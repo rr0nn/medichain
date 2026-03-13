@@ -1,24 +1,54 @@
-'use client';
+"use client";
 
 import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+} from "@/components/ai-elements/message";
 
 export default function Chat() {
   const [input, setInput] = useState('');
   const { messages, sendMessage } = useChat();
   return (
     <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
-      {messages.map(message => (
-        <div key={message.id} className="whitespace-pre-wrap">
-          {message.role === 'user' ? 'User: ' : 'AI: '}
-          {message.parts.map((part, i) => {
-            switch (part.type) {
-              case 'text':
-                return <div key={`${message.id}-${i}`}>{part.text}</div>;
-            }
-          })}
-        </div>
-      ))}
+      <Conversation>
+          <ConversationContent>
+            {messages.length === 0 ? (
+              <ConversationEmptyState
+                title="Start a conversation"
+                description="Type a message below to begin chatting"
+              />
+            ) : (
+              messages.map((message) => (
+                <Message from={message.role} key={message.id}>
+                  <MessageContent>
+                    {message.parts.map((part, i) => {
+                      switch (part.type) {
+                        case "text": // we don't use any reasoning or tool calls in this example
+                          return (
+                            <MessageResponse key={`${message.id}-${i}`}>
+                              {part.text}
+                            </MessageResponse>
+                          );
+                        default:
+                          return null;
+                      }
+                    })}
+                  </MessageContent>
+                </Message>
+              ))
+            )}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
 
       <form
         onSubmit={e => {
