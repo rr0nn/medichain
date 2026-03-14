@@ -1,11 +1,17 @@
 import { matchCategories } from "@/server/ai/agents/category-matcher-agent/agent";
 import { matchClinicalPresentations } from "@/server/ai/agents/clinical-presentation-matcher-agent/agent";
-import type { DiagnosisRow } from "@/server/ai/tools/diagnosis/knowledge-graph";
+import type { DiagnosisRecord } from "@/server/ai/tools/knowledge-graph/types";
 import {
   getCategoriesForClinicalPresentations,
   getClinicalPresentations,
   getDiagnosesForPairs,
-} from "@/server/ai/tools/diagnosis/knowledge-graph";
+} from "@/server/ai/tools/knowledge-graph/knowledge-graph";
+import type {
+  CategoryMatch,
+  ClinicalPresentationMatch,
+  DifferentialDiagnosis,
+  DifferentialDiagnosisWorkflowResult,
+} from "./types";
 
 /**
  * Aggregates raw diagnosis rows into unique diagnoses and ranks them using the
@@ -17,28 +23,15 @@ import {
  * @returns A ranked list of diagnoses with deduplicated support paths.
  */
 function groupDiagnoses(
-  diagnoses: DiagnosisRow[],
-  cpMatches: Array<{ key: string; score: number; matchedText: string[] }>,
-  categoryMatches: Array<{
-    clinicalPresentationKey: string;
-    categoryKey: string;
-    score: number;
-    matchedText: string[];
-  }>
-) {
+  diagnoses: DiagnosisRecord[],
+  cpMatches: ClinicalPresentationMatch[],
+  categoryMatches: CategoryMatch[]
+): DifferentialDiagnosis[] {
   // Merge raw diagnosis rows from the knowledge graph into unique diagnosis entries.
   // Each entry keeps the strongest score plus every presentation/category path that supports it.
   const diagnosisMap = new Map<
     string,
-    {
-      diagnosisKey: string;
-      diagnosisName: string;
-      score: number;
-      paths: Array<{
-        clinicalPresentationKey: string;
-        categoryKey: string;
-      }>;
-    }
+    DifferentialDiagnosis
   >();
 
   for (const row of diagnoses) {
@@ -104,7 +97,7 @@ function groupDiagnoses(
  */
 export async function runDifferentialDiagnosisWorkflow(
   patientDescription: string
-) {
+): Promise<DifferentialDiagnosisWorkflowResult> {
   // Start with every known clinical presentation that could anchor the patient's complaint.
   const clinicalPresentations = await getClinicalPresentations();
 
@@ -133,12 +126,7 @@ export async function runDifferentialDiagnosisWorkflow(
     matchedClinicalPresentations.map((match) => match.key)
   );
 
-  const matchedCategories: Array<{
-    clinicalPresentationKey: string;
-    categoryKey: string;
-    score: number;
-    matchedText: string[];
-  }> = [];
+  const matchedCategories: CategoryMatch[] = [];
 
   // For each matched clinical presentation,
   // see which diagnosis categories fit best with the patient description using the category matcher agent.
@@ -195,7 +183,7 @@ export async function runDifferentialDiagnosisWorkflow(
   }
 
   // Resolve the matched presentation/category pairs into diagnosis rows from the graph.
-  const diagnosisRows = await getDiagnosesForPairs(
+  const diagnosisRecords: DiagnosisRecord[] = await getDiagnosesForPairs(
     matchedCategories.map((match) => ({
       clinicalPresentationKey: match.clinicalPresentationKey,
       categoryKey: match.categoryKey,
@@ -203,8 +191,8 @@ export async function runDifferentialDiagnosisWorkflow(
   );
 
   // Deduplicate and rank the final differential diagnoses before returning them.
-  const differentials = groupDiagnoses(
-    diagnosisRows,
+  const differentials: DifferentialDiagnosis[] = groupDiagnoses(
+    diagnosisRecords,
     matchedClinicalPresentations,
     matchedCategories
   );

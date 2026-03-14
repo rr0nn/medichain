@@ -3,38 +3,20 @@
 // clinical presentations to categories and then to diagnoses.
 import neo4j from "neo4j-driver";
 import { neo4jDatabase, neo4jDriver } from "./neo4j";
+import type {
+  CategoryRecord,
+  ClinicalPresentationRecord,
+  DiagnosisRecord,
+} from "./types";
 
-type ClinicalPresentationRecord = {
-  key: string;
-  name: string;
-  normalized_name: string;
-};
-
-type CategoryRecord = {
-  clinicalPresentationKey: string;
-  categoryKey: string;
-  categoryName: string;
-  categoryNormalizedName: string;
-};
-
-type DiagnosisRecord = {
-  clinicalPresentationKey: string;
-  categoryKey: string;
-  diagnosisKey: string;
-  diagnosisName: string;
-};
-
-export type ClinicalPresentation = ClinicalPresentationRecord;
-export type Category = CategoryRecord;
-export type DiagnosisRow = DiagnosisRecord;
 
 /**
  * Returns all clinical presentation nodes, sorted by display name, for use as
  * the top-level candidate set in diagnosis matching flows.
  *
- * @returns {Promise<ClinicalPresentation[]>} All clinical presentation nodes ordered by name.
+ * @returns {Promise<ClinicalPresentationRecord[]>} All clinical presentation nodes ordered by name.
  */
-export async function getClinicalPresentations(): Promise<ClinicalPresentation[]> {
+export async function getClinicalPresentations(): Promise<ClinicalPresentationRecord[]> {
   const { records } = await neo4jDriver.executeQuery(
     `
     MATCH (cp:ClinicalPresentation)
@@ -63,11 +45,11 @@ export async function getClinicalPresentations(): Promise<ClinicalPresentation[]
  * Short-circuits to an empty array when no presentation keys are provided.
  *
  * @param {string[]} clinicalPresentationKeys Clinical presentation keys to expand into categories.
- * @returns {Promise<Category[]>} Category rows linked to the supplied clinical presentation keys.
+ * @returns {Promise<CategoryRecord[]>} Category rows linked to the supplied clinical presentation keys.
  */
 export async function getCategoriesForClinicalPresentations(
   clinicalPresentationKeys: string[]
-): Promise<Category[]> {
+): Promise<CategoryRecord[]> {
   if (clinicalPresentationKeys.length === 0) {
     return [];
   }
@@ -103,11 +85,11 @@ export async function getCategoriesForClinicalPresentations(
  * Short-circuits to an empty array when no pairs are provided.
  *
  * @param {Array<{ clinicalPresentationKey: string; categoryKey: string }>} pairs Clinical presentation and category key pairs to expand into diagnoses.
- * @returns {Promise<DiagnosisRow[]>} Diagnosis rows linked to the supplied presentation-category pairs.
+ * @returns {Promise<DiagnosisRecord[]>} Diagnosis rows linked to the supplied presentation-category pairs.
  */
 export async function getDiagnosesForPairs(
   pairs: Array<{ clinicalPresentationKey: string; categoryKey: string }>
-): Promise<DiagnosisRow[]> {
+): Promise<DiagnosisRecord[]> {
   if (pairs.length === 0) {
     return [];
   }

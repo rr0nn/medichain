@@ -5,7 +5,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 
 import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
-import type { Category } from "@/server/ai/tools/diagnosis/knowledge-graph";
+import type { CategoryRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const categoryMatchSchema = z.object({
   matches: z.array(
@@ -21,7 +21,7 @@ const categoryMatchSchema = z.object({
 export async function matchCategories(
   patientDescription: string,
   clinicalPresentation: { key: string; name: string },
-  categories: Category[]
+  categories: CategoryRecord[]
 ) {
   const { output } = await generateText({
     model: getDefaultDiagnosisModel(),
