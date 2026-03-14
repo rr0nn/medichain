@@ -1,13 +1,9 @@
-import { streamText, UIMessage, convertToModelMessages } from 'ai';
-import { google } from "@ai-sdk/google";
+import type { ChatRequest } from "@/server/ai/core/types";
+import { runChatWorkflow } from "@/server/ai/workflows/chat-workflow";
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
-
-  const result = streamText({
-    model: google("gemini-2.5-flash"),
-    messages: await convertToModelMessages(messages),
-  });
+  const body = (await req.json()) as ChatRequest;
+  const result = await runChatWorkflow(body);
 
   return result.toUIMessageStreamResponse();
 }
