@@ -117,7 +117,7 @@ export async function getDiagnosesForPairs(
     UNWIND $pairs AS pair
     MATCH (cp:ClinicalPresentation {key: pair.clinicalPresentationKey})
           -[:HAS_CATEGORY]->(cat:Category {key: pair.categoryKey})
-          -[:HAS_DIAGNOSIS]->(dx:Diagnosis)
+          -[:INCLUDES_DIAGNOSIS]->(dx:Diagnosis)
     RETURN
       cp.key AS clinicalPresentationKey,
       cat.key AS categoryKey,
