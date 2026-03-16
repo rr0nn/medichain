@@ -147,13 +147,39 @@ const TraceMatch = styled.div`
 const FillerDiv = styled.div`
   margin-top: 10px;
 `
+import { ArrowUp, SquarePlus  } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Home() {
   
-
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
+    <>
+    <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="fixed top-3.5 left-5 z-50 text-[28px] cursor-pointer"
+        >
+            ☰ 
+        </button>
+       
+       <div
+            className={`fixed  top-0 left-0 h-full w-70 bg-[#1BC2BD]/12 shadow-lg transform transition-transform duration-300
+                ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
+        >
+            <button
+                //onClick={createNewChat}
+                className="flex gap-2 items-center w-full text-[16px] text-left p-4 mt-20 hover:bg-white cursor-pointer border-b border-t"
+            > <SquarePlus size={16} />  New Chat
+            </button>
+            <div className="absolute top-0 left-70 h-full w-[1px] bg-gray-200"></div> 
+        </div>
+
+         <div className='fixed top-3 left-20 bg-[#1B7D7E] text-[18px] font-bold text-white p-2 px-4 rounded-3xl'>
+            MediChain
+            </div>
+
     <ResultPage>
-      <Header>
+      {/* <Header>
         <Image
           src="/medichain.png"
           alt="Medichain logo"
@@ -163,7 +189,7 @@ export default function Home() {
         />
         Diagnostic Reasoning For Final Results
         <LinkHome href="/">Back to ChatBot</LinkHome>
-      </Header>
+      </Header> */}
       <DifferentialDiagnosis>
         <BoxTitle>
           Ranked Output For Differential Diagnosis
@@ -203,5 +229,6 @@ export default function Home() {
         <FillerDiv></FillerDiv>
       </DifferentialDiagnosis>
     </ResultPage>
+    </>
   );
 }
