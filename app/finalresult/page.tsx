@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import styled from "styled-components";
-import Link from 'next/link'
+import Link from 'next/link';
+import data from '../../TestUiDatabase/differentials.json';
 
 const ResultPage = styled.div`
   width: 100%;
@@ -16,6 +17,7 @@ const ResultPage = styled.div`
 `;
 
 const Header = styled.div`
+  position: fixed;
   width: 100%;
   height: 120px;
   text-align: center;
@@ -36,7 +38,7 @@ const DifferentialDiagnosis = styled.div`
   width: 50%;
   background-color: #ffffff;
   border-radius: 25px;
-  margin-top: 65px;
+  margin-top: 185px;
   font-weight: bold;
   box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
 
@@ -61,7 +63,7 @@ const BoxFormatingColumn= styled.div`
   display: flex;
   flex-direction: column;
   width: 50%;
-  padding-left: 10px;
+  padding-left: 25px;
 `
 const ConfidenceFormating = styled.div`
   display: flex;
@@ -90,7 +92,6 @@ const BoxTitle = styled.div`
 `
 
 const ResultDisplay = styled.div`
-  padding-left: 15px;
   padding-top: 10px;
   font-size: 20px;
   margin-top: 30px;
@@ -113,7 +114,7 @@ const DxResult = styled.div`
 `
 const BarBackground = styled.div`
   margin-top: 10px;
-  width: 98%;
+  width: 100%;
   background: #c2d8da;
   border-radius: 20px;
   height: 24px;
@@ -125,6 +126,11 @@ const BarFill = styled.div<{ widthPercent: number}>`
   background-image: linear-gradient(to right, #5fa7ff, #7bfee2); 
   height: 100%;
 `;
+
+const FormatPadding = styled.div`
+  padding-left: 10px;
+  padding-right: 10px;
+`
 
 const TraceMatch = styled.div`
   margin-top: 15px;
@@ -162,59 +168,39 @@ export default function Home() {
         <BoxTitle>
           Ranked Output For Differential Diagnosis
         </BoxTitle>
-        <ResultDisplay>
+
+        {data.differentials.map((d,index) => (
+          <ResultDisplay>
           <BoxFormatingOverall>
             <BoxFormatingColumn>
-              Rank 1
+              Rank {index + 1}
               <DiseaseName>
-                Gastric volvulus
+                {d.diagnosisName}
               </DiseaseName>
               <DxResult>
-                dx:gastric_volvulus
+                {d.diagnosisKey}
               </DxResult>
             </BoxFormatingColumn>
             <ConfidenceFormating>
               Confidence
               <ConfidenceScoreFormating>
-                92%
+                {d.score*100}%
               </ConfidenceScoreFormating>
             </ConfidenceFormating>
           </BoxFormatingOverall>
-          
-          <BarBackground>
-            <BarFill widthPercent={92}/>
-          </BarBackground>
-          <TraceMatch>something </TraceMatch>
+        
+          <FormatPadding>
+            <BarBackground>
+              <BarFill widthPercent={d.score*100}/>
+            </BarBackground>
+
+            <TraceMatch> {d.paths[0].clinicalPresentationKey} / {d.paths[0].categoryKey}</TraceMatch>
+          </FormatPadding>
           <FillerDiv></FillerDiv>
         </ResultDisplay>
-        <ResultDisplay>
-          Rank 2
-          <DiseaseName>
-            Gastric volvulus
-          </DiseaseName>
-          <DxResult>
-            dx:gastric_volvulus
-          </DxResult>
-          <BarBackground>
-            <BarFill widthPercent={68}/>
-          </BarBackground>
-          <TraceMatch>something </TraceMatch>
-          <FillerDiv></FillerDiv>
-        </ResultDisplay>
-        <ResultDisplay>
-          Rank 3
-          <DiseaseName>
-            Gastric volvulus
-          </DiseaseName>
-          <DxResult>
-            dx:gastric_volvulus
-          </DxResult>
-          <BarBackground>
-            <BarFill widthPercent={52}/>
-          </BarBackground>
-          <TraceMatch>something </TraceMatch>
-          <FillerDiv></FillerDiv>
-        </ResultDisplay>
+        ))}
+  
+        <FillerDiv></FillerDiv>
       </DifferentialDiagnosis>
     </ResultPage>
   );

@@ -1,0 +1,59 @@
+ {
+    "differentials": [
+        {
+            "diagnosisKey": "dx:gastric_volvulus",
+            "diagnosisName": "Gastric volvulus",
+            "score": 0.95,
+            "paths": [
+                {
+                    "clinicalPresentationKey": "clinical_presentation:abdominal_pain",
+                    "categoryKey": "category:gastroduodenal"
+                }
+            ]
+        },
+        {
+            "diagnosisKey": "dx:gastric_duodenal_perforation",
+            "diagnosisName": "Gastric/duodenal perforation",
+            "score": 0.90,
+            "paths": [
+                {
+                    "clinicalPresentationKey": "clinical_presentation:abdominal_pain",
+                    "categoryKey": "category:gastroduodenal"
+                }
+            ]
+        },
+        {
+            "diagnosisKey": "dx:gastric_peptic_ulcer",
+            "diagnosisName": "Gastric/peptic ulcer",
+            "score": 0.85,
+            "paths": [
+                {
+                    "clinicalPresentationKey": "clinical_presentation:abdominal_pain",
+                    "categoryKey": "category:gastroduodenal"
+                }
+            ]
+        },
+        {
+            "diagnosisKey": "dx:gastritis",
+            "diagnosisName": "Gastritis",
+            "score": 0.80,
+            "paths": [
+                {
+                    "clinicalPresentationKey": "clinical_presentation:abdominal_pain",
+                    "categoryKey": "category:gastroduodenal"
+                }
+            ]
+        },
+        {
+            "diagnosisKey": "dx:oesophageal_gastric_malignancy",
+            "diagnosisName": "Oesophageal/gastric malignancy",
+            "score": 0.75,
+            "paths": [
+                {
+                    "clinicalPresentationKey": "clinical_presentation:abdominal_pain",
+                    "categoryKey": "category:gastroduodenal"
+                }
+            ]
+        }
+    ]
+ }
