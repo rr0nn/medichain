@@ -5,6 +5,16 @@ import styled from "styled-components";
 import Link from 'next/link';
 import data from '../../TestUiDatabase/differentials.json';
 
+// const PageLayout = styled.div`
+//   width: 100%;
+//   min-height: 100vh;
+
+//   display: flex;
+//   flex-direction: row;
+//   gap: 30px;
+//   padding: 20px;
+// `;
+
 const ResultPage = styled.div`
   width: 100%;
   min-height: 100vh;
@@ -15,6 +25,18 @@ const ResultPage = styled.div`
   flex-direction: column;
   align-items: center;
 `;
+
+
+// const ChainLogic = styled.div`
+//   width: %;
+//   min-height: 100vh;
+//   text-align: center;
+//   background-color: #ad3333;
+
+//   padding: 10px;
+//   flex-direction: column;
+//   align-items: flex-left;
+// `;
 
 const Header = styled.div`
   position: fixed;
@@ -147,7 +169,7 @@ const TraceMatch = styled.div`
 const FillerDiv = styled.div`
   margin-top: 10px;
 `
-import { ArrowUp, SquarePlus  } from 'lucide-react';
+import { ChevronRight , Pill , SquarePlus  } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Home() {
@@ -166,19 +188,30 @@ export default function Home() {
             className={`fixed  top-0 left-0 h-full w-70 bg-[#1BC2BD]/12 shadow-lg transform transition-transform duration-300
                 ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
         >
-            <button
+            <Link
                 //onClick={createNewChat}
-                className="flex gap-2 items-center w-full text-[16px] text-left p-4 mt-20 hover:bg-white cursor-pointer border-b border-t"
+                href="/chatBot"
+                className="flex gap-2 items-center w-full text-[16px] text-left p-4 mt-20 hover:bg-white cursor-pointer "
             > <SquarePlus size={16} />  New Chat
+            </Link>
+          <button
+                className="flex gap-2 items-center w-full text-[16px] text-left p-4 mt-0 hover:bg-white cursor-pointer"
+            > <Pill size={16} /> Diagnosis Output
             </button>
-            <div className="absolute top-0 left-70 h-full w-[1px] bg-gray-200"></div> 
+            <button
+                className="flex gap-2 items-center w-full text-[16px] text-left p-4 mt-0 hover:bg-white cursor-pointer"
+            > Your chats <ChevronRight size={16} />
+            </button>
+            <div className="absolute top-0 left-70 h-full w-[1px] bg-gray-200">
+              </div>
+       
         </div>
 
          <div className='fixed top-3 left-20 bg-[#1B7D7E] text-[18px] font-bold text-white p-2 px-4 rounded-3xl'>
             MediChain
             </div>
-
-    <ResultPage>
+          
+  <ResultPage>
       {/* <Header>
         <Image
           src="/medichain.png"
@@ -196,7 +229,7 @@ export default function Home() {
         </BoxTitle>
 
         {data.differentials.map((d,index) => (
-          <ResultDisplay>
+          <ResultDisplay key={d.diagnosisKey}>
           <BoxFormatingOverall>
             <BoxFormatingColumn>
               Rank {index + 1}
