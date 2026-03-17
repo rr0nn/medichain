@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { getToolName, isToolUIPart } from "ai";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -31,7 +31,6 @@ const initialSteps: WorkflowStepState = {
 export default function Chat() {
   const { messages, sendMessage, status } = useChat();
   const [input, setInput] = useState("");
-  const [steps, setSteps] = useState<WorkflowStepState>(initialSteps);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isLoading = status === "submitted" || status === "streaming";
 
@@ -42,23 +41,24 @@ export default function Chat() {
     ta.style.height = `${Math.min(ta.scrollHeight, 128)}px`;
   }, [input]);
 
-  useEffect(() => {
-    if (status === "submitted") setSteps(initialSteps);
-  }, [status]);
+  const steps = useMemo<WorkflowStepState>(() => {
+    if (status === "submitted") {
+      return initialSteps;
+    }
 
-  useEffect(() => {
     const lastMsg = [...messages].reverse().find((m) => m.role === "assistant");
-    if (!lastMsg) return;
+    if (!lastMsg) return initialSteps;
 
-    const newSteps = { ...initialSteps };
+    const newSteps: WorkflowStepState = { ...initialSteps };
     for (const part of lastMsg.parts) {
       if (part.type === "data-step") {
         const event = (part as { type: string; data: WorkflowStepEvent }).data;
         newSteps[event.step] = event.status;
       }
     }
-    setSteps(newSteps);
-  }, [messages]);
+
+    return newSteps;
+  }, [messages, status]);
 
   const differentials = useMemo<DifferentialDiagnosis[]>(() => {
     for (let i = messages.length - 1; i >= 0; i--) {

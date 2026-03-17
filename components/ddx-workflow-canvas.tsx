@@ -10,7 +10,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { cn } from "@/lib/utils";
 import { CheckIcon, Loader2Icon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTheme } from "next-themes";
 import type { WorkflowStepName } from "@/server/ai/workflows/ddx-workflow/workflow";
 
@@ -77,8 +77,7 @@ const nodeTypes = { workflow: WorkflowNode };
 
 export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [mounted] = useState(() => typeof window !== "undefined");
 
   const nodes = useMemo(
     () => [
