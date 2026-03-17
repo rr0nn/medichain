@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
+import { ThemeSelector } from "@/components/theme-selector";
 import type { WorkflowStepState } from "@/components/ddx-workflow-canvas";
 import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/workflow";
 import type {
@@ -114,6 +115,7 @@ export default function Chat() {
       <div className="flex flex-col w-1/2 border-r border-border min-h-0">
         <header className="flex items-center justify-between px-4 h-12 border-b border-border shrink-0">
           <span className="font-semibold text-sm">MediChain</span>
+          <ThemeSelector />
         </header>
 
         <Conversation className="flex-1 min-h-0">
