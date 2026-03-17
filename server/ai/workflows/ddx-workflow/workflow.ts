@@ -13,6 +13,20 @@ import type {
   DifferentialDiagnosisWorkflowResult,
 } from "./types";
 
+export type WorkflowStepName =
+  | "match_presentations"
+  | "match_categories"
+  | "fetch_diagnoses"
+  | "group_diagnoses";
+
+export type WorkflowStepEvent = {
+  type: "step";
+  step: WorkflowStepName;
+  status: "running" | "complete";
+};
+
+type OnStep = (event: WorkflowStepEvent) => void;
+
 /**
  * Aggregates raw diagnosis rows into unique diagnoses and ranks them using the
  * strongest supporting presentation/category match path.
@@ -96,9 +110,11 @@ function groupDiagnoses(
  * @returns The intermediate presentation/category matches and final ranked differentials.
  */
 export async function runDifferentialDiagnosisWorkflow(
-  patientDescription: string
+  patientDescription: string,
+  onStep?: OnStep
 ): Promise<DifferentialDiagnosisWorkflowResult> {
   // Start with every known clinical presentation that could anchor the patient's complaint.
+  onStep?.({ type: "step", step: "match_presentations", status: "running" });
   const clinicalPresentations = await getClinicalPresentations();
 
   // Match the patient's free-text description to the closest clinical presentations.
@@ -106,6 +122,7 @@ export async function runDifferentialDiagnosisWorkflow(
     patientDescription,
     clinicalPresentations
   );
+  onStep?.({ type: "step", step: "match_presentations", status: "complete" });
 
   // Keep only high-confidence and top-N matched clinical presentations to limit noise and downstream cost.
   const matchedClinicalPresentations = clinicalPresentationResult.matches
@@ -122,6 +139,7 @@ export async function runDifferentialDiagnosisWorkflow(
   }
 
   // Load the diagnosis categories associated with the shortlisted clinical presentations.
+  onStep?.({ type: "step", step: "match_categories", status: "running" });
   const categories = await getCategoriesForClinicalPresentations(
     matchedClinicalPresentations.map((match) => match.key)
   );
@@ -172,6 +190,7 @@ export async function runDifferentialDiagnosisWorkflow(
       });
     }
   }
+  onStep?.({ type: "step", step: "match_categories", status: "complete" });
 
   // If no confident presentation/category pair means there is no path to concrete diagnoses.
   if (matchedCategories.length === 0) {
@@ -183,19 +202,23 @@ export async function runDifferentialDiagnosisWorkflow(
   }
 
   // Resolve the matched presentation/category pairs into diagnosis rows from the graph.
+  onStep?.({ type: "step", step: "fetch_diagnoses", status: "running" });
   const diagnosisRecords: DiagnosisRecord[] = await getDiagnosesForPairs(
     matchedCategories.map((match) => ({
       clinicalPresentationKey: match.clinicalPresentationKey,
       categoryKey: match.categoryKey,
     }))
   );
+  onStep?.({ type: "step", step: "fetch_diagnoses", status: "complete" });
 
   // Deduplicate and rank the final differential diagnoses before returning them.
+  onStep?.({ type: "step", step: "group_diagnoses", status: "running" });
   const differentials: DifferentialDiagnosis[] = groupDiagnoses(
     diagnosisRecords,
     matchedClinicalPresentations,
     matchedCategories
   );
+  onStep?.({ type: "step", step: "group_diagnoses", status: "complete" });
 
   // Return both the intermediate matches and final differential list for downstream explanation.
   return {
