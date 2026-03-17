@@ -142,7 +142,7 @@ export default function Chat() {
                             key={i}
                             className="text-xs text-muted-foreground italic"
                           >
-                            Look on the rifht side running ddx . . .
+                            Look on the right side running ddx . . .
                           </p>
                         );
                       }
