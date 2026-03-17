@@ -26,9 +26,14 @@ describe("runChatWorkflow", () => {
         const fakeResult = { stream: true };
         mocks.mockRunChatAgent.mockResolvedValue(fakeResult);
 
-        const result = await runChatWorkflow(input as never);
+        const writer = {
+            write: vi.fn(),
+            merge: vi.fn(),
+        } as never;
 
-        expect(mocks.mockRunChatAgent).toHaveBeenCalledWith(input);
+        const result = await runChatWorkflow(input as never, writer);
+
+        expect(mocks.mockRunChatAgent).toHaveBeenCalledWith(input, writer);
         expect(result).toBe(fakeResult);
     });
 });
