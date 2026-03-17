@@ -36,11 +36,10 @@ export function DdxPanel({
     return {
       clinicalPresentationName:
         presentationMatch?.name ?? clinicalPresentationKey,
+      clinicalPresentationMatchedText:
+        presentationMatch?.matchedText ?? [],
       categoryName: categoryMatch?.categoryName ?? categoryKey,
-      matchedText: [
-        ...(presentationMatch?.matchedText ?? []),
-        ...(categoryMatch?.matchedText ?? []),
-      ],
+      categoryMatchedText: categoryMatch?.matchedText ?? [],
     };
   };
 
@@ -98,11 +97,19 @@ export function DdxPanel({
                         key={`${d.diagnosisKey}-${path.clinicalPresentationKey}-${path.categoryKey}-${pathIndex}`}
                         className="rounded-md bg-muted/40 px-3 py-2"
                       >
+                        <p className="text-xs text-muted-foreground">
+                          Clinical presentation match:{" "}
+                          {pathDetails.clinicalPresentationMatchedText.length > 0
+                            ? pathDetails.clinicalPresentationMatchedText.join(", ")
+                            : "unavailable"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Category match:{" "}
+                          {pathDetails.categoryMatchedText.length > 0
+                            ? pathDetails.categoryMatchedText.join(", ")
+                            : "unavailable"}
+                        </p>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          {pathDetails.matchedText.length > 0
-                            ? pathDetails.matchedText.join(", ")
-                            : "matched text unavailable"}
-                          {" -> "}
                           {pathDetails.clinicalPresentationName}
                           {" -> "}
                           {pathDetails.categoryName}
