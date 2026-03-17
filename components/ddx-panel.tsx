@@ -48,7 +48,7 @@ export function DdxPanel({
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center px-4 h-20 border-b border-border shrink-0">
-        <span className="top-3 bg-[#1B7D7E] text-[18px] font-bold text-white p-2 px-4 rounded-3xl">Differential Diagnosis</span>
+        <span className="top-3 bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl">Differential Diagnosis</span>
       </header>
 
       <div className="flex-1 overflow-y-auto min-h-0">

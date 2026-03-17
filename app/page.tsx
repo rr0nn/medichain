@@ -114,7 +114,7 @@ export default function Chat() {
       {/* Chat Panel */}
       <div className="flex flex-col w-1/2 border-r border-border min-h-0">
         <header className="flex items-center justify-between px-4 h-20 border-b border-border shrink-0">
-          <span className="top-3 bg-[#1B7D7E] text-[18px] font-bold text-white p-2 px-4 rounded-3xl">MediChain</span>
+          <span className="top-3 bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl">MediChain</span>
           <ThemeSelector />
         </header>
 
@@ -129,8 +129,8 @@ export default function Chat() {
                 <Message from={message.role} key={message.id}>
                   <MessageContent
                     className={message.role === "user"
-                            ? "!bg-chart-2 !text-white self-end p-2 rounded-lg mb-2"
-                            : "bg-gray-100 text-black self-start p-2 rounded-lg mb-2"
+                            ? "!bg-chart-2 !text-primary-foreground self-end p-2 rounded-lg mb-2"
+                            : "bg-muted/40 text-secondary-foreground self-start p-2 rounded-lg mb-2"
                     }
                   >
                     {message.parts.map((part, i) => {
