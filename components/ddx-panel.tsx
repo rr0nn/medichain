@@ -10,6 +10,8 @@ import type {
   DifferentialDiagnosis,
 } from "@/server/ai/workflows/ddx-workflow/types";
 
+import { ChevronRight } from 'lucide-react';
+
 type Props = {
   steps: WorkflowStepState;
   differentials: DifferentialDiagnosis[];
@@ -45,8 +47,8 @@ export function DdxPanel({
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center px-4 h-12 border-b border-border shrink-0">
-        <span className="font-semibold text-sm">Differential Diagnosis</span>
+      <header className="flex items-center px-4 h-20 border-b border-border shrink-0">
+        <span className="top-3 bg-[#1B7D7E] text-[18px] font-bold text-white p-2 px-4 rounded-3xl">Differential Diagnosis</span>
       </header>
 
       <div className="flex-1 overflow-y-auto min-h-0">
@@ -73,8 +75,8 @@ export function DdxPanel({
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {d.diagnosisName}
+                    <p className="text-sm font-medium truncate flex gap-2 items-center">
+                      {d.diagnosisName} <ChevronRight size={16} />
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {d.evidence.length} path{d.evidence.length !== 1 ? "s" : ""}
