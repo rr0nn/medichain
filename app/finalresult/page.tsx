@@ -60,7 +60,7 @@ const DifferentialDiagnosis = styled.div`
   width: 50%;
   background-color: #ffffff;
   border-radius: 25px;
-  margin-top: 185px;
+  margin-top: 105px;
   font-weight: bold;
   box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
 
@@ -69,13 +69,6 @@ const DifferentialDiagnosis = styled.div`
   align-items: center;  
 `;
 
-const LinkHome = styled(Link)`
-  text-decoration: underline;
-  position: absolute;
-  margin-left: 80%;
-  color: #1B7D7E;
-  font-size: 30px;
-  `
 const BoxFormatingOverall = styled.div`
   display: flex;
   flex-direction: row;
@@ -143,8 +136,8 @@ const BarBackground = styled.div`
   overflow: hidden;
 `;
 
-const BarFill = styled.div<{ widthPercent: number}>`
-  width: ${(props) => props.widthPercent}%;
+const BarFill = styled.div<{ widthpercent: number}>`
+  width: ${(props) => props.widthpercent}%;
   background-image: linear-gradient(to right, #5fa7ff, #7bfee2); 
   height: 100%;
 `;
@@ -250,7 +243,7 @@ export default function Home() {
         
           <FormatPadding>
             <BarBackground>
-              <BarFill widthPercent={d.score*100}/>
+              <BarFill widthpercent={d.score*100}/>
             </BarBackground>
 
             <TraceMatch> {d.paths[0].clinicalPresentationKey} / {d.paths[0].categoryKey}</TraceMatch>
