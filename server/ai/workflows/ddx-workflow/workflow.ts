@@ -34,7 +34,7 @@ type OnStep = (event: WorkflowStepEvent) => void;
  * @param diagnoses Raw diagnosis rows returned from the knowledge graph.
  * @param cpMatches Clinical presentation matches scored from the patient description.
  * @param categoryMatches Category matches scored within each matched presentation.
- * @returns A ranked list of diagnoses with deduplicated support paths.
+ * @returns A ranked list of diagnoses with deduplicated evidence references.
  */
 function groupDiagnoses(
   diagnoses: DiagnosisRecord[],
@@ -42,7 +42,7 @@ function groupDiagnoses(
   categoryMatches: CategoryMatch[]
 ): DifferentialDiagnosis[] {
   // Merge raw diagnosis rows from the knowledge graph into unique diagnosis entries.
-  // Each entry keeps the strongest score plus every presentation/category path that supports it.
+  // Each entry keeps the strongest score plus every presentation/category reference that supports it.
   const diagnosisMap = new Map<
     string,
     DifferentialDiagnosis
@@ -70,7 +70,7 @@ function groupDiagnoses(
         diagnosisKey: row.diagnosisKey,
         diagnosisName: row.diagnosisName,
         score: combinedScore,
-        paths: [
+        evidence: [
           {
             clinicalPresentationKey: row.clinicalPresentationKey,
             categoryKey: row.categoryKey,
@@ -84,15 +84,15 @@ function groupDiagnoses(
     // Rank the diagnosis by its best supporting path.
     existing.score = Math.max(existing.score, combinedScore);
 
-    const alreadyHasPath = existing.paths.some(
-      (path) =>
-        path.clinicalPresentationKey === row.clinicalPresentationKey &&
-        path.categoryKey === row.categoryKey
+    const alreadyHasEvidence = existing.evidence.some(
+      (evidenceRef) =>
+        evidenceRef.clinicalPresentationKey === row.clinicalPresentationKey &&
+        evidenceRef.categoryKey === row.categoryKey
     );
 
-    if (!alreadyHasPath) {
+    if (!alreadyHasEvidence) {
       // Preserve distinct supporting routes so the caller can explain why it matched.
-      existing.paths.push({
+      existing.evidence.push({
         clinicalPresentationKey: row.clinicalPresentationKey,
         categoryKey: row.categoryKey,
       });
@@ -127,7 +127,19 @@ export async function runDifferentialDiagnosisWorkflow(
   // Keep only high-confidence and top-N matched clinical presentations to limit noise and downstream cost.
   const matchedClinicalPresentations = clinicalPresentationResult.matches
     .filter((match) => match.score >= 0.6)
-    .slice(0, 3);
+    .slice(0, 3)
+    .map((match) => {
+      const presentation = clinicalPresentations.find(
+        (candidate) => candidate.key === match.key
+      );
+
+      return {
+        key: match.key,
+        name: presentation?.name ?? match.key,
+        score: match.score,
+        matchedText: match.matchedText,
+      };
+    });
 
   // If no matches at the clinical presentation level, stop before category lookup.
   if (matchedClinicalPresentations.length === 0) {
@@ -185,6 +197,10 @@ export async function runDifferentialDiagnosisWorkflow(
       matchedCategories.push({
         clinicalPresentationKey: clinicalPresentationMatch.key,
         categoryKey: categoryMatch.key,
+        categoryName:
+          presentationCategories.find(
+            (category) => category.categoryKey === categoryMatch.key
+          )?.categoryName ?? categoryMatch.key,
         score: categoryMatch.score,
         matchedText: categoryMatch.matchedText,
       });

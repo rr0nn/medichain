@@ -19,7 +19,11 @@ import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import type { WorkflowStepState } from "@/components/ddx-workflow-canvas";
 import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/workflow";
-import type { DifferentialDiagnosis } from "@/server/ai/workflows/ddx-workflow/types";
+import type {
+  CategoryMatch,
+  ClinicalPresentationMatch,
+  DifferentialDiagnosis,
+} from "@/server/ai/workflows/ddx-workflow/types";
 
 const initialSteps: WorkflowStepState = {
   match_presentations: "idle",
@@ -60,7 +64,11 @@ export default function Chat() {
     return newSteps;
   }, [messages, status]);
 
-  const differentials = useMemo<DifferentialDiagnosis[]>(() => {
+  const ddxResult: {
+    differentials: DifferentialDiagnosis[];
+    matchedClinicalPresentations: ClinicalPresentationMatch[];
+    matchedCategories: CategoryMatch[];
+  } = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
       if (m.role !== "assistant") continue;
@@ -71,14 +79,27 @@ export default function Chat() {
           part.state === "output-available"
         ) {
           const output = part.output as
-            | { differentials?: DifferentialDiagnosis[] }
+            | {
+                differentials?: DifferentialDiagnosis[];
+                matchedClinicalPresentations?: ClinicalPresentationMatch[];
+                matchedCategories?: CategoryMatch[];
+              }
             | undefined;
-          return output?.differentials ?? [];
+          return {
+            differentials: output?.differentials ?? [],
+            matchedClinicalPresentations:
+              output?.matchedClinicalPresentations ?? [],
+            matchedCategories: output?.matchedCategories ?? [],
+          };
         }
       }
     }
-    return [];
-  }, [messages]);
+    return {
+      differentials: [],
+      matchedClinicalPresentations: [],
+      matchedCategories: [],
+    };
+  })();
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -177,7 +198,12 @@ export default function Chat() {
 
       {/* DDx Panel */}
       <div className="flex flex-col w-1/2 min-h-0">
-        <DdxPanel steps={steps} differentials={differentials} />
+        <DdxPanel
+          steps={steps}
+          differentials={ddxResult.differentials}
+          matchedClinicalPresentations={ddxResult.matchedClinicalPresentations}
+          matchedCategories={ddxResult.matchedCategories}
+        />
       </div>
     </div>
   );

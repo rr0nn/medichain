@@ -1,5 +1,6 @@
 export type ClinicalPresentationMatch = {
   key: string;
+  name: string;
   score: number;
   matchedText: string[];
 };
@@ -7,11 +8,12 @@ export type ClinicalPresentationMatch = {
 export type CategoryMatch = {
   clinicalPresentationKey: string;
   categoryKey: string;
+  categoryName: string;
   score: number;
   matchedText: string[];
 };
 
-export type DifferentialDiagnosisPath = {
+export type DifferentialDiagnosisEvidenceRef = {
   clinicalPresentationKey: string;
   categoryKey: string;
 };
@@ -20,7 +22,7 @@ export type DifferentialDiagnosis = {
   diagnosisKey: string;
   diagnosisName: string;
   score: number;
-  paths: DifferentialDiagnosisPath[];
+  evidence: DifferentialDiagnosisEvidenceRef[];
 };
 
 export type DifferentialDiagnosisWorkflowResult = {
