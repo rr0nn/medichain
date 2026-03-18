@@ -13,6 +13,20 @@ import type {
   DifferentialDiagnosisWorkflowResult,
 } from "./types";
 
+export type WorkflowStepName =
+  | "match_presentations"
+  | "match_categories"
+  | "fetch_diagnoses"
+  | "group_diagnoses";
+
+export type WorkflowStepEvent = {
+  type: "step";
+  step: WorkflowStepName;
+  status: "running" | "complete";
+};
+
+type OnStep = (event: WorkflowStepEvent) => void;
+
 /**
  * Aggregates raw diagnosis rows into unique diagnoses and ranks them using the
  * strongest supporting presentation/category match path.
@@ -20,7 +34,7 @@ import type {
  * @param diagnoses Raw diagnosis rows returned from the knowledge graph.
  * @param cpMatches Clinical presentation matches scored from the patient description.
  * @param categoryMatches Category matches scored within each matched presentation.
- * @returns A ranked list of diagnoses with deduplicated support paths.
+ * @returns A ranked list of diagnoses with deduplicated evidence references.
  */
 function groupDiagnoses(
   diagnoses: DiagnosisRecord[],
@@ -28,7 +42,7 @@ function groupDiagnoses(
   categoryMatches: CategoryMatch[]
 ): DifferentialDiagnosis[] {
   // Merge raw diagnosis rows from the knowledge graph into unique diagnosis entries.
-  // Each entry keeps the strongest score plus every presentation/category path that supports it.
+  // Each entry keeps the strongest score plus every presentation/category reference that supports it.
   const diagnosisMap = new Map<
     string,
     DifferentialDiagnosis
@@ -56,7 +70,7 @@ function groupDiagnoses(
         diagnosisKey: row.diagnosisKey,
         diagnosisName: row.diagnosisName,
         score: combinedScore,
-        paths: [
+        evidence: [
           {
             clinicalPresentationKey: row.clinicalPresentationKey,
             categoryKey: row.categoryKey,
@@ -70,15 +84,15 @@ function groupDiagnoses(
     // Rank the diagnosis by its best supporting path.
     existing.score = Math.max(existing.score, combinedScore);
 
-    const alreadyHasPath = existing.paths.some(
-      (path) =>
-        path.clinicalPresentationKey === row.clinicalPresentationKey &&
-        path.categoryKey === row.categoryKey
+    const alreadyHasEvidence = existing.evidence.some(
+      (evidenceRef) =>
+        evidenceRef.clinicalPresentationKey === row.clinicalPresentationKey &&
+        evidenceRef.categoryKey === row.categoryKey
     );
 
-    if (!alreadyHasPath) {
+    if (!alreadyHasEvidence) {
       // Preserve distinct supporting routes so the caller can explain why it matched.
-      existing.paths.push({
+      existing.evidence.push({
         clinicalPresentationKey: row.clinicalPresentationKey,
         categoryKey: row.categoryKey,
       });
@@ -96,9 +110,11 @@ function groupDiagnoses(
  * @returns The intermediate presentation/category matches and final ranked differentials.
  */
 export async function runDifferentialDiagnosisWorkflow(
-  patientDescription: string
+  patientDescription: string,
+  onStep?: OnStep
 ): Promise<DifferentialDiagnosisWorkflowResult> {
   // Start with every known clinical presentation that could anchor the patient's complaint.
+  onStep?.({ type: "step", step: "match_presentations", status: "running" });
   const clinicalPresentations = await getClinicalPresentations();
 
   // Match the patient's free-text description to the closest clinical presentations.
@@ -106,11 +122,24 @@ export async function runDifferentialDiagnosisWorkflow(
     patientDescription,
     clinicalPresentations
   );
+  onStep?.({ type: "step", step: "match_presentations", status: "complete" });
 
   // Keep only high-confidence and top-N matched clinical presentations to limit noise and downstream cost.
   const matchedClinicalPresentations = clinicalPresentationResult.matches
     .filter((match) => match.score >= 0.6)
-    .slice(0, 3);
+    .slice(0, 3)
+    .map((match) => {
+      const presentation = clinicalPresentations.find(
+        (candidate) => candidate.key === match.key
+      );
+
+      return {
+        key: match.key,
+        name: presentation?.name ?? match.key,
+        score: match.score,
+        matchedText: match.matchedText,
+      };
+    });
 
   // If no matches at the clinical presentation level, stop before category lookup.
   if (matchedClinicalPresentations.length === 0) {
@@ -122,6 +151,7 @@ export async function runDifferentialDiagnosisWorkflow(
   }
 
   // Load the diagnosis categories associated with the shortlisted clinical presentations.
+  onStep?.({ type: "step", step: "match_categories", status: "running" });
   const categories = await getCategoriesForClinicalPresentations(
     matchedClinicalPresentations.map((match) => match.key)
   );
@@ -167,11 +197,16 @@ export async function runDifferentialDiagnosisWorkflow(
       matchedCategories.push({
         clinicalPresentationKey: clinicalPresentationMatch.key,
         categoryKey: categoryMatch.key,
+        categoryName:
+          presentationCategories.find(
+            (category) => category.categoryKey === categoryMatch.key
+          )?.categoryName ?? categoryMatch.key,
         score: categoryMatch.score,
         matchedText: categoryMatch.matchedText,
       });
     }
   }
+  onStep?.({ type: "step", step: "match_categories", status: "complete" });
 
   // If no confident presentation/category pair means there is no path to concrete diagnoses.
   if (matchedCategories.length === 0) {
@@ -183,19 +218,23 @@ export async function runDifferentialDiagnosisWorkflow(
   }
 
   // Resolve the matched presentation/category pairs into diagnosis rows from the graph.
+  onStep?.({ type: "step", step: "fetch_diagnoses", status: "running" });
   const diagnosisRecords: DiagnosisRecord[] = await getDiagnosesForPairs(
     matchedCategories.map((match) => ({
       clinicalPresentationKey: match.clinicalPresentationKey,
       categoryKey: match.categoryKey,
     }))
   );
+  onStep?.({ type: "step", step: "fetch_diagnoses", status: "complete" });
 
   // Deduplicate and rank the final differential diagnoses before returning them.
+  onStep?.({ type: "step", step: "group_diagnoses", status: "running" });
   const differentials: DifferentialDiagnosis[] = groupDiagnoses(
     diagnosisRecords,
     matchedClinicalPresentations,
     matchedCategories
   );
+  onStep?.({ type: "step", step: "group_diagnoses", status: "complete" });
 
   // Return both the intermediate matches and final differential list for downstream explanation.
   return {

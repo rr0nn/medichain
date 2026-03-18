@@ -89,7 +89,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
 
         expect(result).toEqual({
             matchedClinicalPresentations: [
-                { key: "cp-fever", score: 0.9, matchedText: ["fever"] },
+                { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
             ],
             matchedCategories: [],
             differentials: [],
@@ -184,12 +184,14 @@ describe("runDifferentialDiagnosisWorkflow", () => {
             {
                 clinicalPresentationKey: "cp-fever",
                 categoryKey: "cat-infectious",
+                categoryName: "Infectious",
                 score: 0.8,
                 matchedText: ["high fever"],
             },
             {
                 clinicalPresentationKey: "cp-cough",
                 categoryKey: "cat-inflammatory",
+                categoryName: "Inflammatory",
                 score: 0.6,
                 matchedText: ["dry cough"],
             },
@@ -200,7 +202,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
                 diagnosisKey: "dx-flu",
                 diagnosisName: "Influenza",
                 score: expect.any(Number),
-                paths: [
+                evidence: [
                     {
                         clinicalPresentationKey: "cp-fever",
                         categoryKey: "cat-infectious",
@@ -211,7 +213,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
                 diagnosisKey: "dx-viral",
                 diagnosisName: "Viral syndrome",
                 score: expect.any(Number),
-                paths: [
+                evidence: [
                     {
                         clinicalPresentationKey: "cp-cough",
                         categoryKey: "cat-inflammatory",
@@ -247,9 +249,9 @@ describe("runDifferentialDiagnosisWorkflow", () => {
         const result = await runDifferentialDiagnosisWorkflow("test");
 
         expect(result.matchedClinicalPresentations).toEqual([
-            { key: "cp1", score: 0.95, matchedText: [] },
-            { key: "cp2", score: 0.85, matchedText: [] },
-            { key: "cp3", score: 0.75, matchedText: [] },
+            { key: "cp1", name: "CP1", score: 0.95, matchedText: [] },
+            { key: "cp2", name: "CP2", score: 0.85, matchedText: [] },
+            { key: "cp3", name: "CP3", score: 0.75, matchedText: [] },
         ]);
 
         expect(mocks.mockGetCategoriesForClinicalPresentations).toHaveBeenCalledWith([

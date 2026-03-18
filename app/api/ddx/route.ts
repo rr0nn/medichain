@@ -25,7 +25,28 @@ export async function POST(req: Request) {
     );
   }
 
-  const result = await runDifferentialDiagnosisWorkflow(patientDescription);
+  const enc = new TextEncoder();
 
-  return Response.json(result);
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (data: object) =>
+        controller.enqueue(enc.encode(JSON.stringify(data) + "\n"));
+
+      try {
+        const result = await runDifferentialDiagnosisWorkflow(
+          patientDescription,
+          send
+        );
+        send({ type: "result", ...result });
+      } catch (e) {
+        send({ type: "error", message: String(e) });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: { "Content-Type": "application/x-ndjson" },
+  });
 }

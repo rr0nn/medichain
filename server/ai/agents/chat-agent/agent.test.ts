@@ -7,15 +7,22 @@ const mocks = vi.hoisted(() => ({
     mockConvertToModelMessages: vi.fn(),
     mockStreamText: vi.fn(),
     mockGetDefaultChatModel: vi.fn(),
+    mockRunDifferentialDiagnosisWorkflow: vi.fn(),
 }));
 
 vi.mock("ai", () => ({
     convertToModelMessages: mocks.mockConvertToModelMessages,
     streamText: mocks.mockStreamText,
+    tool: (config: unknown) => config,
+    stepCountIs: vi.fn(),
 }));
 
 vi.mock("@/server/ai/core/models", () => ({
     getDefaultChatModel: mocks.mockGetDefaultChatModel,
+}));
+
+vi.mock("@/server/ai/workflows/ddx-workflow/workflow", () => ({
+    runDifferentialDiagnosisWorkflow: mocks.mockRunDifferentialDiagnosisWorkflow,
 }));
 
 import { runChatAgent } from "./agent";
@@ -39,20 +46,27 @@ describe("runChatAgent", () => {
         ];
 
         const fakeModel = { id: "fake-chat-model" };
-        const fakeStreamResult = { toUIMessageStreamResponse: vi.fn() };
+        const fakeStreamResult = { toUIMessageStream: vi.fn() };
+
+        const writer = {
+            write: vi.fn(),
+            merge: vi.fn(),
+        } as never;
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
         mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
 
-        const result = await runChatAgent(input as never);
+        await runChatAgent(input as never, writer);
 
         expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(input.messages);
         expect(mocks.mockGetDefaultChatModel).toHaveBeenCalledTimes(1);
-        expect(mocks.mockStreamText).toHaveBeenCalledWith({
-            model: fakeModel,
-            messages: convertedMessages,
-        });
-        expect(result).toBe(fakeStreamResult);
+        expect(mocks.mockStreamText).toHaveBeenCalledWith(
+            expect.objectContaining({
+                model: fakeModel,
+                messages: convertedMessages,
+            })
+        );
+        expect(writer.merge).toHaveBeenCalledWith(fakeStreamResult.toUIMessageStream());
     });
 });
