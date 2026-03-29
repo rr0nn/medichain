@@ -17,3 +17,11 @@ export type DiagnosisRecord = {
   diagnosisKey: string;
   diagnosisName: string;
 };
+
+export type FeatureRecord = {
+  clinicalPresentationKey: string;
+  featureKey: string;
+  featureName: string;
+  featureNormalizedName: string;
+  featureType: string;
+}
