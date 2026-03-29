@@ -7,7 +7,9 @@ import type {
   CategoryRecord,
   ClinicalPresentationRecord,
   DiagnosisRecord,
+  FeatureRecord
 } from "./types";
+import { cp } from "fs";
 
 
 /**
@@ -77,6 +79,48 @@ export async function getCategoriesForClinicalPresentations(
     categoryKey: record.get("categoryKey"),
     categoryName: record.get("categoryName"),
     categoryNormalizedName: record.get("categoryNormalizedName"),
+  }));
+}
+
+/**
+ * Returns feature nodes attached to the supplied clinical presentation keys.
+ * These are used by the interviewer workflow to generate targeted follow-up questions.
+ * 
+ * @param {string[]} clinicalPresentationKeys Clinical presentation keys to expand into features.
+ * @returns {Promise<FeatureRecord[]>} Feature rows linked to the supplied clinical presentation keys.
+ */
+export async function getFeaturesForClinicalPresentations(
+  clinicalPresentationsKeys: string[]
+): Promise<FeatureRecord[]> {
+  if (clinicalPresentationsKeys.length === 0) {
+    return [];
+  }
+
+  const { records } = await neo4jDriver.executeQuery(
+    `
+    MATCH (cp:ClinicalPresentation)-[:HAS_FEATURE]->(feature:Feature)
+    WHERE cp.key IN $clinicalPresentationKeys
+    RETURN
+      cp.key AS clinicalPresentationKey,
+      feature.key AS featureKey,
+      feature.name AS featureName,
+      feature.normalized_name AS featureNormalizedName,
+      feature.feature_type AS featureType
+    ORDER BY cp.name, feature.feature_type, feature.name
+    `,
+    { clinicalPresentationsKeys },
+    {
+      database: neo4jDatabase,
+      routing: neo4j.routing.READ,
+    }
+  );
+
+  return records.map((record) => ({
+    clinicalPresentationKey: record.get("clinicalPresentationKey"),
+    featureKey: record.get("featureKey"),
+    featureName: record.get("featureName"),
+    featureNormalizedName: record.get("featureNormalizedName"),
+    featureType: record.get("featureType"),
   }));
 }
 
