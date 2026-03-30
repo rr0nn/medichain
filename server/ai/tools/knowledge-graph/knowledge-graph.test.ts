@@ -44,6 +44,7 @@ describe("knowledge graph feature helpers", () => {
               featureKey: "feature-rlq-tenderness",
               featureName: "Right lower quadrant tenderness",
               featureNormalizedName: "right lower quadrant tenderness",
+              featureType: "site",
             };
 
             return values[key as keyof typeof values];
@@ -61,6 +62,7 @@ describe("knowledge graph feature helpers", () => {
     const [query, params, options] = mocks.mockExecuteQuery.mock.calls[0];
 
     expect(query).toContain("MATCH (cp:ClinicalPresentation)-[:HAS_FEATURE]->(feature:Feature)");
+    expect(query).toContain("coalesce(feature.feature_type, feature.type) AS featureType");
     expect(params).toEqual({
       clinicalPresentationKeys: ["cp-abdominal-pain"],
     });
@@ -75,6 +77,7 @@ describe("knowledge graph feature helpers", () => {
         featureKey: "feature-rlq-tenderness",
         featureName: "Right lower quadrant tenderness",
         featureNormalizedName: "right lower quadrant tenderness",
+        featureType: "site",
       },
     ]);
   });

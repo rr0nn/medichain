@@ -17,6 +17,7 @@ export type FeatureMatch = {
   clinicalPresentationKey: string;
   featureKey: string;
   featureName: string;
+  featureType?: string;
   score: number;
   matchedText: string[];
 };

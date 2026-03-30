@@ -50,12 +50,14 @@ describe("matchFeatures", () => {
         featureKey: "feature-rlq-tenderness",
         featureName: "Right lower quadrant tenderness",
         featureNormalizedName: "right lower quadrant tenderness",
+        featureType: "site",
       },
       {
         clinicalPresentationKey: "cp-abdominal-pain",
         featureKey: "feature-guarding",
         featureName: "Guarding",
         featureNormalizedName: "guarding",
+        featureType: "associated_factor",
       },
     ];
 
@@ -84,6 +86,8 @@ describe("matchFeatures", () => {
     expect(call.prompt).toContain(
       '"normalized_name":"right lower quadrant tenderness"'
     );
+    expect(call.prompt).toContain('"feature_type":"site"');
+    expect(call.prompt).toContain("history, past_history, pain");
 
     expect(result).toEqual(fakeResponse.output);
   });

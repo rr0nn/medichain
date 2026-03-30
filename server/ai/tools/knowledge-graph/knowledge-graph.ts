@@ -103,7 +103,8 @@ export async function getFeaturesForClinicalPresentations(
       cp.key AS clinicalPresentationKey,
       feature.key AS featureKey,
       feature.name AS featureName,
-      feature.normalized_name AS featureNormalizedName
+      feature.normalized_name AS featureNormalizedName,
+      coalesce(feature.feature_type, feature.type) AS featureType
     ORDER BY cp.name, feature.name
     `,
     { clinicalPresentationKeys },
@@ -118,6 +119,7 @@ export async function getFeaturesForClinicalPresentations(
     featureKey: record.get("featureKey"),
     featureName: record.get("featureName"),
     featureNormalizedName: record.get("featureNormalizedName"),
+    featureType: record.get("featureType"),
   }));
 }
 

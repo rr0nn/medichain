@@ -4,6 +4,21 @@ import { z } from "zod";
 import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
 import type { FeatureRecord } from "@/server/ai/tools/knowledge-graph/types";
 
+const SUPPORTED_FEATURE_TYPES = [
+  "history",
+  "past_history",
+  "pain",
+  "associated_symptom",
+  "precipitating_factor",
+  "relieving_factor",
+  "character",
+  "site",
+  "onset",
+  "age",
+  "trauma",
+  "associated_factor",
+] as const;
+
 const featureMatchSchema = z.object({
   matches: z.array(
     z.object({
@@ -30,6 +45,9 @@ Rules:
 - Return an empty array if the match is weak.
 - Prefer concrete symptoms, signs, and descriptors stated or strongly implied by the patient description.
 - Match only features relevant to the given clinical presentation.
+- Use feature type to interpret the role of each feature in the history.
+- Reason explicitly over these feature types when present: ${SUPPORTED_FEATURE_TYPES.join(", ")}.
+- Examples: pain/site/onset/character should capture pain semantics; precipitating_factor and relieving_factor should capture what makes symptoms worse or better; past_history and trauma should capture background context rather than current symptom wording.
 - Treat score as relative match strength for ranking, not as a probability.
 
 Clinical presentation:
@@ -44,6 +62,7 @@ ${JSON.stringify(
     key: feature.featureKey,
     name: feature.featureName,
     normalized_name: feature.featureNormalizedName,
+    feature_type: feature.featureType ?? null,
   }))
 )}
 

@@ -290,6 +290,10 @@ export async function runDifferentialDiagnosisWorkflow(
           presentationFeatures.find(
             (feature) => feature.featureKey === featureMatch.key
           )?.featureName ?? featureMatch.key,
+        featureType:
+          presentationFeatures.find(
+            (feature) => feature.featureKey === featureMatch.key
+          )?.featureType,
         score: featureMatch.score,
         matchedText: featureMatch.matchedText,
       });

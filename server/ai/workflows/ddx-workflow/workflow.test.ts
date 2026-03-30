@@ -137,6 +137,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
         featureKey: "feature-rlq-tenderness",
         featureName: "Right lower quadrant tenderness",
         featureNormalizedName: "right lower quadrant tenderness",
+        featureType: "site",
       },
     ]);
 
@@ -170,6 +171,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
         clinicalPresentationKey: "cp-abdominal-pain",
         featureKey: "feature-rlq-tenderness",
         featureName: "Right lower quadrant tenderness",
+        featureType: "site",
         score: 0.9,
         matchedText: ["right lower quadrant tenderness"],
       },
@@ -227,6 +229,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
         featureKey: "feature-rigors",
         featureName: "Rigors",
         featureNormalizedName: "rigors",
+        featureType: "associated_symptom",
       },
     ]);
 
@@ -325,6 +328,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
         clinicalPresentationKey: "cp-fever",
         featureKey: "feature-rigors",
         featureName: "Rigors",
+        featureType: "associated_symptom",
         score: 0.9,
         matchedText: ["rigors"],
       },
@@ -433,6 +437,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
         featureKey: "feature-rigors",
         featureName: "Rigors",
         featureNormalizedName: "rigors",
+        featureType: "associated_symptom",
       },
     ]);
 

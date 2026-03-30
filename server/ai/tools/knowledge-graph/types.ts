@@ -16,6 +16,7 @@ export type FeatureRecord = {
   featureKey: string;
   featureName: string;
   featureNormalizedName: string;
+  featureType?: string;
 };
 
 export type DiagnosisRecord = {
