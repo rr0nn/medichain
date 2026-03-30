@@ -19,12 +19,12 @@ import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import { ThemeSelector } from "@/components/theme-selector";
 import type { WorkflowStepState } from "@/components/ddx-workflow-canvas";
-import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/workflow";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
   DifferentialDiagnosis,
   FeatureMatch,
+  WorkflowStepEvent,
 } from "@/server/ai/workflows/ddx-workflow/types";
 
 const initialSteps: WorkflowStepState = {

@@ -15,20 +15,8 @@ import type {
   DifferentialDiagnosis,
   DifferentialDiagnosisWorkflowResult,
   FeatureMatch,
+  WorkflowStepEvent,
 } from "./types";
-
-export type WorkflowStepName =
-  | "match_presentations"
-  | "match_categories"
-  | "match_features"
-  | "fetch_diagnoses"
-  | "group_diagnoses";
-
-export type WorkflowStepEvent = {
-  type: "step";
-  step: WorkflowStepName;
-  status: "running" | "complete";
-};
 
 type OnStep = (event: WorkflowStepEvent) => void;
 
@@ -68,7 +56,7 @@ function groupDiagnoses(
   diagnoses: DiagnosisRecord[],
   cpMatches: ClinicalPresentationMatch[],
   categoryMatches: CategoryMatch[],
-  featureMatches: FeatureMatch[]
+  featureMatches: FeatureMatch[],
 ): DifferentialDiagnosis[] {
   type EvidenceType = "category" | "feature";
 
@@ -87,7 +75,7 @@ function groupDiagnoses(
   // Index upstream matches once so diagnosis aggregation does not repeatedly scan
   // the same arrays. This keeps lookup predictable and efficient as the graph grows.
   const cpMatchMap = new Map(
-    cpMatches.map((match) => [match.key, match] as const)
+    cpMatches.map((match) => [match.key, match] as const),
   );
 
   const categoryMatchMap = new Map(
@@ -96,8 +84,8 @@ function groupDiagnoses(
         [
           `${match.clinicalPresentationKey}::${match.categoryKey}`,
           match,
-        ] as const
-    )
+        ] as const,
+    ),
   );
 
   const featureMatchMap = new Map(
@@ -106,8 +94,8 @@ function groupDiagnoses(
         [
           `${match.clinicalPresentationKey}::${match.featureKey}`,
           match,
-        ] as const
-    )
+        ] as const,
+    ),
   );
 
   // Merge raw diagnosis rows from the knowledge graph into unique diagnosis entries.
@@ -119,16 +107,16 @@ function groupDiagnoses(
     // Look up the presentation match and the corresponding category/feature match
     // so this diagnosis path can inherit the confidence assigned upstream.
     const clinicalPresentationMatch = cpMatchMap.get(
-      row.clinicalPresentationKey
+      row.clinicalPresentationKey,
     );
 
     const evidenceMatch =
       row.evidenceType === "category"
         ? categoryMatchMap.get(
-            `${row.clinicalPresentationKey}::${row.categoryKey ?? ""}`
+            `${row.clinicalPresentationKey}::${row.categoryKey ?? ""}`,
           )
         : featureMatchMap.get(
-            `${row.clinicalPresentationKey}::${row.featureKey ?? ""}`
+            `${row.clinicalPresentationKey}::${row.featureKey ?? ""}`,
           );
 
     // Skip orphaned graph rows that no longer have a matched presentation/evidence
@@ -207,7 +195,7 @@ function groupDiagnoses(
         evidenceRef.evidenceType === row.evidenceType &&
         evidenceRef.clinicalPresentationKey === row.clinicalPresentationKey &&
         evidenceRef.categoryKey === row.categoryKey &&
-        evidenceRef.featureKey === row.featureKey
+        evidenceRef.featureKey === row.featureKey,
     );
 
     if (!alreadyHasEvidence) {
@@ -249,7 +237,8 @@ function groupDiagnoses(
         .reduce((sum, path) => sum + path.score * 0.12, 0);
 
       const categorySupportBonus =
-        bestFeaturePathScore !== undefined && bestCategoryPathScore !== undefined
+        bestFeaturePathScore !== undefined &&
+        bestCategoryPathScore !== undefined
           ? bestCategoryPathScore * 0.12
           : 0;
 
@@ -258,7 +247,7 @@ function groupDiagnoses(
         .reduce((sum, path) => sum + path.score * 0.05, 0);
 
       const crossPresentationCount = new Set(
-        supportPaths.map((path) => path.clinicalPresentationKey)
+        supportPaths.map((path) => path.clinicalPresentationKey),
       ).size;
 
       const crossPresentationBonus =
@@ -280,7 +269,7 @@ function groupDiagnoses(
             additionalFeatureBonus +
             categorySupportBonus +
             additionalCategoryBonus +
-            crossPresentationBonus
+            crossPresentationBonus,
         ),
         evidence: diagnosis.evidence,
       };
@@ -305,7 +294,7 @@ function groupDiagnoses(
  */
 export async function runDifferentialDiagnosisWorkflow(
   patientDescription: string,
-  onStep?: OnStep
+  onStep?: OnStep,
 ): Promise<DifferentialDiagnosisWorkflowResult> {
   // Start with every known clinical presentation that could anchor the patient's complaint.
   onStep?.({ type: "step", step: "match_presentations", status: "running" });
@@ -314,7 +303,7 @@ export async function runDifferentialDiagnosisWorkflow(
   // Match the patient's free-text description to the closest clinical presentations.
   const clinicalPresentationResult = await matchClinicalPresentations(
     patientDescription,
-    clinicalPresentations
+    clinicalPresentations,
   );
   onStep?.({ type: "step", step: "match_presentations", status: "complete" });
 
@@ -324,7 +313,7 @@ export async function runDifferentialDiagnosisWorkflow(
     .slice(0, 3)
     .map((match) => {
       const presentation = clinicalPresentations.find(
-        (candidate) => candidate.key === match.key
+        (candidate) => candidate.key === match.key,
       );
 
       return {
@@ -349,10 +338,10 @@ export async function runDifferentialDiagnosisWorkflow(
   onStep?.({ type: "step", step: "match_categories", status: "running" });
   const [categories, features] = await Promise.all([
     getCategoriesForClinicalPresentations(
-      matchedClinicalPresentations.map((match) => match.key)
+      matchedClinicalPresentations.map((match) => match.key),
     ),
     getFeaturesForClinicalPresentations(
-      matchedClinicalPresentations.map((match) => match.key)
+      matchedClinicalPresentations.map((match) => match.key),
     ),
   ]);
 
@@ -364,11 +353,11 @@ export async function runDifferentialDiagnosisWorkflow(
   for (const clinicalPresentationMatch of matchedClinicalPresentations) {
     const presentationCategories = categories.filter(
       (category) =>
-        category.clinicalPresentationKey === clinicalPresentationMatch.key
+        category.clinicalPresentationKey === clinicalPresentationMatch.key,
     );
 
     const presentation = clinicalPresentations.find(
-      (candidate) => candidate.key === clinicalPresentationMatch.key
+      (candidate) => candidate.key === clinicalPresentationMatch.key,
     );
 
     if (!presentation) {
@@ -380,11 +369,11 @@ export async function runDifferentialDiagnosisWorkflow(
       const categoryResult = await matchCategories(
         patientDescription,
         { key: presentation.key, name: presentation.name },
-        presentationCategories
+        presentationCategories,
       );
 
       for (const categoryMatch of categoryResult.matches.filter(
-        (match) => match.score >= 0.55
+        (match) => match.score >= 0.55,
       )) {
         // Keep only confident category matches and tie them back to their parent presentation.
         matchedCategories.push({
@@ -392,7 +381,7 @@ export async function runDifferentialDiagnosisWorkflow(
           categoryKey: categoryMatch.key,
           categoryName:
             presentationCategories.find(
-              (category) => category.categoryKey === categoryMatch.key
+              (category) => category.categoryKey === categoryMatch.key,
             )?.categoryName ?? categoryMatch.key,
           score: categoryMatch.score,
           matchedText: categoryMatch.matchedText,
@@ -408,7 +397,7 @@ export async function runDifferentialDiagnosisWorkflow(
   for (const clinicalPresentationMatch of matchedClinicalPresentations) {
     const presentationFeatures = features.filter(
       (feature) =>
-        feature.clinicalPresentationKey === clinicalPresentationMatch.key
+        feature.clinicalPresentationKey === clinicalPresentationMatch.key,
     );
 
     // If this presentation has no feature nodes, it can still contribute via categories.
@@ -417,7 +406,7 @@ export async function runDifferentialDiagnosisWorkflow(
     }
 
     const presentation = clinicalPresentations.find(
-      (candidate) => candidate.key === clinicalPresentationMatch.key
+      (candidate) => candidate.key === clinicalPresentationMatch.key,
     );
 
     if (!presentation) {
@@ -429,11 +418,11 @@ export async function runDifferentialDiagnosisWorkflow(
     const featureResult = await matchFeatures(
       patientDescription,
       { key: presentation.key, name: presentation.name },
-      presentationFeatures
+      presentationFeatures,
     );
 
     for (const featureMatch of featureResult.matches.filter(
-      (match) => match.score >= 0.55
+      (match) => match.score >= 0.55,
     )) {
       // Keep only confident feature matches and tie them back to their parent presentation.
       matchedFeatures.push({
@@ -441,12 +430,11 @@ export async function runDifferentialDiagnosisWorkflow(
         featureKey: featureMatch.key,
         featureName:
           presentationFeatures.find(
-            (feature) => feature.featureKey === featureMatch.key
+            (feature) => feature.featureKey === featureMatch.key,
           )?.featureName ?? featureMatch.key,
-        featureType:
-          presentationFeatures.find(
-            (feature) => feature.featureKey === featureMatch.key
-          )?.featureType,
+        featureType: presentationFeatures.find(
+          (feature) => feature.featureKey === featureMatch.key,
+        )?.featureType,
         score: featureMatch.score,
         matchedText: featureMatch.matchedText,
       });
@@ -473,13 +461,13 @@ export async function runDifferentialDiagnosisWorkflow(
         matchedCategories.map((match) => ({
           clinicalPresentationKey: match.clinicalPresentationKey,
           categoryKey: match.categoryKey,
-        }))
+        })),
       ),
       getDiagnosesForFeaturePairs(
         matchedFeatures.map((match) => ({
           clinicalPresentationKey: match.clinicalPresentationKey,
           featureKey: match.featureKey,
-        }))
+        })),
       ),
     ])
   ).flat();
@@ -491,7 +479,7 @@ export async function runDifferentialDiagnosisWorkflow(
     diagnosisRecords,
     matchedClinicalPresentations,
     matchedCategories,
-    matchedFeatures
+    matchedFeatures,
   );
   onStep?.({ type: "step", step: "group_diagnoses", status: "complete" });
 

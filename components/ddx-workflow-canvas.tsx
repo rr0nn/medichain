@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useMemo, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
-import type { WorkflowStepName } from "@/server/ai/workflows/ddx-workflow/workflow";
+import type { WorkflowStepName } from "@/server/ai/workflows/ddx-workflow/types";
 
 export type StepStatus = "idle" | "running" | "complete" | "error";
 export type WorkflowStepState = Record<WorkflowStepName, StepStatus>;

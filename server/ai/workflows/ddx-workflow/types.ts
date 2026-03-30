@@ -5,6 +5,19 @@ export type ClinicalPresentationMatch = {
   matchedText: string[];
 };
 
+export type WorkflowStepName =
+  | "match_presentations"
+  | "match_categories"
+  | "match_features"
+  | "fetch_diagnoses"
+  | "group_diagnoses";
+
+export type WorkflowStepEvent = {
+  type: "step";
+  step: WorkflowStepName;
+  status: "running" | "complete";
+};
+
 export type CategoryMatch = {
   clinicalPresentationKey: string;
   categoryKey: string;
