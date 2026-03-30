@@ -406,4 +406,77 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       "cp3",
     ]);
   });
+
+  it("emits workflow step events for the expanded category and feature flow", async () => {
+    const onStep = vi.fn();
+
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.9, matchedText: ["fever"] }],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+    ]);
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        featureNormalizedName: "rigors",
+      },
+    ]);
+
+    mocks.mockMatchCategories.mockResolvedValue({
+      matches: [{ key: "cat-infectious", score: 0.8, matchedText: ["fever"] }],
+    });
+
+    mocks.mockMatchFeatures.mockResolvedValue({
+      matches: [{ key: "feature-rigors", score: 0.85, matchedText: ["rigors"] }],
+    });
+
+    mocks.mockGetDiagnosesForPairs.mockResolvedValue([
+      {
+        evidenceType: "category",
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+      },
+    ]);
+
+    mocks.mockGetDiagnosesForFeaturePairs.mockResolvedValue([
+      {
+        evidenceType: "feature",
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+      },
+    ]);
+
+    await runDifferentialDiagnosisWorkflow("fever with rigors", onStep);
+
+    expect(onStep.mock.calls.map(([event]) => event)).toEqual([
+      { type: "step", step: "match_presentations", status: "running" },
+      { type: "step", step: "match_presentations", status: "complete" },
+      { type: "step", step: "match_categories", status: "running" },
+      { type: "step", step: "match_categories", status: "complete" },
+      { type: "step", step: "match_features", status: "running" },
+      { type: "step", step: "match_features", status: "complete" },
+      { type: "step", step: "fetch_diagnoses", status: "running" },
+      { type: "step", step: "fetch_diagnoses", status: "complete" },
+      { type: "step", step: "group_diagnoses", status: "running" },
+      { type: "step", step: "group_diagnoses", status: "complete" },
+    ]);
+  });
 });
