@@ -7,6 +7,7 @@ import type {
   CategoryRecord,
   ClinicalPresentationRecord,
   DiagnosisRecord,
+  FeatureRecord,
 } from "./types";
 
 
@@ -81,6 +82,48 @@ export async function getCategoriesForClinicalPresentations(
 }
 
 /**
+ * Returns feature nodes attached to the supplied clinical presentation keys.
+ * Short-circuits to an empty array when no presentation keys are provided.
+ *
+ * @param {string[]} clinicalPresentationKeys Clinical presentation keys to expand into features.
+ * @returns {Promise<FeatureRecord[]>} Feature rows linked to the supplied clinical presentation keys.
+ */
+export async function getFeaturesForClinicalPresentations(
+  clinicalPresentationKeys: string[]
+): Promise<FeatureRecord[]> {
+  if (clinicalPresentationKeys.length === 0) {
+    return [];
+  }
+
+  const { records } = await neo4jDriver.executeQuery(
+    `
+    MATCH (cp:ClinicalPresentation)-[:HAS_FEATURE]->(feature:Feature)
+    WHERE cp.key IN $clinicalPresentationKeys
+    RETURN
+      cp.key AS clinicalPresentationKey,
+      feature.key AS featureKey,
+      feature.name AS featureName,
+      feature.normalized_name AS featureNormalizedName,
+      coalesce(feature.feature_type, feature.type) AS featureType
+    ORDER BY cp.name, feature.name
+    `,
+    { clinicalPresentationKeys },
+    {
+      database: neo4jDatabase,
+      routing: neo4j.routing.READ,
+    }
+  );
+
+  return records.map((record) => ({
+    clinicalPresentationKey: record.get("clinicalPresentationKey"),
+    featureKey: record.get("featureKey"),
+    featureName: record.get("featureName"),
+    featureNormalizedName: record.get("featureNormalizedName"),
+    featureType: record.get("featureType"),
+  }));
+}
+
+/**
  * Returns diagnosis rows for each provided clinical-presentation/category pair.
  * Short-circuits to an empty array when no pairs are provided.
  *
@@ -115,8 +158,52 @@ export async function getDiagnosesForPairs(
   );
 
   return records.map((record) => ({
+    evidenceType: "category" as const,
     clinicalPresentationKey: record.get("clinicalPresentationKey"),
     categoryKey: record.get("categoryKey"),
+    diagnosisKey: record.get("diagnosisKey"),
+    diagnosisName: record.get("diagnosisName"),
+  }));
+}
+
+/**
+ * Returns diagnosis rows for each provided clinical-presentation/feature pair.
+ * Short-circuits to an empty array when no pairs are provided.
+ *
+ * @param {Array<{ clinicalPresentationKey: string; featureKey: string }>} pairs Clinical presentation and feature key pairs to expand into diagnoses.
+ * @returns {Promise<DiagnosisRecord[]>} Diagnosis rows linked to the supplied presentation-feature pairs.
+ */
+export async function getDiagnosesForFeaturePairs(
+  pairs: Array<{ clinicalPresentationKey: string; featureKey: string }>
+): Promise<DiagnosisRecord[]> {
+  if (pairs.length === 0) {
+    return [];
+  }
+
+  const { records } = await neo4jDriver.executeQuery(
+    `
+    UNWIND $pairs AS pair
+    MATCH (cp:ClinicalPresentation {key: pair.clinicalPresentationKey})
+          -[:HAS_FEATURE]->(feature:Feature {key: pair.featureKey})
+          -[:SUGGESTS]->(dx:Diagnosis)
+    RETURN
+      cp.key AS clinicalPresentationKey,
+      feature.key AS featureKey,
+      dx.key AS diagnosisKey,
+      dx.name AS diagnosisName
+    ORDER BY cp.key, feature.key, dx.name
+    `,
+    { pairs },
+    {
+      database: neo4jDatabase,
+      routing: neo4j.routing.READ,
+    }
+  );
+
+  return records.map((record) => ({
+    evidenceType: "feature" as const,
+    clinicalPresentationKey: record.get("clinicalPresentationKey"),
+    featureKey: record.get("featureKey"),
     diagnosisKey: record.get("diagnosisKey"),
     diagnosisName: record.get("diagnosisName"),
   }));

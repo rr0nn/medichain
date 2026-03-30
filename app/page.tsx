@@ -19,16 +19,18 @@ import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import { ThemeSelector } from "@/components/theme-selector";
 import type { WorkflowStepState } from "@/components/ddx-workflow-canvas";
-import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/workflow";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
   DifferentialDiagnosis,
+  FeatureMatch,
+  WorkflowStepEvent,
 } from "@/server/ai/workflows/ddx-workflow/types";
 
 const initialSteps: WorkflowStepState = {
   match_presentations: "idle",
   match_categories: "idle",
+  match_features: "idle",
   fetch_diagnoses: "idle",
   group_diagnoses: "idle",
 };
@@ -69,6 +71,7 @@ export default function Chat() {
     differentials: DifferentialDiagnosis[];
     matchedClinicalPresentations: ClinicalPresentationMatch[];
     matchedCategories: CategoryMatch[];
+    matchedFeatures: FeatureMatch[];
   } = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
@@ -84,6 +87,7 @@ export default function Chat() {
                 differentials?: DifferentialDiagnosis[];
                 matchedClinicalPresentations?: ClinicalPresentationMatch[];
                 matchedCategories?: CategoryMatch[];
+                matchedFeatures?: FeatureMatch[];
               }
             | undefined;
           return {
@@ -91,6 +95,7 @@ export default function Chat() {
             matchedClinicalPresentations:
               output?.matchedClinicalPresentations ?? [],
             matchedCategories: output?.matchedCategories ?? [],
+            matchedFeatures: output?.matchedFeatures ?? [],
           };
         }
       }
@@ -99,6 +104,7 @@ export default function Chat() {
       differentials: [],
       matchedClinicalPresentations: [],
       matchedCategories: [],
+      matchedFeatures: [],
     };
   })();
 
@@ -122,7 +128,7 @@ export default function Chat() {
           <ConversationContent>
             {messages.length === 0 && !isLoading ? (
               <ConversationEmptyState
-                title="Describe patient issues"
+                title="Describe a patient presentation"
               />
             ) : (
               messages.map((message) => (
@@ -149,7 +155,7 @@ export default function Chat() {
                             key={i}
                             className="text-xs text-muted-foreground italic"
                           >
-                            Look on the right side running ddx . . .
+                            Running the differential diagnosis workflow. Review structured matches on the right.
                           </p>
                         );
                       }
@@ -210,6 +216,7 @@ export default function Chat() {
           differentials={ddxResult.differentials}
           matchedClinicalPresentations={ddxResult.matchedClinicalPresentations}
           matchedCategories={ddxResult.matchedCategories}
+          matchedFeatures={ddxResult.matchedFeatures}
         />
       </div>
     </div>

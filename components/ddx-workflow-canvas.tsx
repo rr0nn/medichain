@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useMemo, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
-import type { WorkflowStepName } from "@/server/ai/workflows/ddx-workflow/workflow";
+import type { WorkflowStepName } from "@/server/ai/workflows/ddx-workflow/types";
 
 export type StepStatus = "idle" | "running" | "complete" | "error";
 export type WorkflowStepState = Record<WorkflowStepName, StepStatus>;
@@ -88,7 +88,7 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
       {
         id: "cp",
         type: "workflow",
-        position: { x: 0, y: 0 },
+        position: { x: 0, y: 44 },
         data: {
           label: "CP Matching",
           description: "Presentation agent",
@@ -106,19 +106,29 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
         },
       },
       {
+        id: "feature",
+        type: "workflow",
+        position: { x: 210, y: 88 },
+        data: {
+          label: "Feature Matching",
+          description: "Feature agent",
+          status: steps.match_features,
+        },
+      },
+      {
         id: "diag",
         type: "workflow",
-        position: { x: 420, y: 0 },
+        position: { x: 450, y: 44 },
         data: {
           label: "Diagnosis Lookup",
-          description: "Knowledge graph",
+          description: "Graph merge",
           status: steps.fetch_diagnoses,
         },
       },
       {
         id: "results",
         type: "workflow",
-        position: { x: 630, y: 0 },
+        position: { x: 660, y: 44 },
         data: {
           label: "Results",
           description: "Ranked differentials",
@@ -140,11 +150,27 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
           steps.match_categories === "running",
       },
       {
+        id: "cp-feature",
+        source: "cp",
+        target: "feature",
+        animated:
+          steps.match_presentations === "running" ||
+          steps.match_features === "running",
+      },
+      {
         id: "cat-diag",
         source: "cat",
         target: "diag",
         animated:
           steps.match_categories === "running" ||
+          steps.fetch_diagnoses === "running",
+      },
+      {
+        id: "feature-diag",
+        source: "feature",
+        target: "diag",
+        animated:
+          steps.match_features === "running" ||
           steps.fetch_diagnoses === "running",
       },
       {
@@ -159,10 +185,10 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
     [steps]
   );
 
-  if (!mounted) return <div className="h-44 w-full border-b border-border" />;
+  if (!mounted) return <div className="h-52 w-full border-b border-border" />;
 
   return (
-    <div className="h-44 w-full border-b border-border">
+    <div className="h-52 w-full border-b border-border">
       <ReactFlow
         nodes={nodes}
         edges={edges}

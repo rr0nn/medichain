@@ -5,6 +5,19 @@ export type ClinicalPresentationMatch = {
   matchedText: string[];
 };
 
+export type WorkflowStepName =
+  | "match_presentations"
+  | "match_categories"
+  | "match_features"
+  | "fetch_diagnoses"
+  | "group_diagnoses";
+
+export type WorkflowStepEvent = {
+  type: "step";
+  step: WorkflowStepName;
+  status: "running" | "complete";
+};
+
 export type CategoryMatch = {
   clinicalPresentationKey: string;
   categoryKey: string;
@@ -13,9 +26,20 @@ export type CategoryMatch = {
   matchedText: string[];
 };
 
-export type DifferentialDiagnosisEvidenceRef = {
+export type FeatureMatch = {
   clinicalPresentationKey: string;
-  categoryKey: string;
+  featureKey: string;
+  featureName: string;
+  featureType?: string;
+  score: number;
+  matchedText: string[];
+};
+
+export type DifferentialDiagnosisEvidenceRef = {
+  evidenceType: "category" | "feature";
+  clinicalPresentationKey: string;
+  categoryKey?: string;
+  featureKey?: string;
 };
 
 export type DifferentialDiagnosis = {
@@ -28,5 +52,6 @@ export type DifferentialDiagnosis = {
 export type DifferentialDiagnosisWorkflowResult = {
   matchedClinicalPresentations: ClinicalPresentationMatch[];
   matchedCategories: CategoryMatch[];
+  matchedFeatures: FeatureMatch[];
   differentials: DifferentialDiagnosis[];
 };
