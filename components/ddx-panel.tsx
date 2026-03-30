@@ -157,9 +157,14 @@ export function DdxPanel({
                         {d.evidence.length !== 1 ? "s" : ""}
                       </p>
                     </div>
-                    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                      {(d.score * 100).toFixed(0)}%
-                    </span>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Evidence support score
+                      </p>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {d.score.toFixed(2)}
+                      </span>
+                    </div>
                   </summary>
 
                   <div className="space-y-2 border-t border-border px-3 py-3">

@@ -57,6 +57,7 @@ describe("DdxPanel", () => {
     expect(
       screen.getByText("Feature: Right lower quadrant tenderness (site)")
     ).toBeInTheDocument();
+    expect(screen.getByText("Evidence support score")).toBeInTheDocument();
 
     const summary = screen.getByText("Appendicitis");
     summary.closest("details")?.setAttribute("open", "");
