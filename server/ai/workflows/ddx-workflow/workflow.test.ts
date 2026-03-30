@@ -195,7 +195,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     expect(result.differentials[0].score).toBeCloseTo(0.85);
   });
 
-  it("groups and boosts diagnoses supported by both category and feature evidence", async () => {
+  it("prioritizes feature evidence, uses category support secondarily, and keeps path count as a bonus", async () => {
     mocks.mockGetClinicalPresentations.mockResolvedValue([
       { key: "cp-fever", name: "Fever" },
       { key: "cp-cough", name: "Cough" },
@@ -366,8 +366,83 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       },
     ]);
 
-    expect(result.differentials[0].score).toBeCloseTo(0.95);
+    expect(result.differentials[0].score).toBeCloseTo(0.98, 2);
     expect(result.differentials[1].score).toBeCloseTo(0.65);
+  });
+
+  it("ranks diagnoses with support from multiple distinct presentations above single-path diagnoses", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+      { key: "cp-cough", name: "Cough" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [
+        { key: "cp-fever", score: 0.9, matchedText: ["fever"] },
+        { key: "cp-cough", score: 0.8, matchedText: ["cough"] },
+      ],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+      {
+        clinicalPresentationKey: "cp-cough",
+        categoryKey: "cat-respiratory",
+        categoryName: "Respiratory",
+        categoryNormalizedName: "respiratory",
+      },
+    ]);
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([]);
+
+    mocks.mockMatchCategories
+      .mockResolvedValueOnce({
+        matches: [{ key: "cat-infectious", score: 0.8, matchedText: ["fever"] }],
+      })
+      .mockResolvedValueOnce({
+        matches: [{ key: "cat-respiratory", score: 0.7, matchedText: ["cough"] }],
+      });
+
+    mocks.mockGetDiagnosesForPairs.mockResolvedValue([
+      {
+        evidenceType: "category",
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+      },
+      {
+        evidenceType: "category",
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        clinicalPresentationKey: "cp-cough",
+        categoryKey: "cat-respiratory",
+      },
+      {
+        evidenceType: "category",
+        diagnosisKey: "dx-bronchitis",
+        diagnosisName: "Bronchitis",
+        clinicalPresentationKey: "cp-cough",
+        categoryKey: "cat-respiratory",
+      },
+    ]);
+
+    mocks.mockGetDiagnosesForFeaturePairs.mockResolvedValue([]);
+
+    const result = await runDifferentialDiagnosisWorkflow("fever and cough");
+
+    expect(result.differentials[0].diagnosisKey).toBe("dx-flu");
+    expect(result.differentials[1].diagnosisKey).toBe("dx-bronchitis");
+    expect(result.differentials[0].score).toBeGreaterThan(
+      result.differentials[1].score
+    );
+    expect(result.differentials[0].score).toBeCloseTo(0.87, 2);
+    expect(result.differentials[1].score).toBeCloseTo(0.75);
   });
 
   it("keeps only the top 3 clinical presentations with score >= 0.6", async () => {
