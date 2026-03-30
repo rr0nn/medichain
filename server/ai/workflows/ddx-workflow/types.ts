@@ -1,3 +1,5 @@
+import type { CriticAssessment } from "@/server/ai/agents/critic-agent/agent";
+
 export type ClinicalPresentationMatch = {
   key: string;
   name: string;
@@ -10,7 +12,9 @@ export type WorkflowStepName =
   | "match_categories"
   | "match_features"
   | "fetch_diagnoses"
-  | "group_diagnoses";
+  | "group_diagnoses"
+  | "critic_review"
+  | "build_follow_up_questions";
 
 export type WorkflowStepEvent = {
   type: "step";
@@ -49,9 +53,22 @@ export type DifferentialDiagnosis = {
   evidence: DifferentialDiagnosisEvidenceRef[];
 };
 
+export type FollowUpQuestion = {
+  id: string;
+  question: string;
+  reason: string;
+};
+
+export type ConsultationStatus = 
+  | "ready_for_review"
+  | "needs_more_information";
+
 export type DifferentialDiagnosisWorkflowResult = {
   matchedClinicalPresentations: ClinicalPresentationMatch[];
   matchedCategories: CategoryMatch[];
   matchedFeatures: FeatureMatch[];
   differentials: DifferentialDiagnosis[];
+  status: ConsultationStatus;
+  criticAssessment: CriticAssessment;
+  followUpQuestions: FollowUpQuestion[];
 };
