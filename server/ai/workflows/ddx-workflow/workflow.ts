@@ -1,7 +1,12 @@
+import { reviewDifferentialConfidence } from "@/server/ai/agents/critic-agent/agent";
+import { runInterviewerAgent } from "@/server/ai/agents/interviewer-agent/agent";
 import { matchCategories } from "@/server/ai/agents/category-matcher-agent/agent";
 import { matchClinicalPresentations } from "@/server/ai/agents/clinical-presentation-matcher-agent/agent";
 import { matchFeatures } from "@/server/ai/agents/feature-matcher-agent/agent";
-import type { DiagnosisRecord } from "@/server/ai/tools/knowledge-graph/types";
+import type { 
+  DiagnosisRecord,
+  FeatureRecord, 
+} from "@/server/ai/tools/knowledge-graph/types";
 import {
   getCategoriesForClinicalPresentations,
   getClinicalPresentations,
@@ -286,6 +291,64 @@ function groupDiagnoses(
 }
 
 /**
+ * Builds a low-confidence workflow result by running the critic and, when needed,
+ * generating follow-up questions from the interviewer agent.
+ * 
+ * @param patientDescription Free-text patient summary.
+ * @param matchedClinicalPresentations Current matched clinical presentations.
+ * @param matchedCategories Current matched categories.
+ * @param matchedFeatures Current matched features.
+ * @param candidateFeatures All candidate graph features for the shortlisted presentations.
+ * @param differentials Current ranked differential diagnoses.
+ * @param onStep Optional callback for step streaming.
+ * @returns Workflow result that routes back to the interviewer.
+ */
+async function buildInterviewResult(
+  patientDescription: string,
+  matchedClinicalPresentations: ClinicalPresentationMatch[],
+  matchedCategories: CategoryMatch[],
+  matchedFeatures: FeatureMatch[],
+  candidateFeatures: FeatureRecord[],
+  differentials: DifferentialDiagnosis[],
+  onStep?: OnStep,
+): Promise<DifferentialDiagnosisWorkflowResult> {
+  onStep?.({ type: "step", step: "critic_review", status: "running" });
+  const criticAssessment = reviewDifferentialConfidence(differentials);
+  onStep?.({ type: "step", step: "critic_review", status: "complete" });
+
+  onStep?.({
+    type: "step",
+    step: "build_follow_up_questions",
+    status: "running",
+  });
+
+  const followUpQuestions = await runInterviewerAgent({
+    patientDescription,
+    matchedClinicalPresentations,
+    matchedCategories,
+    differentials,
+    candidateFeatures,
+    criticAssessment,
+  });
+
+  onStep?.({
+    type: "step",
+    step: "build_follow_up_questions",
+    status: "complete",
+  });
+
+  return {
+    matchedClinicalPresentations,
+    matchedCategories,
+    matchedFeatures,
+    differentials,
+    status: "needs_more_information",
+    criticAssessment,
+    followUpQuestions
+  };
+}
+
+/**
  * Runs the differential diagnosis workflow from free-text patient description
  * through: clinical presentation matching -> category/feature matching -> diagnosis ranking -> final output.
  *
@@ -326,12 +389,15 @@ export async function runDifferentialDiagnosisWorkflow(
 
   // If no matches at the clinical presentation level, stop before category lookup.
   if (matchedClinicalPresentations.length === 0) {
-    return {
-      matchedClinicalPresentations: [],
-      matchedCategories: [],
-      matchedFeatures: [],
-      differentials: [],
-    };
+    return buildInterviewResult(
+      patientDescription,
+      [],
+      [],
+      [],
+      [],
+      [],
+      onStep,
+    );
   }
 
   // Load the graph branches associated with the shortlisted clinical presentations.
@@ -445,12 +511,15 @@ export async function runDifferentialDiagnosisWorkflow(
   // If neither category nor feature matching produced a confident path,
   // there is no supported route to concrete diagnoses in the graph.
   if (matchedCategories.length === 0 && matchedFeatures.length === 0) {
-    return {
+    return buildInterviewResult(
+      patientDescription,
       matchedClinicalPresentations,
-      matchedCategories: [],
-      matchedFeatures: [],
-      differentials: [],
-    };
+      [],
+      [],
+      features,
+      [],
+      onStep,
+    );
   }
 
   // Resolve both matched category paths and matched feature paths into diagnosis rows.
@@ -483,11 +552,34 @@ export async function runDifferentialDiagnosisWorkflow(
   );
   onStep?.({ type: "step", step: "group_diagnoses", status: "complete" });
 
-  // Return both the intermediate matches and final differential list for downstream explanation.
+  // Review the final ranked differential to decide whether the workflow should
+  // stop here or ask the user for more history.
+  onStep?.({ type: "step", step: "critic_review", status: "running" });
+  const criticAssessment = reviewDifferentialConfidence(differentials);
+  onStep?.({ type: "step", step: "critic_review", status: "complete" });
+
+  if (!criticAssessment.isConfident) {
+
+    return buildInterviewResult(
+      patientDescription,
+      matchedClinicalPresentations,
+      matchedCategories,
+      matchedFeatures,
+      features,
+      differentials,
+      onStep,
+    );
+  }
+
+  // The critic is satisfied that the workflow has enough support to stop
+  // interviewing and present the differential for review.
   return {
     matchedClinicalPresentations,
     matchedCategories,
     matchedFeatures,
     differentials,
+    status: "ready_for_review",
+    criticAssessment,
+    followUpQuestions: [],
   };
 }
