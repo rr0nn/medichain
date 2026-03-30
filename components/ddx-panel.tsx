@@ -83,7 +83,7 @@ export function DdxPanel({
                     </p>
                   </div>
                   <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-                    {(d.score * 100).toFixed(0)}%
+                    Internal Semantic Matching: {(d.score * 100).toFixed(0)}%
                   </span>
                 </summary>
 

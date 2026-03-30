@@ -99,7 +99,19 @@ function groupDiagnoses(
     }
   }
 
-  return Array.from(diagnosisMap.values()).sort((a, b) => b.score - a.score);
+  return Array.from(diagnosisMap.values()).sort((a, b) => {
+    const aCount = new Set(a.evidence.map(e => e.clinicalPresentationKey)).size;
+    const bCount = new Set(b.evidence.map(e => e.clinicalPresentationKey)).size;
+
+    // Sort descending by number of clinicalPresentationKeys
+    const diff = bCount - aCount;
+    if (diff !== 0) return diff;
+
+    // If counts are equal
+    return b.score - a.score;
+  });
+
+  // return Array.from(diagnosisMap.values()).sort((a, b) => b.score - a.score);
 }
 
 /**
