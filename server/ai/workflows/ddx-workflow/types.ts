@@ -13,9 +13,19 @@ export type CategoryMatch = {
   matchedText: string[];
 };
 
-export type DifferentialDiagnosisEvidenceRef = {
+export type FeatureMatch = {
   clinicalPresentationKey: string;
-  categoryKey: string;
+  featureKey: string;
+  featureName: string;
+  score: number;
+  matchedText: string[];
+};
+
+export type DifferentialDiagnosisEvidenceRef = {
+  evidenceType: "category" | "feature";
+  clinicalPresentationKey: string;
+  categoryKey?: string;
+  featureKey?: string;
 };
 
 export type DifferentialDiagnosis = {
@@ -28,5 +38,6 @@ export type DifferentialDiagnosis = {
 export type DifferentialDiagnosisWorkflowResult = {
   matchedClinicalPresentations: ClinicalPresentationMatch[];
   matchedCategories: CategoryMatch[];
+  matchedFeatures: FeatureMatch[];
   differentials: DifferentialDiagnosis[];
 };

@@ -1,263 +1,409 @@
-// This test covers:
-//  - 0.6 presentation threshold
-//  - 0.55 category threshold
-//  - top-3 presentation slicing
-//  - early returns
-//  - final grouping and ranking of diagnoses
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-    mockMatchClinicalPresentations: vi.fn(),
-    mockMatchCategories: vi.fn(),
-    mockGetClinicalPresentations: vi.fn(),
-    mockGetCategoriesForClinicalPresentations: vi.fn(),
-    mockGetDiagnosesForPairs: vi.fn()
+  mockMatchClinicalPresentations: vi.fn(),
+  mockMatchCategories: vi.fn(),
+  mockMatchFeatures: vi.fn(),
+  mockGetClinicalPresentations: vi.fn(),
+  mockGetCategoriesForClinicalPresentations: vi.fn(),
+  mockGetFeaturesForClinicalPresentations: vi.fn(),
+  mockGetDiagnosesForPairs: vi.fn(),
+  mockGetDiagnosesForFeaturePairs: vi.fn(),
 }));
 
 vi.mock("@/server/ai/agents/clinical-presentation-matcher-agent/agent", () => ({
-    matchClinicalPresentations: mocks.mockMatchClinicalPresentations,
+  matchClinicalPresentations: mocks.mockMatchClinicalPresentations,
 }));
 
 vi.mock("@/server/ai/agents/category-matcher-agent/agent", () => ({
-    matchCategories: mocks.mockMatchCategories,
+  matchCategories: mocks.mockMatchCategories,
+}));
+
+vi.mock("@/server/ai/agents/feature-matcher-agent/agent", () => ({
+  matchFeatures: mocks.mockMatchFeatures,
 }));
 
 vi.mock("@/server/ai/tools/knowledge-graph/knowledge-graph", () => ({
-    getClinicalPresentations: mocks.mockGetClinicalPresentations,
-    getCategoriesForClinicalPresentations: mocks.mockGetCategoriesForClinicalPresentations,
-    getDiagnosesForPairs: mocks.mockGetDiagnosesForPairs,
+  getClinicalPresentations: mocks.mockGetClinicalPresentations,
+  getCategoriesForClinicalPresentations:
+    mocks.mockGetCategoriesForClinicalPresentations,
+  getFeaturesForClinicalPresentations:
+    mocks.mockGetFeaturesForClinicalPresentations,
+  getDiagnosesForPairs: mocks.mockGetDiagnosesForPairs,
+  getDiagnosesForFeaturePairs: mocks.mockGetDiagnosesForFeaturePairs,
 }));
 
-import { runDifferentialDiagnosisWorkflow  } from "./workflow";
+import { runDifferentialDiagnosisWorkflow } from "./workflow";
 
 describe("runDifferentialDiagnosisWorkflow", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns empty results when no clinical presentations meet threshold", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.59, matchedText: ["fever"] }],
     });
 
-    it("returns empty results when no clinical presentations meet threshold", async () => {
-        mocks.mockGetClinicalPresentations.mockResolvedValue([
-            { key: "cp-fever", name: "Fever" },
-        ]);
+    const result = await runDifferentialDiagnosisWorkflow("fever");
 
-        mocks.mockMatchClinicalPresentations.mockResolvedValue({
-            matches: [
-                { key: "cp-fever", score: 0.59, matchedText: ["fever"] },
-            ],
-        });
-
-        const result = await runDifferentialDiagnosisWorkflow("fever");
-
-        expect(result).toEqual({
-            matchedClinicalPresentations: [],
-            matchedCategories: [],
-            differentials: [],
-        });
-
-        expect(mocks.mockGetCategoriesForClinicalPresentations).not.toHaveBeenCalled();
-        expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      matchedClinicalPresentations: [],
+      matchedCategories: [],
+      matchedFeatures: [],
+      differentials: [],
     });
 
-    it("returns matched presentations but no differentials when no categories meet threshold", async () => {
-        mocks.mockGetClinicalPresentations.mockResolvedValue([
-            { key: "cp-fever", name: "Fever" },
-        ]);
+    expect(mocks.mockGetCategoriesForClinicalPresentations).not.toHaveBeenCalled();
+    expect(mocks.mockGetFeaturesForClinicalPresentations).not.toHaveBeenCalled();
+    expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
+    expect(mocks.mockGetDiagnosesForFeaturePairs).not.toHaveBeenCalled();
+  });
 
-        mocks.mockMatchClinicalPresentations.mockResolvedValue({
-            matches: [
-                { key: "cp-fever", score: 0.9, matchedText: ["fever"] },
-            ],
-        });
+  it("returns matched presentations but no differentials when neither categories nor features meet threshold", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
 
-        mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
-            {
-                clinicalPresentationKey: "cp-fever",
-                categoryKey: "cat-infectious",
-                categoryName: "Infectious",
-                categoryNormalizedName: "infectious",
-            },
-        ]);
-
-        mocks.mockMatchCategories.mockResolvedValue({
-            matches: [
-                { key: "cat-infectious", score: 0.54, matchedText: ["fever"] },
-            ],
-        });
-
-        const result = await runDifferentialDiagnosisWorkflow("fever");
-
-        expect(result).toEqual({
-            matchedClinicalPresentations: [
-                { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
-            ],
-            matchedCategories: [],
-            differentials: [],
-        });
-
-        expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.9, matchedText: ["fever"] }],
     });
 
-    it("returns grouped and ranked differentials for successful matches", async () => {
-        mocks.mockGetClinicalPresentations.mockResolvedValue([
-            { key: "cp-fever", name: "Fever" },
-            { key: "cp-cough", name: "Cough" },
-        ]);
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+    ]);
 
-        mocks.mockMatchClinicalPresentations.mockResolvedValue({
-            matches: [
-                { key: "cp-fever", score: 0.9, matchedText: ["fever"] },
-                { key: "cp-cough", score: 0.7, matchedText: ["cough"] },
-                { key: "cp-other", score: 0.4, matchedText: ["other"] },
-            ],
-        });
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        featureNormalizedName: "rigors",
+      },
+    ]);
 
-        mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
-            {
-                clinicalPresentationKey: "cp-fever",
-                categoryKey: "cat-infectious",
-                categoryName: "Infectious",
-                categoryNormalizedName: "infectious",
-            },
-            {
-                clinicalPresentationKey: "cp-cough",
-                categoryKey: "cat-inflammatory",
-                categoryName: "Inflammatory",
-                categoryNormalizedName: "inflammatory",
-            },
-        ]);
-
-        mocks.mockMatchCategories
-            .mockResolvedValueOnce({
-                matches: [
-                    { key: "cat-infectious", score: 0.8, matchedText: ["high fever"] },
-                ],
-            })
-            .mockResolvedValueOnce({
-                matches: [
-                    { key: "cat-inflammatory", score: 0.6, matchedText: ["dry cough"] },
-                ],
-            });
-        
-        mocks.mockGetDiagnosesForPairs.mockResolvedValue([
-            {
-                diagnosisKey: "dx-flu",
-                diagnosisName: "Influenza",
-                clinicalPresentationKey: "cp-fever",
-                categoryKey: "cat-infectious",
-            },
-            {
-                diagnosisKey: "dx-flu",
-                diagnosisName: "Influenza",
-                clinicalPresentationKey: "cp-fever",
-                categoryKey: "cat-infectious",
-            },
-            {
-                diagnosisKey: "dx-viral",
-                diagnosisName: "Viral syndrome",
-                clinicalPresentationKey: "cp-cough",
-                categoryKey: "cat-inflammatory",
-            },
-        ]);
-
-        const result = await runDifferentialDiagnosisWorkflow(
-            "fever and cough for two days"
-        );
-
-        expect(mocks.mockGetCategoriesForClinicalPresentations).toHaveBeenCalledWith([
-            "cp-fever",
-            "cp-cough",
-        ]);
-
-        expect(mocks.mockGetDiagnosesForPairs).toHaveBeenCalledWith([
-            {
-                clinicalPresentationKey: "cp-fever",
-                categoryKey: "cat-infectious",
-            },
-            {
-                clinicalPresentationKey: "cp-cough",
-                categoryKey: "cat-inflammatory",
-            },
-        ]);
-
-        expect(result.matchedCategories).toEqual([
-            {
-                clinicalPresentationKey: "cp-fever",
-                categoryKey: "cat-infectious",
-                categoryName: "Infectious",
-                score: 0.8,
-                matchedText: ["high fever"],
-            },
-            {
-                clinicalPresentationKey: "cp-cough",
-                categoryKey: "cat-inflammatory",
-                categoryName: "Inflammatory",
-                score: 0.6,
-                matchedText: ["dry cough"],
-            },
-        ]);
-
-        expect(result.differentials).toEqual([
-            {
-                diagnosisKey: "dx-flu",
-                diagnosisName: "Influenza",
-                score: expect.any(Number),
-                evidence: [
-                    {
-                        clinicalPresentationKey: "cp-fever",
-                        categoryKey: "cat-infectious",
-                    },
-                ],
-            },
-            {
-                diagnosisKey: "dx-viral",
-                diagnosisName: "Viral syndrome",
-                score: expect.any(Number),
-                evidence: [
-                    {
-                        clinicalPresentationKey: "cp-cough",
-                        categoryKey: "cat-inflammatory",
-                    },
-                ],
-            },
-        ]);
-
-        expect(result.differentials[0].score).toBeCloseTo(0.85);
-        expect(result.differentials[1].score).toBeCloseTo(0.65);
+    mocks.mockMatchCategories.mockResolvedValue({
+      matches: [{ key: "cat-infectious", score: 0.54, matchedText: ["fever"] }],
     });
 
-    it("keeps only the top 3 clinical presentations with score >= 0.6", async () => {
-        mocks.mockGetClinicalPresentations.mockResolvedValue([
-            { key: "cp1", name: "CP1" },
-            { key: "cp2", name: "CP2" },
-            { key: "cp3", name: "CP3" },
-            { key: "cp4", name: "CP4" },
-        ]);
-
-        mocks.mockMatchClinicalPresentations.mockResolvedValue({
-            matches: [
-                { key: "cp1", score: 0.95, matchedText: [] },
-                { key: "cp2", score: 0.85, matchedText: [] },
-                { key: "cp3", score: 0.75, matchedText: [] },
-                { key: "cp4", score: 0.65, matchedText: [] },
-            ],
-        });
-
-        mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([]);
-        mocks.mockMatchCategories.mockResolvedValue({ matches: [] });
-
-        const result = await runDifferentialDiagnosisWorkflow("test");
-
-        expect(result.matchedClinicalPresentations).toEqual([
-            { key: "cp1", name: "CP1", score: 0.95, matchedText: [] },
-            { key: "cp2", name: "CP2", score: 0.85, matchedText: [] },
-            { key: "cp3", name: "CP3", score: 0.75, matchedText: [] },
-        ]);
-
-        expect(mocks.mockGetCategoriesForClinicalPresentations).toHaveBeenCalledWith([
-            "cp1",
-            "cp2",
-            "cp3",
-        ]);
+    mocks.mockMatchFeatures.mockResolvedValue({
+      matches: [{ key: "feature-rigors", score: 0.45, matchedText: ["rigors"] }],
     });
+
+    const result = await runDifferentialDiagnosisWorkflow("fever");
+
+    expect(result).toEqual({
+      matchedClinicalPresentations: [
+        { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
+      ],
+      matchedCategories: [],
+      matchedFeatures: [],
+      differentials: [],
+    });
+
+    expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
+    expect(mocks.mockGetDiagnosesForFeaturePairs).not.toHaveBeenCalled();
+  });
+
+  it("returns differentials from feature-only evidence when category matching is empty", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-abdominal-pain", name: "Abdominal pain" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [
+        {
+          key: "cp-abdominal-pain",
+          score: 0.8,
+          matchedText: ["abdominal pain"],
+        },
+      ],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([]);
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-abdominal-pain",
+        featureKey: "feature-rlq-tenderness",
+        featureName: "Right lower quadrant tenderness",
+        featureNormalizedName: "right lower quadrant tenderness",
+      },
+    ]);
+
+    mocks.mockMatchFeatures.mockResolvedValue({
+      matches: [
+        {
+          key: "feature-rlq-tenderness",
+          score: 0.9,
+          matchedText: ["right lower quadrant tenderness"],
+        },
+      ],
+    });
+
+    mocks.mockGetDiagnosesForPairs.mockResolvedValue([]);
+    mocks.mockGetDiagnosesForFeaturePairs.mockResolvedValue([
+      {
+        evidenceType: "feature",
+        clinicalPresentationKey: "cp-abdominal-pain",
+        featureKey: "feature-rlq-tenderness",
+        diagnosisKey: "dx-appendicitis",
+        diagnosisName: "Appendicitis",
+      },
+    ]);
+
+    const result = await runDifferentialDiagnosisWorkflow(
+      "abdominal pain with right lower quadrant tenderness"
+    );
+
+    expect(result.matchedFeatures).toEqual([
+      {
+        clinicalPresentationKey: "cp-abdominal-pain",
+        featureKey: "feature-rlq-tenderness",
+        featureName: "Right lower quadrant tenderness",
+        score: 0.9,
+        matchedText: ["right lower quadrant tenderness"],
+      },
+    ]);
+
+    expect(result.differentials).toEqual([
+      {
+        diagnosisKey: "dx-appendicitis",
+        diagnosisName: "Appendicitis",
+        score: expect.any(Number),
+        evidence: [
+          {
+            evidenceType: "feature",
+            clinicalPresentationKey: "cp-abdominal-pain",
+            featureKey: "feature-rlq-tenderness",
+          },
+        ],
+      },
+    ]);
+
+    expect(result.differentials[0].score).toBeCloseTo(0.85);
+  });
+
+  it("groups and boosts diagnoses supported by both category and feature evidence", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+      { key: "cp-cough", name: "Cough" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [
+        { key: "cp-fever", score: 0.9, matchedText: ["fever"] },
+        { key: "cp-cough", score: 0.7, matchedText: ["cough"] },
+      ],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+      {
+        clinicalPresentationKey: "cp-cough",
+        categoryKey: "cat-inflammatory",
+        categoryName: "Inflammatory",
+        categoryNormalizedName: "inflammatory",
+      },
+    ]);
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        featureNormalizedName: "rigors",
+      },
+    ]);
+
+    mocks.mockMatchCategories
+      .mockResolvedValueOnce({
+        matches: [{ key: "cat-infectious", score: 0.8, matchedText: ["high fever"] }],
+      })
+      .mockResolvedValueOnce({
+        matches: [
+          { key: "cat-inflammatory", score: 0.6, matchedText: ["dry cough"] },
+        ],
+      });
+
+    mocks.mockMatchFeatures.mockResolvedValue({
+      matches: [{ key: "feature-rigors", score: 0.9, matchedText: ["rigors"] }],
+    });
+
+    mocks.mockGetDiagnosesForPairs.mockResolvedValue([
+      {
+        evidenceType: "category",
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+      },
+      {
+        evidenceType: "category",
+        diagnosisKey: "dx-viral",
+        diagnosisName: "Viral syndrome",
+        clinicalPresentationKey: "cp-cough",
+        categoryKey: "cat-inflammatory",
+      },
+    ]);
+
+    mocks.mockGetDiagnosesForFeaturePairs.mockResolvedValue([
+      {
+        evidenceType: "feature",
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+      },
+    ]);
+
+    const result = await runDifferentialDiagnosisWorkflow(
+      "fever, rigors, and dry cough for two days"
+    );
+
+    expect(mocks.mockGetCategoriesForClinicalPresentations).toHaveBeenCalledWith([
+      "cp-fever",
+      "cp-cough",
+    ]);
+
+    expect(mocks.mockGetFeaturesForClinicalPresentations).toHaveBeenCalledWith([
+      "cp-fever",
+      "cp-cough",
+    ]);
+
+    expect(mocks.mockGetDiagnosesForPairs).toHaveBeenCalledWith([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+      },
+      {
+        clinicalPresentationKey: "cp-cough",
+        categoryKey: "cat-inflammatory",
+      },
+    ]);
+
+    expect(mocks.mockGetDiagnosesForFeaturePairs).toHaveBeenCalledWith([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+      },
+    ]);
+
+    expect(result.matchedCategories).toEqual([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        score: 0.8,
+        matchedText: ["high fever"],
+      },
+      {
+        clinicalPresentationKey: "cp-cough",
+        categoryKey: "cat-inflammatory",
+        categoryName: "Inflammatory",
+        score: 0.6,
+        matchedText: ["dry cough"],
+      },
+    ]);
+
+    expect(result.matchedFeatures).toEqual([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        score: 0.9,
+        matchedText: ["rigors"],
+      },
+    ]);
+
+    expect(result.differentials).toEqual([
+      {
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        score: expect.any(Number),
+        evidence: [
+          {
+            evidenceType: "category",
+            clinicalPresentationKey: "cp-fever",
+            categoryKey: "cat-infectious",
+          },
+          {
+            evidenceType: "feature",
+            clinicalPresentationKey: "cp-fever",
+            featureKey: "feature-rigors",
+          },
+        ],
+      },
+      {
+        diagnosisKey: "dx-viral",
+        diagnosisName: "Viral syndrome",
+        score: expect.any(Number),
+        evidence: [
+          {
+            evidenceType: "category",
+            clinicalPresentationKey: "cp-cough",
+            categoryKey: "cat-inflammatory",
+          },
+        ],
+      },
+    ]);
+
+    expect(result.differentials[0].score).toBeCloseTo(0.95);
+    expect(result.differentials[1].score).toBeCloseTo(0.65);
+  });
+
+  it("keeps only the top 3 clinical presentations with score >= 0.6", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp1", name: "CP1" },
+      { key: "cp2", name: "CP2" },
+      { key: "cp3", name: "CP3" },
+      { key: "cp4", name: "CP4" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [
+        { key: "cp1", score: 0.95, matchedText: [] },
+        { key: "cp2", score: 0.85, matchedText: [] },
+        { key: "cp3", score: 0.75, matchedText: [] },
+        { key: "cp4", score: 0.65, matchedText: [] },
+      ],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([]);
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([]);
+
+    const result = await runDifferentialDiagnosisWorkflow("test");
+
+    expect(result.matchedClinicalPresentations).toEqual([
+      { key: "cp1", name: "CP1", score: 0.95, matchedText: [] },
+      { key: "cp2", name: "CP2", score: 0.85, matchedText: [] },
+      { key: "cp3", name: "CP3", score: 0.75, matchedText: [] },
+    ]);
+
+    expect(mocks.mockGetCategoriesForClinicalPresentations).toHaveBeenCalledWith([
+      "cp1",
+      "cp2",
+      "cp3",
+    ]);
+
+    expect(mocks.mockGetFeaturesForClinicalPresentations).toHaveBeenCalledWith([
+      "cp1",
+      "cp2",
+      "cp3",
+    ]);
+  });
 });
