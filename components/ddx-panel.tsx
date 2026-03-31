@@ -141,86 +141,92 @@ export function DdxPanel({
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Differentials
               </p>
-              {differentials.map((d, i) => (
-                <details
-                  key={d.diagnosisKey}
-                  className="group rounded-lg border border-border"
-                >
-                  <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
-                    <span className="w-4 shrink-0 text-xs text-muted-foreground">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-2 truncate text-sm font-medium">
-                        {d.diagnosisName} <ChevronRight size={16} />
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {d.evidence.length} supporting path
-                        {d.evidence.length !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                        Evidence support score
-                      </p>
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {d.score.toFixed(2)}
-                      </span>
-                    </div>
-                  </summary>
+            {differentials.map((d, i) => {
+              const evidencePath = d.evidence.map(path => {
+                const pathDetails = getPathDetails(path);
+                return [pathDetails.clinicalPresentationName, pathDetails.evidenceName];
+              });
 
-                  <div className="space-y-2 border-t border-border px-3 py-3">
-                    {d.evidence.map((path, pathIndex) => {
-                      const pathDetails = getPathDetails(path);
-
-                      return (
-                        <div
-                          key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
-                          className="rounded-md bg-muted/40 px-3 py-2"
-                        >
-                          <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                            {path.evidenceType === "category"
-                              ? "Category Evidence Path"
-                              : "Feature Evidence Path"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Presentation evidence:{" "}
-                            {pathDetails.clinicalPresentationMatchedText.length > 0
-                              ? pathDetails.clinicalPresentationMatchedText.join(", ")
-                              : "not available"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {path.evidenceType === "category"
-                              ? "Category evidence"
-                              : "Feature evidence"}
-                            :{" "}
-                            {pathDetails.evidenceMatchedText.length > 0
-                              ? pathDetails.evidenceMatchedText.join(", ")
-                              : "not available"}
-                          </p>
-                          {path.evidenceType === "feature" && (
-                            <p className="text-xs text-muted-foreground">
-                              Feature type: {pathDetails.evidenceTypeLabel ?? "not available"}
-                            </p>
-                          )}
-                          <p className="text-xs leading-relaxed text-muted-foreground">
-                            {pathDetails.clinicalPresentationName}
-                            {" -> "}
-                            {pathDetails.evidenceName}
-                            {" -> "}
-                            {d.diagnosisName}
-                          </p>
-                        </div>
-                      );
-                    })}
-                    <details>
-                      <summary>Diagnosis Knowledge Graph</summary>
-                      <DdxKG diagnosis = {d.evidence} diagnosisName = {d.diagnosisName}></DdxKG>
-                    </details>
-                    
+              return (
+              <details
+                key={d.diagnosisKey}
+                className="group rounded-lg border border-border"
+              >
+                <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                  <span className="w-4 shrink-0 text-xs text-muted-foreground">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-2 truncate text-sm font-medium">
+                      {d.diagnosisName} <ChevronRight size={16} />
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {d.evidence.length} supporting path
+                      {d.evidence.length !== 1 ? "s" : ""}
+                    </p>
                   </div>
-                </details>
-              ))}
+                  <div className="shrink-0 text-right">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Evidence support score
+                    </p>
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {d.score.toFixed(2)}
+                    </span>
+                  </div>
+                </summary>
+
+                <div className="space-y-2 border-t border-border px-3 py-3">
+                  {d.evidence.map((path, pathIndex) => {
+                    const pathDetails = getPathDetails(path);
+    
+                    return (
+                      <div
+                        key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
+                        className="rounded-md bg-muted/40 px-3 py-2"
+                      >
+                        <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                          {path.evidenceType === "category"
+                            ? "Category Evidence Path"
+                            : "Feature Evidence Path"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Presentation evidence:{" "}
+                          {pathDetails.clinicalPresentationMatchedText.length > 0
+                            ? pathDetails.clinicalPresentationMatchedText.join(", ")
+                            : "not available"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {path.evidenceType === "category"
+                            ? "Category evidence"
+                            : "Feature evidence"}
+                          :{" "}
+                          {pathDetails.evidenceMatchedText.length > 0
+                            ? pathDetails.evidenceMatchedText.join(", ")
+                            : "not available"}
+                        </p>
+                        {path.evidenceType === "feature" && (
+                          <p className="text-xs text-muted-foreground">
+                            Feature type: {pathDetails.evidenceTypeLabel ?? "not available"}
+                          </p>
+                        )}
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {pathDetails.clinicalPresentationName}
+                          {" -> "}
+                          {pathDetails.evidenceName}
+                          {" -> "}
+                          {d.diagnosisName}
+                        </p>
+                      </div>
+                    );
+                  })}
+                  <details>
+                    <summary>Diagnosis Subgraph Graph</summary>
+                    <DdxKG diagnosis = {evidencePath} diagnosisName = {d.diagnosisName}></DdxKG>
+                  </details>
+                  
+                </div>
+              </details>
+            )})}
             </div>
           </div>
         )}
