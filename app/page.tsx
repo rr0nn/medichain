@@ -33,6 +33,8 @@ const initialSteps: WorkflowStepState = {
   match_features: "idle",
   fetch_diagnoses: "idle",
   group_diagnoses: "idle",
+  critic_review: "idle",
+  build_follow_up_questions: "idle",
 };
 
 export default function Chat() {
