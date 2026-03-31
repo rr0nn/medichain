@@ -18,6 +18,8 @@ import type {
   WorkflowStepEvent,
 } from "./types";
 
+export type { WorkflowStepEvent };
+
 type OnStep = (event: WorkflowStepEvent) => void;
 
 /**

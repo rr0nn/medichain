@@ -25,7 +25,8 @@ Be concise and clinically precise.`;
 
 export async function runChatAgent(
   { messages }: ChatRequest,
-  writer: UIMessageStreamWriter
+  writer: UIMessageStreamWriter,
+  onAssistantFinish?: (text: string) => Promise<void>
 ) {
   const modelMessages = await convertToModelMessages(messages);
 
@@ -53,6 +54,15 @@ export async function runChatAgent(
       }),
     },
     stopWhen: stepCountIs(3),
+    onFinish: async ({ text }) => {
+      if (onAssistantFinish && text) {
+        try {
+          await onAssistantFinish(text);
+        } catch (err) {
+          console.error("[chat-agent] Failed to persist assistant message:", err);
+        }
+      }
+    },
   });
 
   writer.merge(result.toUIMessageStream());

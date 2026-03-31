@@ -33,7 +33,7 @@ describe("runChatWorkflow", () => {
 
         const result = await runChatWorkflow(input as never, writer);
 
-        expect(mocks.mockRunChatAgent).toHaveBeenCalledWith(input, writer);
+        expect(mocks.mockRunChatAgent).toHaveBeenCalledWith(input, writer, undefined);
         expect(result).toBe(fakeResult);
     });
 });
