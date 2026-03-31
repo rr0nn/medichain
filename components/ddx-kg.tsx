@@ -34,7 +34,7 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
     const makeNode = ({index, i, item, type, background} : NodeProps) => {
         return {
             id: `n-${i}-${item}`,
-            position: { x: index * 200, y: i * 150 },
+            position: { x: index * 200, y: i * 200 },
             data: { label: item },
             type: type, 
             style: {
@@ -48,7 +48,7 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
 
     const nodes = grouped.flatMap((diagnosisPoint, i) =>
         diagnosisPoint.map((item, index) => {
-            return makeNode({index, i, item, type: 'default', background: '#b2e2d9'})
+            return makeNode({index: index + 1.5, i, item, type: 'default', background: '#b2e2d9'})
         })
     );
 
@@ -56,7 +56,7 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
 
     for (let i = 0; i < 3; i++) {
         labelNodes.push(makeNode({
-            index: -1,
+            index: 0.5,
             i,
             item: 'Level ' + `${i + 1}: ` + labelNames[i],
             type: 'output',
@@ -66,11 +66,11 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
     
     const allNodes = [...nodes,
         makeNode({
-            index: (grouped[1].length - 1)/2,
+            index: (grouped[1].length - 1)/2 + 1.5,
             i: 2,
             item: diagnosisName,
             type: 'output',
-            background: '#b2e2d9',
+            background: '#cefdf1',
         }),...labelNodes
     ];
 
