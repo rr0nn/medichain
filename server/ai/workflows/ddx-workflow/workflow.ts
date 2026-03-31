@@ -1,4 +1,7 @@
-import { reviewDifferentialConfidence } from "@/server/ai/agents/critic-agent/agent";
+import { 
+  reviewDifferentialConfidence,
+  type CriticAssessment, 
+} from "@/server/ai/agents/critic-agent/agent";
 import { runInterviewerAgent } from "@/server/ai/agents/interviewer-agent/agent";
 import { matchCategories } from "@/server/ai/agents/category-matcher-agent/agent";
 import { matchClinicalPresentations } from "@/server/ai/agents/clinical-presentation-matcher-agent/agent";
@@ -310,12 +313,9 @@ async function buildInterviewResult(
   matchedFeatures: FeatureMatch[],
   candidateFeatures: FeatureRecord[],
   differentials: DifferentialDiagnosis[],
+  criticAssessment: CriticAssessment,
   onStep?: OnStep,
 ): Promise<DifferentialDiagnosisWorkflowResult> {
-  onStep?.({ type: "step", step: "critic_review", status: "running" });
-  const criticAssessment = reviewDifferentialConfidence(differentials);
-  onStep?.({ type: "step", step: "critic_review", status: "complete" });
-
   onStep?.({
     type: "step",
     step: "build_follow_up_questions",
@@ -389,6 +389,10 @@ export async function runDifferentialDiagnosisWorkflow(
 
   // If no matches at the clinical presentation level, stop before category lookup.
   if (matchedClinicalPresentations.length === 0) {
+    onStep?.({ type: "step", step: "critic_review", status: "running" });
+    const criticAssessment = reviewDifferentialConfidence([]);
+    onStep?.({ type: "step", step: "critic_review", status: "complete" });
+
     return buildInterviewResult(
       patientDescription,
       [],
@@ -396,6 +400,7 @@ export async function runDifferentialDiagnosisWorkflow(
       [],
       [],
       [],
+      criticAssessment,
       onStep,
     );
   }
@@ -511,6 +516,10 @@ export async function runDifferentialDiagnosisWorkflow(
   // If neither category nor feature matching produced a confident path,
   // there is no supported route to concrete diagnoses in the graph.
   if (matchedCategories.length === 0 && matchedFeatures.length === 0) {
+    onStep?.({ type: "step", step: "critic_review", status: "running" });
+    const criticAssessment = reviewDifferentialConfidence([]);
+    onStep?.({ type: "step", step: "critic_review", status: "complete" });
+
     return buildInterviewResult(
       patientDescription,
       matchedClinicalPresentations,
@@ -518,6 +527,7 @@ export async function runDifferentialDiagnosisWorkflow(
       [],
       features,
       [],
+      criticAssessment,
       onStep,
     );
   }
@@ -567,6 +577,7 @@ export async function runDifferentialDiagnosisWorkflow(
       matchedFeatures,
       features,
       differentials,
+      criticAssessment,
       onStep,
     );
   }
