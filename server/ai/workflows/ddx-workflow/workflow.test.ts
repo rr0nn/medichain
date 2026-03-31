@@ -4,6 +4,8 @@ const mocks = vi.hoisted(() => ({
   mockMatchClinicalPresentations: vi.fn(),
   mockMatchCategories: vi.fn(),
   mockMatchFeatures: vi.fn(),
+  mockReviewDifferentialConfidence: vi.fn(),
+  mockRunInterviewerAgent: vi.fn(),
   mockGetClinicalPresentations: vi.fn(),
   mockGetCategoriesForClinicalPresentations: vi.fn(),
   mockGetFeaturesForClinicalPresentations: vi.fn(),
@@ -22,6 +24,14 @@ vi.mock("@/server/ai/agents/category-matcher-agent/agent", () => ({
 vi.mock("@/server/ai/agents/feature-matcher-agent/agent", () => ({
   matchFeatures: mocks.mockMatchFeatures,
 }));
+
+vi.mock("@/server/ai/agents/critic-agent/agent", () => ({
+  reviewDifferentialConfidence: mocks.mockReviewDifferentialConfidence,
+}));
+
+vi.mock("@/server/ai/agents/interviewer-agent/agent", () => ({
+  runInterviewerAgent: mocks.mockRunInterviewerAgent,
+}))
 
 vi.mock("@/server/ai/tools/knowledge-graph/knowledge-graph", () => ({
   getClinicalPresentations: mocks.mockGetClinicalPresentations,
@@ -103,15 +113,43 @@ function diagnosisSupportScore({
 describe("runDifferentialDiagnosisWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mocks.mockReviewDifferentialConfidence.mockReturnValue({
+      isConfident: true,
+      shouldReturnToInterview: false,
+      confidenceLabel: "high",
+      reasons: [],
+      topDifferentialScore: 0.9,
+      topDifferentialEvidenceCount: 2,
+      scoreGapToSecond: 0.2,
+    });
+
+    mocks.mockRunInterviewerAgent.mockResolvedValue([
+      {
+        id: "follow-up-1",
+        question: "Can you tell me more about the symptom onset?",
+        reason: "Clarifies timing and progression.",
+      },
+    ]);
   });
 
-  it("returns empty results when no clinical presentations meet threshold", async () => {
+  it("routes to the interviewer when no clinical presentations meet threshold", async () => {
     mocks.mockGetClinicalPresentations.mockResolvedValue([
       { key: "cp-fever", name: "Fever" },
     ]);
 
     mocks.mockMatchClinicalPresentations.mockResolvedValue({
       matches: [{ key: "cp-fever", score: 0.59, matchedText: ["fever"] }],
+    });
+
+    mocks.mockReviewDifferentialConfidence.mockReturnValue({
+      isConfident: false,
+      shouldReturnToInterview: true,
+      confidenceLabel: "low",
+      reasons: ["No differential diagnoses were returned from the knowledge graph."],
+      topDifferentialScore: null,
+      topDifferentialEvidenceCount: 0,
+      scoreGapToSecond: null,
     });
 
     const result = await runDifferentialDiagnosisWorkflow("fever");
@@ -121,6 +159,23 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       matchedCategories: [],
       matchedFeatures: [],
       differentials: [],
+      status: "needs_more_information",
+      criticAssessment: {
+        isConfident: false,
+        shouldReturnToInterview: true,
+        confidenceLabel: "low",
+        reasons: ["No differential diagnoses were returned from the knowledge graph."],
+        topDifferentialScore: null,
+        topDifferentialEvidenceCount: 0,
+        scoreGapToSecond: null,
+      },
+      followUpQuestions: [
+        {
+          id: "follow-up-1",
+          question: "Can you tell me more about the symptom onset?",
+          reason: "Clarifies timing and progression.",
+        },
+      ],
     });
 
     expect(
@@ -131,9 +186,10 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     ).not.toHaveBeenCalled();
     expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
     expect(mocks.mockGetDiagnosesForFeaturePairs).not.toHaveBeenCalled();
+    expect(mocks.mockRunInterviewerAgent).toHaveBeenCalled();
   });
 
-  it("returns matched presentations but no differentials when neither categories nor features meet threshold", async () => {
+  it("routes to the interviewer when neither categories nor features meet threshold", async () => {
     mocks.mockGetClinicalPresentations.mockResolvedValue([
       { key: "cp-fever", name: "Fever" },
     ]);
@@ -170,6 +226,16 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       ],
     });
 
+    mocks.mockReviewDifferentialConfidence.mockReturnValue({
+      isConfident: false,
+      shouldReturnToInterview: true,
+      confidenceLabel: "low",
+      reasons: ["No differential diagnoses were returned from the knowledge graph."],
+      topDifferentialScore: null,
+      topDifferentialEvidenceCount: 0,
+      scoreGapToSecond: null,
+    });
+
     const result = await runDifferentialDiagnosisWorkflow("fever");
 
     expect(result).toEqual({
@@ -179,13 +245,31 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       matchedCategories: [],
       matchedFeatures: [],
       differentials: [],
+      status: "needs_more_information",
+      criticAssessment: {
+        isConfident: false,
+        shouldReturnToInterview: true,
+        confidenceLabel: "low",
+        reasons: ["No differential diagnoses were returned from the knowledge graph."],
+        topDifferentialScore: null,
+        topDifferentialEvidenceCount: 0,
+        scoreGapToSecond: null,
+      },
+      followUpQuestions: [
+        {
+          id: "follow-up-1",
+          question: "Can you tell me more about the symptom onset?",
+          reason: "Clarifies timing and progression.",
+        },
+      ],
     });
 
     expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
     expect(mocks.mockGetDiagnosesForFeaturePairs).not.toHaveBeenCalled();
+    expect(mocks.mockRunInterviewerAgent).toHaveBeenCalled();
   });
 
-  it("returns differentials from feature-only evidence when category matching is empty", async () => {
+  it("returns ready_for_review when feature-only evidence produces a confident differential", async () => {
     mocks.mockGetClinicalPresentations.mockResolvedValue([
       { key: "cp-abdominal-pain", name: "Abdominal pain" },
     ]);
@@ -237,6 +321,10 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       "abdominal pain with right lower quadrant tenderness",
     );
 
+    expect(result.status).toBe("ready_for_review");
+    expect(result.followUpQuestions).toEqual([]);
+    expect(result.criticAssessment.isConfident).toBe(true);
+
     expect(result.matchedFeatures).toEqual([
       {
         clinicalPresentationKey: "cp-abdominal-pain",
@@ -269,6 +357,68 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       }),
       5,
     );
+  });
+
+  it("routes low-confidence ranked differentials back to the interviewer", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.9, matchedText: ["fever"] }],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+    ]);
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([]);
+
+    mocks.mockMatchCategories.mockResolvedValue({
+      matches: [{ key: "cat-infectious", score: 0.8, matchedText: ["fever"] }],
+    });
+
+    mocks.mockGetDiagnosesForPairs.mockResolvedValue([
+      {
+        evidenceType: "category",
+        diagnosisKey: "dx-viral",
+        diagnosisName: "Viral syndrome",
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+      },
+    ]);
+
+    mocks.mockGetDiagnosesForFeaturePairs.mockResolvedValue([]);
+
+    mocks.mockReviewDifferentialConfidence.mockReturnValue({
+      isConfident: false,
+      shouldReturnToInterview: true,
+      confidenceLabel: "medium",
+      reasons: [
+        "The top differential is supported by only one or zero evidence paths.",
+      ],
+      topDifferentialScore: 0.835,
+      topDifferentialEvidenceCount: 1,
+      scoreGapToSecond: null,
+    });
+
+    const result = await runDifferentialDiagnosisWorkflow("fever");
+
+    expect(result.status).toBe("needs_more_information");
+    expect(result.criticAssessment.isConfident).toBe(false);
+    expect(result.followUpQuestions).toEqual([
+      {
+        id: "follow-up-1",
+        question: "Can you tell me more about the symptom onset?",
+        reason: "Clarifies timing and progression.",
+      },
+    ]);
+    expect(mocks.mockRunInterviewerAgent).toHaveBeenCalled();
   });
 
   it("prioritizes feature evidence, uses category support secondarily, and keeps path count as a bonus", async () => {
@@ -650,6 +800,18 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       },
     ]);
 
+    mocks.mockReviewDifferentialConfidence.mockReturnValue({
+      isConfident: false,
+      shouldReturnToInterview: true,
+      confidenceLabel: "medium",
+      reasons: [
+        "The top differential is supported by only one or zero evidence paths."
+      ],
+      topDifferentialScore: 0.9,
+      topDifferentialEvidenceCount: 1,
+      scoreGapToSecond: null,
+    });
+
     await runDifferentialDiagnosisWorkflow("fever with rigors", onStep);
 
     expect(onStep.mock.calls.map(([event]) => event)).toEqual([
@@ -663,6 +825,18 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       { type: "step", step: "fetch_diagnoses", status: "complete" },
       { type: "step", step: "group_diagnoses", status: "running" },
       { type: "step", step: "group_diagnoses", status: "complete" },
+      { type: "step", step: "critic_review", status: "running" },
+      { type: "step", step: "critic_review", status: "complete" },
+      {
+        type: "step",
+        step: "build_follow_up_questions",
+        status: "running",
+      },
+      {
+        type: "step",
+        step: "build_follow_up_questions",
+        status: "complete",
+      }
     ]);
   });
 });
