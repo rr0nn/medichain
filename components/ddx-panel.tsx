@@ -13,6 +13,8 @@ import type {
 } from "@/server/ai/workflows/ddx-workflow/types";
 import { ChevronRight } from "lucide-react";
 
+import { DdxKG } from "./ddx-kg";
+
 type Props = {
   steps: WorkflowStepState;
   differentials: DifferentialDiagnosis[];
@@ -211,6 +213,11 @@ export function DdxPanel({
                         </div>
                       );
                     })}
+                    <details>
+                      <summary>Diagnosis Knowledge Graph</summary>
+                      <DdxKG diagnosis = {d.evidence} diagnosisName = {d.diagnosisName}></DdxKG>
+                    </details>
+                    
                   </div>
                 </details>
               ))}
