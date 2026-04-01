@@ -79,4 +79,46 @@ describe("runInterviewAgent", () => {
         );
         expect(writer.merge).toHaveBeenCalledWith(fakeStreamResult.toUIMessageStream());
     });
+
+    it("formats consultation context into the workflow input", async () => {
+        const convertedMessages = [
+            { role: "user", content: [{ type: "text", text: "Pain started yesterday" }] },
+        ];
+        const fakeModel = { id: "fake-chat-model" };
+        const fakeStreamResult = { toUIMessageStream: vi.fn() };
+        const writer = {
+            write: vi.fn(),
+            merge: vi.fn(),
+        };
+
+        mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
+        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockStreamText.mockReturnValue(fakeStreamResult);
+        mocks.mockRunSafetyWorkflow.mockResolvedValue({ status: "needs_more_information" });
+
+        await runInterviewAgent(
+            {
+                messages: [{ id: "1", role: "user", content: "Pain started yesterday" }],
+            } as never,
+            writer as never
+        );
+
+        const streamConfig = mocks.mockStreamText.mock.calls[0][0];
+        const toolConfig = streamConfig.tools.runDifferentialDiagnosis;
+
+        await toolConfig.execute({
+            patientDescription: "Lower abdominal pain with nausea",
+            consultationStage: "follow_up_clarification",
+            newInformationFocus: "onset",
+        });
+
+        expect(mocks.mockRunSafetyWorkflow).toHaveBeenCalledWith(
+            [
+                "Consultation stage: follow_up_clarification.",
+                "New information focus: onset.",
+                "Patient summary: Lower abdominal pain with nausea",
+            ].join("\n"),
+            expect.any(Function)
+        );
+    });
 });

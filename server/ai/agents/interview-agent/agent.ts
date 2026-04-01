@@ -11,6 +11,26 @@ import type { ChatRequest } from "@/server/ai/core/types";
 import { getDefaultChatModel } from "@/server/ai/core/models";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
 
+function buildWorkflowPatientDescription(input: {
+  patientDescription: string;
+  consultationStage: "initial_assessment" | "follow_up_clarification";
+  newInformationFocus?: string;
+}) {
+  const contextLines = [
+    `Consultation stage: ${input.consultationStage}.`,
+  ];
+
+  if (input.newInformationFocus?.trim()) {
+    contextLines.push(
+      `New information focus: ${input.newInformationFocus.trim()}.`,
+    );
+  }
+
+  contextLines.push(`Patient summary: ${input.patientDescription.trim()}`);
+
+  return contextLines.join("\n");
+}
+
 const SYSTEM_PROMPT = `You are MediChain, a clinical differential diagnosis support assistant.
 
 Use the runDifferentialDiagnosis tool when the user:
@@ -20,6 +40,10 @@ Use the runDifferentialDiagnosis tool when the user:
 
 Use the full conversation context when deciding what patient summary to send to the tool.
 If the user is clarifying a prior answer, include that new information in the summary you send.
+When calling the tool, always set:
+- consultationStage = "initial_assessment" for the first full presentation
+- consultationStage = "follow_up_clarification" when the user is answering or refining earlier questions
+- newInformationFocus to a short phrase describing the newly clarified detail when relevant
 
 The tool returns structured graph-grounded differential output. Your reply must follow one of these modes:
 
@@ -73,9 +97,30 @@ export async function runInterviewAgent(
             .describe(
               "A concise but complete summary of the patient's presentation using all relevant conversation context so far",
             ),
+          consultationStage: z
+            .enum(["initial_assessment", "follow_up_clarification"])
+            .describe(
+              "Whether this tool call is the first full assessment or a follow-up clarification of earlier history",
+            ),
+          newInformationFocus: z
+            .string()
+            .optional()
+            .describe(
+              "A short phrase describing the newly clarified detail, such as onset, site, associated symptoms, or past history",
+            ),
         }),
-        execute: async ({ patientDescription }) => {
-          return runSafetyWorkflow(patientDescription, (event) =>
+        execute: async ({
+          patientDescription,
+          consultationStage,
+          newInformationFocus,
+        }) => {
+          const workflowPatientDescription = buildWorkflowPatientDescription({
+            patientDescription,
+            consultationStage,
+            newInformationFocus,
+          });
+
+          return runSafetyWorkflow(workflowPatientDescription, (event) =>
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             writer.write({ type: "data-step", data: event } as any),
           );
