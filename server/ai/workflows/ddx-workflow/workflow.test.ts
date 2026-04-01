@@ -70,7 +70,7 @@ function diagnosisSupportScore({
 }) {
   const bestFeaturePathScore = [...featurePathScores].sort((a, b) => b - a)[0];
   const bestCategoryPathScore = [...categoryPathScores].sort(
-    (a, b) => b - a
+    (a, b) => b - a,
   )[0];
 
   const baseScore = bestFeaturePathScore ?? bestCategoryPathScore ?? 0;
@@ -96,7 +96,7 @@ function diagnosisSupportScore({
       additionalFeatureBonus +
       categorySupportBonus +
       additionalCategoryBonus +
-      crossPresentationBonus
+      crossPresentationBonus,
   );
 }
 
@@ -123,10 +123,37 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       differentials: [],
     });
 
-    expect(mocks.mockGetCategoriesForClinicalPresentations).not.toHaveBeenCalled();
-    expect(mocks.mockGetFeaturesForClinicalPresentations).not.toHaveBeenCalled();
+    expect(
+      mocks.mockGetCategoriesForClinicalPresentations,
+    ).not.toHaveBeenCalled();
+    expect(
+      mocks.mockGetFeaturesForClinicalPresentations,
+    ).not.toHaveBeenCalled();
     expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
     expect(mocks.mockGetDiagnosesForFeaturePairs).not.toHaveBeenCalled();
+  });
+
+  it("completes downstream step states when no clinical presentations match", async () => {
+    const onStep = vi.fn();
+
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.4, matchedText: ["fever"] }],
+    });
+
+    await runDifferentialDiagnosisWorkflow("fever", onStep);
+
+    expect(onStep.mock.calls.map(([event]) => event)).toEqual([
+      { type: "step", step: "match_presentations", status: "running" },
+      { type: "step", step: "match_presentations", status: "complete" },
+      { type: "step", step: "match_categories", status: "complete" },
+      { type: "step", step: "match_features", status: "complete" },
+      { type: "step", step: "fetch_diagnoses", status: "complete" },
+      { type: "step", step: "group_diagnoses", status: "complete" },
+    ]);
   });
 
   it("returns matched presentations but no differentials when neither categories nor features meet threshold", async () => {
@@ -162,7 +189,9 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     });
 
     mocks.mockMatchFeatures.mockResolvedValue({
-      matches: [{ key: "feature-rigors", score: 0.45, matchedText: ["rigors"] }],
+      matches: [
+        { key: "feature-rigors", score: 0.45, matchedText: ["rigors"] },
+      ],
     });
 
     const result = await runDifferentialDiagnosisWorkflow("fever");
@@ -175,6 +204,58 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       matchedFeatures: [],
       differentials: [],
     });
+  });
+
+  it("completes diagnosis steps when no category or feature evidence is matched", async () => {
+    const onStep = vi.fn();
+
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.9, matchedText: ["fever"] }],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+    ]);
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        featureNormalizedName: "rigors",
+        featureType: "associated_symptom",
+      },
+    ]);
+
+    mocks.mockMatchCategories.mockResolvedValue({
+      matches: [{ key: "cat-infectious", score: 0.2, matchedText: ["fever"] }],
+    });
+
+    mocks.mockMatchFeatures.mockResolvedValue({
+      matches: [{ key: "feature-rigors", score: 0.2, matchedText: ["rigors"] }],
+    });
+
+    await runDifferentialDiagnosisWorkflow("fever", onStep);
+
+    expect(onStep.mock.calls.map(([event]) => event)).toEqual([
+      { type: "step", step: "match_presentations", status: "running" },
+      { type: "step", step: "match_presentations", status: "complete" },
+      { type: "step", step: "match_categories", status: "running" },
+      { type: "step", step: "match_categories", status: "complete" },
+      { type: "step", step: "match_features", status: "running" },
+      { type: "step", step: "match_features", status: "complete" },
+      { type: "step", step: "fetch_diagnoses", status: "complete" },
+      { type: "step", step: "group_diagnoses", status: "complete" },
+    ]);
   });
 
   it("returns differentials from feature-only evidence", async () => {
@@ -225,7 +306,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     ]);
 
     const result = await runDifferentialDiagnosisWorkflow(
-      "abdominal pain with right lower quadrant tenderness"
+      "abdominal pain with right lower quadrant tenderness",
     );
 
     expect(result.matchedFeatures).toEqual([
@@ -243,7 +324,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
       diagnosisSupportScore({
         featurePathScores: [featurePathScore(0.8, 0.9)],
       }),
-      5
+      5,
     );
   });
 
@@ -287,10 +368,14 @@ describe("runDifferentialDiagnosisWorkflow", () => {
 
     mocks.mockMatchCategories
       .mockResolvedValueOnce({
-        matches: [{ key: "cat-infectious", score: 0.8, matchedText: ["high fever"] }],
+        matches: [
+          { key: "cat-infectious", score: 0.8, matchedText: ["high fever"] },
+        ],
       })
       .mockResolvedValueOnce({
-        matches: [{ key: "cat-inflammatory", score: 0.6, matchedText: ["dry cough"] }],
+        matches: [
+          { key: "cat-inflammatory", score: 0.6, matchedText: ["dry cough"] },
+        ],
       });
 
     mocks.mockMatchFeatures.mockResolvedValue({
@@ -325,7 +410,7 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     ]);
 
     const result = await runDifferentialDiagnosisWorkflow(
-      "fever, rigors, and dry cough for two days"
+      "fever, rigors, and dry cough for two days",
     );
 
     expect(result.differentials[0].diagnosisKey).toBe("dx-flu");
@@ -335,13 +420,13 @@ describe("runDifferentialDiagnosisWorkflow", () => {
         featurePathScores: [featurePathScore(0.9, 0.9)],
         categoryPathScores: [categoryPathScore(0.9, 0.8)],
       }),
-      5
+      5,
     );
     expect(result.differentials[1].score).toBeCloseTo(
       diagnosisSupportScore({
         categoryPathScores: [categoryPathScore(0.7, 0.6)],
       }),
-      5
+      5,
     );
   });
 

@@ -20,6 +20,15 @@ import { rankDifferentialDiagnoses } from "./diagnosis-ranking";
 
 type OnStep = (event: WorkflowStepEvent) => void;
 
+function completeRemainingSteps(
+  steps: WorkflowStepEvent["step"][],
+  onStep?: OnStep,
+) {
+  for (const step of steps) {
+    onStep?.({ type: "step", step, status: "complete" });
+  }
+}
+
 /**
  * Runs the differential diagnosis workflow from free-text patient description
  * through: clinical presentation matching -> category/feature matching -> diagnosis ranking -> final output.
@@ -61,6 +70,16 @@ export async function runDifferentialDiagnosisWorkflow(
 
   // If no matches at the clinical presentation level, stop before category lookup.
   if (matchedClinicalPresentations.length === 0) {
+    completeRemainingSteps(
+      [
+        "match_categories",
+        "match_features",
+        "fetch_diagnoses",
+        "group_diagnoses",
+      ],
+      onStep,
+    );
+
     return {
       matchedClinicalPresentations: [],
       matchedCategories: [],
@@ -180,6 +199,8 @@ export async function runDifferentialDiagnosisWorkflow(
   // If neither category nor feature matching produced a confident path,
   // there is no supported route to concrete diagnoses in the graph.
   if (matchedCategories.length === 0 && matchedFeatures.length === 0) {
+    completeRemainingSteps(["fetch_diagnoses", "group_diagnoses"], onStep);
+
     return {
       matchedClinicalPresentations,
       matchedCategories: [],
