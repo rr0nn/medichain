@@ -1,5 +1,3 @@
-import type { CriticAssessment } from "@/server/ai/agents/critic-agent/agent";
-
 export type ClinicalPresentationMatch = {
   key: string;
   name: string;
@@ -53,22 +51,9 @@ export type DifferentialDiagnosis = {
   evidence: DifferentialDiagnosisEvidenceRef[];
 };
 
-export type FollowUpQuestion = {
-  id: string;
-  question: string;
-  reason: string;
-};
-
-export type ConsultationStatus = 
-  | "ready_for_review"
-  | "needs_more_information";
-
 export type DifferentialDiagnosisWorkflowResult = {
   matchedClinicalPresentations: ClinicalPresentationMatch[];
   matchedCategories: CategoryMatch[];
   matchedFeatures: FeatureMatch[];
   differentials: DifferentialDiagnosis[];
-  status: ConsultationStatus;
-  criticAssessment: CriticAssessment;
-  followUpQuestions: FollowUpQuestion[];
 };

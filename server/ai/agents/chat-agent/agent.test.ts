@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     mockConvertToModelMessages: vi.fn(),
     mockStreamText: vi.fn(),
     mockGetDefaultChatModel: vi.fn(),
-    mockRunDifferentialDiagnosisWorkflow: vi.fn(),
+    mockRunSafetyWorkflow: vi.fn(),
 }));
 
 vi.mock("ai", () => ({
@@ -21,8 +21,8 @@ vi.mock("@/server/ai/core/models", () => ({
     getDefaultChatModel: mocks.mockGetDefaultChatModel,
 }));
 
-vi.mock("@/server/ai/workflows/ddx-workflow/workflow", () => ({
-    runDifferentialDiagnosisWorkflow: mocks.mockRunDifferentialDiagnosisWorkflow,
+vi.mock("@/server/ai/workflows/safety-workflow/workflow", () => ({
+    runSafetyWorkflow: mocks.mockRunSafetyWorkflow,
 }));
 
 import { runChatAgent } from "./agent";

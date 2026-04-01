@@ -9,7 +9,7 @@ import { z } from "zod";
 
 import type { ChatRequest } from "@/server/ai/core/types";
 import { getDefaultChatModel } from "@/server/ai/core/models";
-import { runDifferentialDiagnosisWorkflow } from "@/server/ai/workflows/ddx-workflow/workflow";
+import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
 
 const SYSTEM_PROMPT = `You are MediChain, a clinical decision support assistant.
 
@@ -57,7 +57,7 @@ export async function runChatAgent(
             ),
         }),
         execute: async ({ patientDescription }) => {
-          return runDifferentialDiagnosisWorkflow(
+          return runSafetyWorkflow(
             patientDescription,
             (event) =>
               // eslint-disable-next-line @typescript-eslint/no-explicit-any

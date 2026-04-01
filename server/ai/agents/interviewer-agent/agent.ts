@@ -2,14 +2,16 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 
 import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
-import type { CriticAssessment } from "@/server/ai/agents/critic-agent/agent";
 import type { FeatureRecord } from "@/server/ai/tools/knowledge-graph/types";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
   DifferentialDiagnosis,
-  FollowUpQuestion,
 } from "@/server/ai/workflows/ddx-workflow/types";
+import type {
+  CriticAssessment,
+  FollowUpQuestion,
+} from "@/server/ai/workflows/safety-workflow/types";
 
 const interviewerOutputSchema = z.object({
   followUpQuestions: z
