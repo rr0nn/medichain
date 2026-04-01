@@ -81,7 +81,7 @@ describe("runSafetyWorkflow", () => {
     expect(mocks.mockGetFeaturesForClinicalPresentations).not.toHaveBeenCalled();
   });
 
-  it("routes to needs_more_information when the differential is weak", async () => {
+  it("routes to needs_more_information when the top differential score is too low", async () => {
     mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
       matchedClinicalPresentations: [
         { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
@@ -92,7 +92,7 @@ describe("runSafetyWorkflow", () => {
         {
           diagnosisKey: "dx-flu",
           diagnosisName: "Influenza",
-          score: 0.7,
+          score: 0.55,
           evidence: [
             {
               evidenceType: "feature",
@@ -104,7 +104,7 @@ describe("runSafetyWorkflow", () => {
         {
           diagnosisKey: "dx-cold",
           diagnosisName: "Common cold",
-          score: 0.66,
+          score: 0.52,
           evidence: [
             {
               evidenceType: "category",

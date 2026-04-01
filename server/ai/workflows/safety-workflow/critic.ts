@@ -7,7 +7,16 @@ import type { CriticAssessment } from "./types";
  * continue to the interviewer for more history gathering.
  *
  * This critic is heuristic-first so the routing behaviour is predictable,
- * easy to test, and directly aligned with the workflow's acceptance criteria.
+ * easy to test, and pragmatic for a small example knowledge graph.
+ *
+ * Current project rule:
+ * - ask follow-up questions only when no differentials are returned, or when
+ *   the top differential score is below the confidence threshold
+ *
+ * Stricter criteria that can be reintroduced later if graph coverage improves:
+ * - require more than one supporting evidence path for the top differential
+ * - require a minimum score gap from the second-ranked differential
+ * - require feature-backed evidence for specific high-risk presentations
  *
  * @param differentials Ranked differential diagnoses from the DDX workflow.
  * @returns Assessment describing whether the result is confident enough.
@@ -39,21 +48,9 @@ export function reviewDifferentialConfidence(
 
   const reasons: string[] = [];
 
-  if (topDifferential.evidence.length <= 1) {
-    reasons.push(
-      "The top differential is supported by only one or zero evidence paths."
-    );
-  }
-
-  if (topDifferential.score < 0.72) {
+  if (topDifferential.score < 0.6) {
     reasons.push(
       "The top differential score is below the confidence threshold."
-    );
-  }
-
-  if (scoreGapToSecond !== null && scoreGapToSecond < 0.08) {
-    reasons.push(
-      "The top two differential diagnoses are too close in score to separate confidently."
     );
   }
 
