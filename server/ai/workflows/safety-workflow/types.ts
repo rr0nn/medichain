@@ -1,4 +1,5 @@
 import type { DifferentialDiagnosisWorkflowResult } from "@/server/ai/workflows/ddx-workflow/types";
+import type { FeatureRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 export type CriticAssessment = {
   isConfident: boolean;
@@ -10,12 +11,6 @@ export type CriticAssessment = {
   scoreGapToSecond: number | null;
 };
 
-export type FollowUpQuestion = {
-  id: string;
-  question: string;
-  reason: string;
-};
-
 export type ConsultationStatus =
   | "ready_for_review"
   | "needs_more_information";
@@ -23,5 +18,5 @@ export type ConsultationStatus =
 export type SafetyWorkflowResult = DifferentialDiagnosisWorkflowResult & {
   status: ConsultationStatus;
   criticAssessment: CriticAssessment;
-  followUpQuestions: FollowUpQuestion[];
+  candidateFeatures: FeatureRecord[];
 };

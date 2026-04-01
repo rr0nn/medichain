@@ -1,4 +1,4 @@
-// This matches the file exactly: runChatAgent just converts incoming messages,
+// This matches the file exactly: runInterviewAgent just converts incoming messages,
 // gets the default chat model, and passes both into streamText.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -25,9 +25,9 @@ vi.mock("@/server/ai/workflows/safety-workflow/workflow", () => ({
     runSafetyWorkflow: mocks.mockRunSafetyWorkflow,
 }));
 
-import { runChatAgent } from "./agent";
+import { runInterviewAgent } from "./agent";
 
-describe("runChatAgent", () => {
+describe("runInterviewAgent", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -57,7 +57,7 @@ describe("runChatAgent", () => {
         mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
 
-        await runChatAgent(input as never, writer as never);
+        await runInterviewAgent(input as never, writer as never);
 
         expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(input.messages);
         expect(mocks.mockGetDefaultChatModel).toHaveBeenCalledTimes(1);

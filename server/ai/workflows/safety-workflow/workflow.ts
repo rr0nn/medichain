@@ -30,14 +30,12 @@ export async function runSafetyWorkflow(
     );
 
     return buildNeedsMoreInformationResult(
-      patientDescription,
       ddxResult.matchedClinicalPresentations,
       ddxResult.matchedCategories,
       ddxResult.matchedFeatures,
       candidateFeatures,
       ddxResult.differentials,
-      criticAssessment,
-      onStep
+      criticAssessment
     );
   }
 
@@ -45,6 +43,6 @@ export async function runSafetyWorkflow(
     ...ddxResult,
     status: "ready_for_review",
     criticAssessment,
-    followUpQuestions: [],
+    candidateFeatures: [],
   };
 }

@@ -4,11 +4,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-    mockRunChatAgent: vi.fn(),
+    mockRunInterviewAgent: vi.fn(),
 }));
 
-vi.mock("@/server/ai/agents/chat-agent/agent", () => ({
-    runChatAgent: mocks.mockRunChatAgent,
+vi.mock("@/server/ai/agents/interview-agent/agent", () => ({
+    runInterviewAgent: mocks.mockRunInterviewAgent,
 }));
 
 import { runChatWorkflow } from "./workflow";
@@ -18,13 +18,13 @@ describe("runChatWorkflow", () => {
         vi.clearAllMocks();
     });
 
-    it("delegates directly to runChatAgent", async () => {
+    it("delegates directly to runInterviewAgent", async () => {
         const input = {
             messages: [{ id: "1", role: "user", content: "hello" }],
         };
 
         const fakeResult = { stream: true };
-        mocks.mockRunChatAgent.mockResolvedValue(fakeResult);
+        mocks.mockRunInterviewAgent.mockResolvedValue(fakeResult);
 
         const writer = {
             write: vi.fn(),
@@ -33,7 +33,7 @@ describe("runChatWorkflow", () => {
 
         const result = await runChatWorkflow(input as never, writer);
 
-        expect(mocks.mockRunChatAgent).toHaveBeenCalledWith(input, writer);
+        expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(input, writer);
         expect(result).toBe(fakeResult);
     });
 });

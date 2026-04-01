@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   mockRunDifferentialDiagnosisWorkflow: vi.fn(),
   mockGetFeaturesForClinicalPresentations: vi.fn(),
-  mockRunInterviewerAgent: vi.fn(),
 }));
 
 vi.mock("@/server/ai/workflows/ddx-workflow/workflow", () => ({
@@ -15,22 +14,11 @@ vi.mock("@/server/ai/tools/knowledge-graph/knowledge-graph", () => ({
     mocks.mockGetFeaturesForClinicalPresentations,
 }));
 
-vi.mock("@/server/ai/agents/interviewer-agent/agent", () => ({
-  runInterviewerAgent: mocks.mockRunInterviewerAgent,
-}));
-
 import { runSafetyWorkflow } from "./workflow";
 
 describe("runSafetyWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.mockRunInterviewerAgent.mockResolvedValue([
-      {
-        id: "follow-up-1",
-        question: "When did the pain start?",
-        reason: "Clarifies onset.",
-      },
-    ]);
   });
 
   it("returns ready_for_review when the differential is confident", async () => {
@@ -77,7 +65,7 @@ describe("runSafetyWorkflow", () => {
 
     expect(result.status).toBe("ready_for_review");
     expect(result.criticAssessment.isConfident).toBe(true);
-    expect(result.followUpQuestions).toEqual([]);
+    expect(result.candidateFeatures).toEqual([]);
     expect(mocks.mockGetFeaturesForClinicalPresentations).not.toHaveBeenCalled();
   });
 
@@ -130,11 +118,13 @@ describe("runSafetyWorkflow", () => {
 
     expect(result.status).toBe("needs_more_information");
     expect(result.criticAssessment.isConfident).toBe(false);
-    expect(result.followUpQuestions).toEqual([
+    expect(result.candidateFeatures).toEqual([
       {
-        id: "follow-up-1",
-        question: "When did the pain start?",
-        reason: "Clarifies onset.",
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        featureNormalizedName: "rigors",
+        featureType: "associated_symptom",
       },
     ]);
     expect(mocks.mockGetFeaturesForClinicalPresentations).toHaveBeenCalledWith([
@@ -159,8 +149,6 @@ describe("runSafetyWorkflow", () => {
     expect(onStep.mock.calls.map(([event]) => event)).toEqual([
       { type: "step", step: "critic_review", status: "running" },
       { type: "step", step: "critic_review", status: "complete" },
-      { type: "step", step: "build_follow_up_questions", status: "running" },
-      { type: "step", step: "build_follow_up_questions", status: "complete" },
     ]);
   });
 });

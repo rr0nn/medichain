@@ -11,7 +11,7 @@ import type { ChatRequest } from "@/server/ai/core/types";
 import { getDefaultChatModel } from "@/server/ai/core/models";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
 
-const SYSTEM_PROMPT = `You are MediChain, a clinical decision support assistant.
+const SYSTEM_PROMPT = `You are MediChain, a clinical differential diagnosis support assistant.
 
 When the user describes a patient presentation, or answers earlier follow-up questions, call the runDifferentialDiagnosis tool.
 
@@ -19,7 +19,10 @@ The tool can return one of two outcomes:
 
 1. status = "needs_more_information"
 - Briefly explain that more information is needed to narrow the differential.
-- Ask the returned follow-up questions clearly.
+- Ask 1 to 3 focused follow-up questions in bullet points yourself.
+- Use the full conversation context, critic assessment, current differentials, matched features, and candidate graph features from the tool result.
+- Prefer targeted history or symptom clarification questions over generic questioning.
+- Do not repeat details the user already provided.
 - Do not present the result as a confident final diagnosis.
 
 2. status = "ready_for_review"
@@ -35,7 +38,7 @@ Rules:
 - Be concise and clinically precise.
 - Do not fabricate investigations, examination findings, or diagnoses beyond the tool output.`;
 
-export async function runChatAgent(
+export async function runInterviewAgent(
   { messages }: ChatRequest,
   writer: UIMessageStreamWriter
 ) {
@@ -48,7 +51,7 @@ export async function runChatAgent(
     tools: {
       runDifferentialDiagnosis: tool({
         description:
-          "Run the iterative differential diagnosis workflow for a patient presentation, including confidence review and follow-up questioning when needed.",
+          "Run the safety-reviewed differential diagnosis workflow for a patient presentation, including confidence review when the differential remains weak.",
         inputSchema: z.object({
           patientDescription: z
             .string()

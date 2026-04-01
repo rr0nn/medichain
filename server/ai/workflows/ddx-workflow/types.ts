@@ -11,8 +11,7 @@ export type WorkflowStepName =
   | "match_features"
   | "fetch_diagnoses"
   | "group_diagnoses"
-  | "critic_review"
-  | "build_follow_up_questions";
+  | "critic_review";
 
 export type WorkflowStepEvent = {
   type: "step";
