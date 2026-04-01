@@ -26,6 +26,7 @@ import type {
   FeatureMatch,
   WorkflowStepEvent,
 } from "@/server/ai/workflows/ddx-workflow/types";
+import type { CriticAssessment } from "@/server/ai/workflows/safety-workflow/types";
 
 const initialSteps: WorkflowStepState = {
   match_presentations: "idle",
@@ -34,7 +35,6 @@ const initialSteps: WorkflowStepState = {
   fetch_diagnoses: "idle",
   group_diagnoses: "idle",
   critic_review: "idle",
-  build_follow_up_questions: "idle",
 };
 
 export default function Chat() {
@@ -74,6 +74,7 @@ export default function Chat() {
     matchedClinicalPresentations: ClinicalPresentationMatch[];
     matchedCategories: CategoryMatch[];
     matchedFeatures: FeatureMatch[];
+    criticAssessment?: CriticAssessment;
   } = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
@@ -90,6 +91,7 @@ export default function Chat() {
                 matchedClinicalPresentations?: ClinicalPresentationMatch[];
                 matchedCategories?: CategoryMatch[];
                 matchedFeatures?: FeatureMatch[];
+                criticAssessment?: CriticAssessment;
               }
             | undefined;
           return {
@@ -98,6 +100,7 @@ export default function Chat() {
               output?.matchedClinicalPresentations ?? [],
             matchedCategories: output?.matchedCategories ?? [],
             matchedFeatures: output?.matchedFeatures ?? [],
+            criticAssessment: output?.criticAssessment,
           };
         }
       }
@@ -107,6 +110,7 @@ export default function Chat() {
       matchedClinicalPresentations: [],
       matchedCategories: [],
       matchedFeatures: [],
+      criticAssessment: undefined,
     };
   })();
 
@@ -219,6 +223,7 @@ export default function Chat() {
           matchedClinicalPresentations={ddxResult.matchedClinicalPresentations}
           matchedCategories={ddxResult.matchedCategories}
           matchedFeatures={ddxResult.matchedFeatures}
+          criticAssessment={ddxResult.criticAssessment}
         />
       </div>
     </div>

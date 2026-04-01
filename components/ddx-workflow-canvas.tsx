@@ -88,7 +88,7 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
       {
         id: "cp",
         type: "workflow",
-        position: { x: 0, y: 44 },
+        position: { x: 0, y: 52 },
         data: {
           label: "CP Matching",
           description: "Presentation agent",
@@ -98,7 +98,7 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
       {
         id: "cat",
         type: "workflow",
-        position: { x: 210, y: 0 },
+        position: { x: 220, y: 0 },
         data: {
           label: "Category Matching",
           description: "Category agent",
@@ -108,7 +108,7 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
       {
         id: "feature",
         type: "workflow",
-        position: { x: 210, y: 88 },
+        position: { x: 220, y: 104 },
         data: {
           label: "Feature Matching",
           description: "Feature agent",
@@ -118,7 +118,7 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
       {
         id: "diag",
         type: "workflow",
-        position: { x: 450, y: 44 },
+        position: { x: 480, y: 52 },
         data: {
           label: "Diagnosis Lookup",
           description: "Graph merge",
@@ -128,11 +128,21 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
       {
         id: "results",
         type: "workflow",
-        position: { x: 660, y: 44 },
+        position: { x: 720, y: 52 },
         data: {
-          label: "Results",
+          label: "Differentials",
           description: "Ranked differentials",
           status: steps.group_diagnoses,
+        },
+      },
+      {
+        id: "critic",
+        type: "workflow",
+        position: { x: 960, y: 52 },
+        data: {
+          label: "Critic Review",
+          description: "Confidence gate",
+          status: steps.critic_review,
         },
       },
     ],
@@ -181,20 +191,28 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
           steps.fetch_diagnoses === "running" ||
           steps.group_diagnoses === "running",
       },
+      {
+        id: "results-critic",
+        source: "results",
+        target: "critic",
+        animated:
+          steps.group_diagnoses === "running" ||
+          steps.critic_review === "running",
+      },
     ],
     [steps]
   );
 
-  if (!mounted) return <div className="h-52 w-full border-b border-border" />;
+  if (!mounted) return <div className="h-60 w-full border-b border-border" />;
 
   return (
-    <div className="h-52 w-full border-b border-border">
+    <div className="h-60 w-full border-b border-border">
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.35 }}
+        fitViewOptions={{ padding: 0.28 }}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}

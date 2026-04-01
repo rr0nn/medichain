@@ -18,7 +18,6 @@ describe("DdxPanel", () => {
           fetch_diagnoses: "complete",
           group_diagnoses: "complete",
           critic_review: "complete",
-          build_follow_up_questions: "complete",
         }}
         differentials={[
           {
@@ -53,6 +52,15 @@ describe("DdxPanel", () => {
             matchedText: ["right lower quadrant tenderness"],
           },
         ]}
+        criticAssessment={{
+          isConfident: false,
+          shouldReturnToInterview: true,
+          confidenceLabel: "medium",
+          reasons: ["The top differential score is below the confidence threshold."],
+          topDifferentialScore: 0.92,
+          topDifferentialEvidenceCount: 1,
+          scoreGapToSecond: null,
+        }}
       />
     );
 
@@ -60,6 +68,12 @@ describe("DdxPanel", () => {
       screen.getByText("Feature: Right lower quadrant tenderness (site)")
     ).toBeInTheDocument();
     expect(screen.getByText("Evidence support score")).toBeInTheDocument();
+    expect(screen.getByText("Critic Review")).toBeInTheDocument();
+    expect(screen.getByText("Needs more information")).toBeInTheDocument();
+    expect(screen.getByText("Confidence: medium")).toBeInTheDocument();
+    expect(
+      screen.getByText("The top differential score is below the confidence threshold.")
+    ).toBeInTheDocument();
 
     const summary = screen.getByText("Appendicitis");
     summary.closest("details")?.setAttribute("open", "");
