@@ -65,6 +65,16 @@ describe("runInterviewAgent", () => {
             expect.objectContaining({
                 model: fakeModel,
                 messages: convertedMessages,
+                system: expect.stringContaining(
+                    'status = "needs_more_information" and matchedClinicalPresentations.length === 0'
+                ),
+            })
+        );
+        expect(mocks.mockStreamText).toHaveBeenCalledWith(
+            expect.objectContaining({
+                system: expect.stringContaining(
+                    "Do not imply that an evidence support score is a probability."
+                ),
             })
         );
         expect(writer.merge).toHaveBeenCalledWith(fakeStreamResult.toUIMessageStream());
