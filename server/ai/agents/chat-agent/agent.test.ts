@@ -51,13 +51,13 @@ describe("runChatAgent", () => {
         const writer = {
             write: vi.fn(),
             merge: vi.fn(),
-        } as never;
+        };
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
         mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
 
-        await runChatAgent(input as never, writer);
+        await runChatAgent(input as never, writer as never);
 
         expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(input.messages);
         expect(mocks.mockGetDefaultChatModel).toHaveBeenCalledTimes(1);

@@ -17,6 +17,8 @@ describe("DdxPanel", () => {
           match_features: "complete",
           fetch_diagnoses: "complete",
           group_diagnoses: "complete",
+          critic_review: "complete",
+          build_follow_up_questions: "complete",
         }}
         differentials={[
           {
