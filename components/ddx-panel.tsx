@@ -35,6 +35,57 @@ type PathDetails = {
   evidenceTypeLabel?: string;
 };
 
+function formatSourceLabel(input: {
+  sourceTitle: string;
+  edition?: string;
+  pageStart?: number;
+  pageEnd?: number;
+}) {
+  const titleWithEdition = input.edition
+    ? `${input.sourceTitle}, ${formatEditionLabel(input.edition)}`
+    : input.sourceTitle;
+
+  if (
+    input.pageStart !== undefined &&
+    input.pageEnd !== undefined &&
+    input.pageStart !== input.pageEnd
+  ) {
+    return `${titleWithEdition} (pp. ${input.pageStart}-${input.pageEnd})`;
+  }
+
+  if (input.pageStart !== undefined) {
+    return `${titleWithEdition} (p. ${input.pageStart})`;
+  }
+
+  return titleWithEdition;
+}
+
+function formatEditionLabel(edition: string) {
+  const trimmedEdition = edition.trim();
+
+  if (!/^\d+$/.test(trimmedEdition)) {
+    return trimmedEdition;
+  }
+
+  const numericEdition = Number(trimmedEdition);
+  const lastTwoDigits = numericEdition % 100;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+    return `${numericEdition}th edition`;
+  }
+
+  switch (numericEdition % 10) {
+    case 1:
+      return `${numericEdition}st edition`;
+    case 2:
+      return `${numericEdition}nd edition`;
+    case 3:
+      return `${numericEdition}rd edition`;
+    default:
+      return `${numericEdition}th edition`;
+  }
+}
+
 export function DdxPanel({
   steps,
   differentials,
@@ -226,12 +277,32 @@ export function DdxPanel({
               </p>
               <div className="flex flex-wrap gap-2">
                 {matchedClinicalPresentations.map((match) => (
-                  <span
+                  <div
                     key={`cp-${match.key}`}
-                    className="rounded-full bg-muted px-2.5 py-1 text-xs"
+                    className="space-y-1 rounded-md border border-border bg-muted/30 px-2.5 py-2"
                   >
-                    Presentation: {match.name}
-                  </span>
+                    <span className="block text-xs">
+                      Presentation: {match.name}
+                    </span>
+                    {match.sources.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {match.sources.map((source) => (
+                          <span
+                            key={`${match.key}-${source.sourceKey}`}
+                            className="rounded-full bg-background px-2 py-1 text-[11px] text-muted-foreground"
+                          >
+                            Source:{" "}
+                            {formatSourceLabel({
+                              sourceTitle: source.sourceTitle,
+                              edition: source.edition,
+                              pageStart: source.pageStart,
+                              pageEnd: source.pageEnd,
+                            })}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
                 {matchedCategories.map((match) => (
                   <span
