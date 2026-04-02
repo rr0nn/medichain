@@ -6,7 +6,11 @@ import type {
   FeatureMatch,
 } from "@/server/ai/workflows/ddx-workflow/types";
 
-import type { CriticAssessment, SafetyWorkflowResult } from "./types";
+import type {
+  CriticAssessment,
+  GroundingAssessment,
+  SafetyWorkflowResult,
+} from "./types";
 
 /**
  * Builds the low-confidence workflow result so the chat agent can ask its own
@@ -18,7 +22,8 @@ export function buildNeedsMoreInformationResult(
   matchedFeatures: FeatureMatch[],
   candidateFeatures: FeatureRecord[],
   differentials: DifferentialDiagnosis[],
-  criticAssessment: CriticAssessment
+  criticAssessment: CriticAssessment,
+  groundingAssessment: GroundingAssessment,
 ): SafetyWorkflowResult {
   return {
     matchedClinicalPresentations,
@@ -27,6 +32,7 @@ export function buildNeedsMoreInformationResult(
     differentials,
     status: "needs_more_information",
     criticAssessment,
+    groundingAssessment,
     candidateFeatures,
   };
 }

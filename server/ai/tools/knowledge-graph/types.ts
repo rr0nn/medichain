@@ -27,3 +27,11 @@ export type DiagnosisRecord = {
   diagnosisKey: string;
   diagnosisName: string;
 };
+
+export type DiagnosisPathAuditRecord = {
+  evidenceType: "category" | "feature";
+  clinicalPresentationKey: string;
+  categoryKey?: string;
+  featureKey?: string;
+  diagnosisKey: string;
+};

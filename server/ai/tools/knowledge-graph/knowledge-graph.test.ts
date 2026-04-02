@@ -22,6 +22,7 @@ vi.mock("./neo4j", () => ({
 import {
   getDiagnosesForFeaturePairs,
   getFeaturesForClinicalPresentations,
+  verifyDiagnosisEvidencePaths,
 } from "./knowledge-graph";
 
 describe("knowledge graph feature helpers", () => {
@@ -133,6 +134,64 @@ describe("knowledge graph feature helpers", () => {
         featureKey: "feature-rlq-tenderness",
         diagnosisKey: "dx-appendicitis",
         diagnosisName: "Appendicitis",
+      },
+    ]);
+  });
+
+  it("re-verifies diagnosis evidence paths directly from Neo4j", async () => {
+    mocks.mockExecuteQuery.mockResolvedValue({
+      records: [
+        {
+          get: vi.fn((key: string) => {
+            const values = {
+              evidenceType: "feature",
+              clinicalPresentationKey: "cp-abdominal-pain",
+              categoryKey: null,
+              featureKey: "feature-rlq-tenderness",
+              diagnosisKey: "dx-appendicitis",
+            };
+
+            return values[key as keyof typeof values];
+          }),
+        },
+      ],
+    });
+
+    const result = await verifyDiagnosisEvidencePaths([
+      {
+        evidenceType: "feature",
+        clinicalPresentationKey: "cp-abdominal-pain",
+        featureKey: "feature-rlq-tenderness",
+        diagnosisKey: "dx-appendicitis",
+      },
+    ]);
+
+    const [query, params, options] = mocks.mockExecuteQuery.mock.calls[0];
+
+    expect(query).toContain("UNWIND $paths AS path");
+    expect(query).toContain("-[:SUGGESTS]->(dx:Diagnosis {key: path.diagnosisKey})");
+    expect(query).toContain("-[:INCLUDES_DIAGNOSIS]->(dx:Diagnosis {key: path.diagnosisKey})");
+    expect(params).toEqual({
+      paths: [
+        {
+          evidenceType: "feature",
+          clinicalPresentationKey: "cp-abdominal-pain",
+          featureKey: "feature-rlq-tenderness",
+          diagnosisKey: "dx-appendicitis",
+        },
+      ],
+    });
+    expect(options).toEqual({
+      database: "neo4j-test-db",
+      routing: "READ",
+    });
+
+    expect(result).toEqual([
+      {
+        evidenceType: "feature",
+        clinicalPresentationKey: "cp-abdominal-pain",
+        featureKey: "feature-rlq-tenderness",
+        diagnosisKey: "dx-appendicitis",
       },
     ]);
   });

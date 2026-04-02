@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   mockRunDifferentialDiagnosisWorkflow: vi.fn(),
   mockGetFeaturesForClinicalPresentations: vi.fn(),
+  mockVerifyDiagnosisEvidencePaths: vi.fn(),
 }));
 
 vi.mock("@/server/ai/workflows/ddx-workflow/workflow", () => ({
@@ -12,6 +13,7 @@ vi.mock("@/server/ai/workflows/ddx-workflow/workflow", () => ({
 vi.mock("@/server/ai/tools/knowledge-graph/knowledge-graph", () => ({
   getFeaturesForClinicalPresentations:
     mocks.mockGetFeaturesForClinicalPresentations,
+  verifyDiagnosisEvidencePaths: mocks.mockVerifyDiagnosisEvidencePaths,
 }));
 
 import { runSafetyWorkflow } from "./workflow";
@@ -19,6 +21,7 @@ import { runSafetyWorkflow } from "./workflow";
 describe("runSafetyWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.mockVerifyDiagnosisEvidencePaths.mockImplementation(async (paths) => paths);
   });
 
   it("returns ready_for_review when the differential is confident", async () => {
@@ -26,8 +29,32 @@ describe("runSafetyWorkflow", () => {
       matchedClinicalPresentations: [
         { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
       ],
-      matchedCategories: [],
-      matchedFeatures: [],
+      matchedCategories: [
+        {
+          clinicalPresentationKey: "cp-fever",
+          categoryKey: "cat-infectious",
+          categoryName: "Infectious",
+          score: 0.78,
+          matchedText: ["infectious symptoms"],
+        },
+        {
+          clinicalPresentationKey: "cp-fever",
+          categoryKey: "cat-viral",
+          categoryName: "Viral",
+          score: 0.7,
+          matchedText: ["viral illness"],
+        },
+      ],
+      matchedFeatures: [
+        {
+          clinicalPresentationKey: "cp-fever",
+          featureKey: "feature-rigors",
+          featureName: "Rigors",
+          featureType: "associated_symptom",
+          score: 0.85,
+          matchedText: ["rigors"],
+        },
+      ],
       differentials: [
         {
           diagnosisKey: "dx-flu",
@@ -65,6 +92,7 @@ describe("runSafetyWorkflow", () => {
 
     expect(result.status).toBe("ready_for_review");
     expect(result.criticAssessment.isConfident).toBe(true);
+    expect(result.groundingAssessment.isGrounded).toBe(true);
     expect(result.candidateFeatures).toEqual([]);
     expect(mocks.mockGetFeaturesForClinicalPresentations).not.toHaveBeenCalled();
   });
@@ -118,6 +146,7 @@ describe("runSafetyWorkflow", () => {
 
     expect(result.status).toBe("needs_more_information");
     expect(result.criticAssessment.isConfident).toBe(false);
+    expect(result.groundingAssessment.isGrounded).toBe(true);
     expect(result.candidateFeatures).toEqual([
       {
         clinicalPresentationKey: "cp-fever",
@@ -130,6 +159,93 @@ describe("runSafetyWorkflow", () => {
     expect(mocks.mockGetFeaturesForClinicalPresentations).toHaveBeenCalledWith([
       "cp-fever",
     ]);
+  });
+
+  it("filters out ungrounded diagnoses before returning ready_for_review", async () => {
+    mocks.mockVerifyDiagnosisEvidencePaths.mockResolvedValue([
+      {
+        evidenceType: "feature",
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        diagnosisKey: "dx-flu",
+      },
+    ]);
+
+    mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
+      matchedClinicalPresentations: [
+        { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
+      ],
+      matchedCategories: [
+        {
+          clinicalPresentationKey: "cp-fever",
+          categoryKey: "cat-infectious",
+          categoryName: "Infectious",
+          score: 0.8,
+          matchedText: ["fever"],
+        },
+      ],
+      matchedFeatures: [
+        {
+          clinicalPresentationKey: "cp-fever",
+          featureKey: "feature-rigors",
+          featureName: "Rigors",
+          featureType: "associated_symptom",
+          score: 0.9,
+          matchedText: ["rigors"],
+        },
+      ],
+      differentials: [
+        {
+          diagnosisKey: "dx-flu",
+          diagnosisName: "Influenza",
+          score: 0.9,
+          evidence: [
+            {
+              evidenceType: "feature",
+              clinicalPresentationKey: "cp-fever",
+              featureKey: "feature-rigors",
+            },
+          ],
+        },
+        {
+          diagnosisKey: "dx-ungrounded",
+          diagnosisName: "Ungrounded diagnosis",
+          score: 0.89,
+          evidence: [
+            {
+              evidenceType: "category",
+              clinicalPresentationKey: "cp-fever",
+              categoryKey: "cat-missing",
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await runSafetyWorkflow("fever and rigors");
+
+    expect(result.status).toBe("ready_for_review");
+    expect(result.differentials).toEqual([
+      {
+        diagnosisKey: "dx-flu",
+        diagnosisName: "Influenza",
+        score: 0.9,
+        evidence: [
+          {
+            evidenceType: "feature",
+            clinicalPresentationKey: "cp-fever",
+            featureKey: "feature-rigors",
+          },
+        ],
+      },
+    ]);
+    expect(result.groundingAssessment).toMatchObject({
+      isGrounded: true,
+      groundedDifferentialCount: 1,
+      ungroundedDifferentialCount: 1,
+      topDiagnosisHasGroundedEvidence: true,
+      topDiagnosisHasFeatureEvidence: true,
+    });
   });
 
   it("emits critic and follow-up step events", async () => {

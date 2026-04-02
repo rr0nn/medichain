@@ -15,8 +15,18 @@ export type ConsultationStatus =
   | "ready_for_review"
   | "needs_more_information";
 
+export type GroundingAssessment = {
+  isGrounded: boolean;
+  reasons: string[];
+  groundedDifferentialCount: number;
+  ungroundedDifferentialCount: number;
+  topDiagnosisHasGroundedEvidence: boolean;
+  topDiagnosisHasFeatureEvidence: boolean;
+};
+
 export type SafetyWorkflowResult = DifferentialDiagnosisWorkflowResult & {
   status: ConsultationStatus;
   criticAssessment: CriticAssessment;
+  groundingAssessment: GroundingAssessment;
   candidateFeatures: FeatureRecord[];
 };
