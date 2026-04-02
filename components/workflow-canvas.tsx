@@ -264,12 +264,6 @@ export function WorkflowCanvas({
         label: noGraphMatch ? "no match" : "ask more",
         animated: noGraphMatch || needsMoreInformation,
       },
-      {
-        id: "more-info-interview",
-        source: "more-info",
-        target: "interview",
-        animated: noGraphMatch || needsMoreInformation,
-      },
     ],
     [
       needsMoreInformation,
