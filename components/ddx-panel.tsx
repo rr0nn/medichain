@@ -11,7 +11,10 @@ import type {
   DifferentialDiagnosisEvidenceRef,
   FeatureMatch,
 } from "@/server/ai/workflows/ddx-workflow/types";
-import type { CriticAssessment } from "@/server/ai/workflows/safety-workflow/types";
+import type {
+  CriticAssessment,
+  GroundingAssessment,
+} from "@/server/ai/workflows/safety-workflow/types";
 import { ChevronRight } from "lucide-react";
 
 type Props = {
@@ -21,6 +24,7 @@ type Props = {
   matchedCategories: CategoryMatch[];
   matchedFeatures: FeatureMatch[];
   criticAssessment?: CriticAssessment;
+  groundingAssessment?: GroundingAssessment;
 };
 
 type PathDetails = {
@@ -38,6 +42,7 @@ export function DdxPanel({
   matchedCategories,
   matchedFeatures,
   criticAssessment,
+  groundingAssessment,
 }: Props) {
   const getPathDetails = (
     path: DifferentialDiagnosisEvidenceRef
@@ -164,6 +169,53 @@ export function DdxPanel({
                   <p className="text-xs text-muted-foreground">
                     The critic considered the current differential sufficiently supported for review.
                   </p>
+                )}
+
+                {groundingAssessment && (
+                  <div className="space-y-2 rounded-md border border-border/70 bg-background/70 p-2.5">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Grounding Audit
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span
+                        className={
+                          groundingAssessment.isGrounded
+                            ? "rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"
+                            : "rounded-full bg-amber-500/10 px-2.5 py-1 text-amber-700 dark:text-amber-300"
+                        }
+                      >
+                        {groundingAssessment.isGrounded
+                          ? "Graph grounded"
+                          : "Grounding failed"}
+                      </span>
+                      <span className="rounded-full bg-muted px-2.5 py-1">
+                        Grounded diagnoses: {groundingAssessment.groundedDifferentialCount}
+                      </span>
+                      {groundingAssessment.ungroundedDifferentialCount > 0 && (
+                        <span className="rounded-full bg-muted px-2.5 py-1">
+                          Removed as ungrounded: {groundingAssessment.ungroundedDifferentialCount}
+                        </span>
+                      )}
+                      <span className="rounded-full bg-muted px-2.5 py-1">
+                        Top diagnosis grounded: {groundingAssessment.topDiagnosisHasGroundedEvidence ? "yes" : "no"}
+                      </span>
+                      <span className="rounded-full bg-muted px-2.5 py-1">
+                        Top diagnosis feature-backed: {groundingAssessment.topDiagnosisHasFeatureEvidence ? "yes" : "no"}
+                      </span>
+                    </div>
+                    {groundingAssessment.reasons.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                          Audit notes
+                        </p>
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          {groundingAssessment.reasons.map((reason) => (
+                            <li key={reason}>{reason}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}

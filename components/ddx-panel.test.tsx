@@ -61,6 +61,14 @@ describe("DdxPanel", () => {
           topDifferentialEvidenceCount: 1,
           scoreGapToSecond: null,
         }}
+        groundingAssessment={{
+          isGrounded: true,
+          reasons: ["1 differential diagnosis failed direct knowledge graph path verification and was removed."],
+          groundedDifferentialCount: 1,
+          ungroundedDifferentialCount: 1,
+          topDiagnosisHasGroundedEvidence: true,
+          topDiagnosisHasFeatureEvidence: true,
+        }}
       />
     );
 
@@ -71,8 +79,15 @@ describe("DdxPanel", () => {
     expect(screen.getByText("Critic Review")).toBeInTheDocument();
     expect(screen.getByText("Needs more information")).toBeInTheDocument();
     expect(screen.getByText("Confidence: medium")).toBeInTheDocument();
+    expect(screen.getByText("Grounding Audit")).toBeInTheDocument();
+    expect(screen.getByText("Graph grounded")).toBeInTheDocument();
+    expect(screen.getByText("Grounded diagnoses: 1")).toBeInTheDocument();
+    expect(screen.getByText("Removed as ungrounded: 1")).toBeInTheDocument();
     expect(
       screen.getByText("The top differential score is below the confidence threshold.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("1 differential diagnosis failed direct knowledge graph path verification and was removed.")
     ).toBeInTheDocument();
 
     const summary = screen.getByText("Appendicitis");

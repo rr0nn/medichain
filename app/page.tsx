@@ -27,6 +27,7 @@ import type {
   WorkflowStepEvent,
 } from "@/server/ai/workflows/ddx-workflow/types";
 import type { CriticAssessment } from "@/server/ai/workflows/safety-workflow/types";
+import type { GroundingAssessment } from "@/server/ai/workflows/safety-workflow/types";
 
 const initialSteps: WorkflowStepState = {
   match_presentations: "idle",
@@ -75,6 +76,7 @@ export default function Chat() {
     matchedCategories: CategoryMatch[];
     matchedFeatures: FeatureMatch[];
     criticAssessment?: CriticAssessment;
+    groundingAssessment?: GroundingAssessment;
   } = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
@@ -92,6 +94,7 @@ export default function Chat() {
                 matchedCategories?: CategoryMatch[];
                 matchedFeatures?: FeatureMatch[];
                 criticAssessment?: CriticAssessment;
+                groundingAssessment?: GroundingAssessment;
               }
             | undefined;
           return {
@@ -101,6 +104,7 @@ export default function Chat() {
             matchedCategories: output?.matchedCategories ?? [],
             matchedFeatures: output?.matchedFeatures ?? [],
             criticAssessment: output?.criticAssessment,
+            groundingAssessment: output?.groundingAssessment,
           };
         }
       }
@@ -111,6 +115,7 @@ export default function Chat() {
       matchedCategories: [],
       matchedFeatures: [],
       criticAssessment: undefined,
+      groundingAssessment: undefined,
     };
   })();
 
@@ -224,6 +229,7 @@ export default function Chat() {
           matchedCategories={ddxResult.matchedCategories}
           matchedFeatures={ddxResult.matchedFeatures}
           criticAssessment={ddxResult.criticAssessment}
+          groundingAssessment={ddxResult.groundingAssessment}
         />
       </div>
     </div>
