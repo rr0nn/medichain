@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  DdxWorkflowCanvas,
+  WorkflowCanvas,
   type WorkflowStepState,
-} from "@/components/ddx-workflow-canvas";
+} from "@/components/workflow-canvas";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
@@ -48,18 +48,18 @@ export function DdxPanel({
     const categoryMatch =
       path.evidenceType === "category"
         ? matchedCategories.find(
-            (match) =>
-              match.clinicalPresentationKey === path.clinicalPresentationKey &&
-              match.categoryKey === path.categoryKey
-          )
+          (match) =>
+            match.clinicalPresentationKey === path.clinicalPresentationKey &&
+            match.categoryKey === path.categoryKey
+        )
         : undefined;
     const featureMatch =
       path.evidenceType === "feature"
         ? matchedFeatures.find(
-            (match) =>
-              match.clinicalPresentationKey === path.clinicalPresentationKey &&
-              match.featureKey === path.featureKey
-          )
+          (match) =>
+            match.clinicalPresentationKey === path.clinicalPresentationKey &&
+            match.featureKey === path.featureKey
+        )
         : undefined;
 
     return {
@@ -90,7 +90,11 @@ export function DdxPanel({
       </header>
 
       <div className="flex-1 overflow-y-auto min-h-0">
-        <DdxWorkflowCanvas steps={steps} />
+        <WorkflowCanvas
+          steps={steps}
+          matchedClinicalPresentationCount={matchedClinicalPresentations.length}
+          criticAssessment={criticAssessment}
+        />
 
         {differentials.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import { ThemeSelector } from "@/components/theme-selector";
-import type { WorkflowStepState } from "@/components/ddx-workflow-canvas";
+import type { WorkflowStepState } from "@/components/workflow-canvas";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
