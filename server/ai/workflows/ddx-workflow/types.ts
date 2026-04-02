@@ -1,8 +1,11 @@
+import type { SourceRecord } from "@/server/ai/tools/knowledge-graph/types";
+
 export type ClinicalPresentationMatch = {
   key: string;
   name: string;
   score: number;
   matchedText: string[];
+  sources: SourceRecord[];
 };
 
 export type WorkflowStepName =

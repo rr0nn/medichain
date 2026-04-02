@@ -39,6 +39,16 @@ describe("DdxPanel", () => {
             name: "Abdominal pain",
             score: 0.8,
             matchedText: ["abdominal pain"],
+            sources: [
+              {
+                clinicalPresentationKey: "cp-abdominal-pain",
+                sourceKey: "source:pocketbook_ddx_5e_abdominal_pain",
+                sourceTitle: "Pocketbook of Differential Diagnosis",
+                edition: "5",
+                pageStart: 123,
+                pageEnd: 126,
+              },
+            ],
           },
         ]}
         matchedCategories={[]}
@@ -74,6 +84,11 @@ describe("DdxPanel", () => {
 
     expect(
       screen.getByText("Feature: Right lower quadrant tenderness (site)")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Source: Pocketbook of Differential Diagnosis, 5th edition (pp. 123-126)"
+      )
     ).toBeInTheDocument();
     expect(screen.getByText("Evidence support score")).toBeInTheDocument();
     expect(screen.getByText("Safety Review")).toBeInTheDocument();
