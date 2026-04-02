@@ -1,5 +1,5 @@
-// This ensures this workflow acts as a thin wrapper, and allows the
-// behaviour to be locked in if the implementation changes later.
+// This ensures the interview workflow stays a thin wrapper around the
+// interview agent, even if the implementation changes later.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,9 +11,9 @@ vi.mock("@/server/ai/agents/interview-agent/agent", () => ({
     runInterviewAgent: mocks.mockRunInterviewAgent,
 }));
 
-import { runChatWorkflow } from "./workflow";
+import { runInterviewerWorkflow } from "./workflow";
 
-describe("runChatWorkflow", () => {
+describe("runInterviewerWorkflow", () => {
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -31,7 +31,7 @@ describe("runChatWorkflow", () => {
             merge: vi.fn(),
         } as never;
 
-        const result = await runChatWorkflow(input as never, writer);
+        const result = await runInterviewerWorkflow(input as never, writer);
 
         expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(input, writer);
         expect(result).toBe(fakeResult);

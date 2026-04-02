@@ -13,8 +13,8 @@ import type {
 } from "./types";
 
 /**
- * Builds the low-confidence workflow result so the chat agent can ask its own
- * follow-up questions using the full conversation context plus graph evidence.
+ * Builds the low-confidence workflow result so the interview agent can ask its
+ * own follow-up questions using the full conversation context plus graph evidence.
  */
 export function buildNeedsMoreInformationResult(
   matchedClinicalPresentations: ClinicalPresentationMatch[],
