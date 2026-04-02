@@ -1,6 +1,4 @@
-import {
-  getFeaturesForClinicalPresentations,
-} from "@/server/ai/tools/knowledge-graph/knowledge-graph";
+import { getFeaturesForClinicalPresentations } from "@/server/ai/tools/knowledge-graph/knowledge-graph";
 import { runDifferentialDiagnosisWorkflow } from "@/server/ai/workflows/ddx-workflow/workflow";
 import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/types";
 
@@ -20,7 +18,8 @@ function mergeSafetyAssessments(input: {
   groundingAssessment: GroundingAssessment;
 }): CriticAssessment {
   const shouldReturnToInterview =
-    !input.groundingAssessment.isGrounded || !input.criticAssessment.isConfident;
+    !input.groundingAssessment.isGrounded ||
+    !input.criticAssessment.isConfident;
 
   if (!shouldReturnToInterview) {
     return input.criticAssessment;
@@ -42,14 +41,19 @@ function mergeSafetyAssessments(input: {
 }
 
 /**
- * Runs the safety workflow on top of the core DDX workflow by reviewing
- * confidence and generating follow-up questions when the differential is weak.
+ * Runs the safety workflow on top of the core DDX workflow by auditing graph
+ * grounding and confidence before the interview agent decides how to respond.
  */
 export async function runSafetyWorkflow(
   patientDescription: string,
-  onStep?: OnStep
+  onStep?: OnStep,
 ): Promise<SafetyWorkflowResult> {
-  const ddxResult = await runDifferentialDiagnosisWorkflow(patientDescription, onStep);
+  const ddxResult = await runDifferentialDiagnosisWorkflow(
+    patientDescription,
+    onStep,
+  );
+
+  onStep?.({ type: "step", step: "safety_review", status: "running" });
 
   // First, audit every returned diagnosis path directly against Neo4j so the
   // safety workflow only evaluates differentials that still exist in the graph.
@@ -63,11 +67,10 @@ export async function runSafetyWorkflow(
 
   // Then run the critic on the audited differential list rather than the raw
   // DDX output, so confidence never depends on unsupported graph paths.
-  onStep?.({ type: "step", step: "critic_review", status: "running" });
   const criticAssessment = reviewDifferentialConfidence(
-    groundedDdxResult.differentials
+    groundedDdxResult.differentials,
   );
-  onStep?.({ type: "step", step: "critic_review", status: "complete" });
+  onStep?.({ type: "step", step: "safety_review", status: "complete" });
 
   const mergedCriticAssessment = mergeSafetyAssessments({
     criticAssessment,
@@ -78,7 +81,7 @@ export async function runSafetyWorkflow(
   // interview loop with the audited differential state attached.
   if (mergedCriticAssessment.shouldReturnToInterview) {
     const candidateFeatures = await getFeaturesForClinicalPresentations(
-      groundedDdxResult.matchedClinicalPresentations.map((match) => match.key)
+      groundedDdxResult.matchedClinicalPresentations.map((match) => match.key),
     );
 
     return buildNeedsMoreInformationResult(

@@ -17,7 +17,7 @@ describe("DdxPanel", () => {
           match_features: "complete",
           fetch_diagnoses: "complete",
           group_diagnoses: "complete",
-          critic_review: "complete",
+          safety_review: "complete",
         }}
         differentials={[
           {
@@ -76,7 +76,7 @@ describe("DdxPanel", () => {
       screen.getByText("Feature: Right lower quadrant tenderness (site)")
     ).toBeInTheDocument();
     expect(screen.getByText("Evidence support score")).toBeInTheDocument();
-    expect(screen.getByText("Critic Review")).toBeInTheDocument();
+    expect(screen.getByText("Safety Review")).toBeInTheDocument();
     expect(screen.getByText("Needs more information")).toBeInTheDocument();
     expect(screen.getByText("Confidence: medium")).toBeInTheDocument();
     expect(screen.getByText("Grounding Audit")).toBeInTheDocument();

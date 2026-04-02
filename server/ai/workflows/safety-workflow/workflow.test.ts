@@ -21,7 +21,9 @@ import { runSafetyWorkflow } from "./workflow";
 describe("runSafetyWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.mockVerifyDiagnosisEvidencePaths.mockImplementation(async (paths) => paths);
+    mocks.mockVerifyDiagnosisEvidencePaths.mockImplementation(
+      async (paths) => paths,
+    );
   });
 
   it("returns ready_for_review when the differential is confident", async () => {
@@ -94,7 +96,9 @@ describe("runSafetyWorkflow", () => {
     expect(result.criticAssessment.isConfident).toBe(true);
     expect(result.groundingAssessment.isGrounded).toBe(true);
     expect(result.candidateFeatures).toEqual([]);
-    expect(mocks.mockGetFeaturesForClinicalPresentations).not.toHaveBeenCalled();
+    expect(
+      mocks.mockGetFeaturesForClinicalPresentations,
+    ).not.toHaveBeenCalled();
   });
 
   it("routes to needs_more_information when the top differential score is too low", async () => {
@@ -263,8 +267,8 @@ describe("runSafetyWorkflow", () => {
     await runSafetyWorkflow("unknown presentation", onStep);
 
     expect(onStep.mock.calls.map(([event]) => event)).toEqual([
-      { type: "step", step: "critic_review", status: "running" },
-      { type: "step", step: "critic_review", status: "complete" },
+      { type: "step", step: "safety_review", status: "running" },
+      { type: "step", step: "safety_review", status: "complete" },
     ]);
   });
 });

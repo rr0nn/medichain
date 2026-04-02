@@ -117,7 +117,7 @@ export function DdxPanel({
             {criticAssessment && (
               <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Critic Review
+                  Safety Review
                 </p>
                 <div className="flex flex-wrap gap-2 text-xs">
                   <span

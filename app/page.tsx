@@ -26,8 +26,10 @@ import type {
   FeatureMatch,
   WorkflowStepEvent,
 } from "@/server/ai/workflows/ddx-workflow/types";
-import type { CriticAssessment } from "@/server/ai/workflows/safety-workflow/types";
-import type { GroundingAssessment } from "@/server/ai/workflows/safety-workflow/types";
+import type {
+  CriticAssessment,
+  GroundingAssessment,
+} from "@/server/ai/workflows/safety-workflow/types";
 
 const initialSteps: WorkflowStepState = {
   match_presentations: "idle",
@@ -35,7 +37,7 @@ const initialSteps: WorkflowStepState = {
   match_features: "idle",
   fetch_diagnoses: "idle",
   group_diagnoses: "idle",
-  critic_review: "idle",
+  safety_review: "idle",
 };
 
 export default function Chat() {
