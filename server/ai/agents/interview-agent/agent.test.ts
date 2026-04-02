@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
     mockStreamText: vi.fn(),
     mockGetDefaultChatModel: vi.fn(),
     mockRunSafetyWorkflow: vi.fn(),
+    mockComposePatientResponse: vi.fn(),
 }));
 
 vi.mock("ai", () => ({
@@ -23,6 +24,10 @@ vi.mock("@/server/ai/core/models", () => ({
 
 vi.mock("@/server/ai/workflows/safety-workflow/workflow", () => ({
     runSafetyWorkflow: mocks.mockRunSafetyWorkflow,
+}));
+
+vi.mock("./patient-response", () => ({
+    composePatientResponse: mocks.mockComposePatientResponse,
 }));
 
 import { runInterviewAgent } from "./agent";
@@ -119,6 +124,74 @@ describe("runInterviewAgent", () => {
                 "Patient summary: Lower abdominal pain with nausea",
             ].join("\n"),
             expect.any(Function)
+        );
+    });
+
+    it("composes a patient-facing response when the safety workflow is ready for review", async () => {
+        const convertedMessages = [
+            { role: "user", content: [{ type: "text", text: "Abdominal pain" }] },
+        ];
+        const fakeModel = { id: "fake-chat-model" };
+        const fakeStreamResult = { toUIMessageStream: vi.fn() };
+        const writer = {
+            write: vi.fn(),
+            merge: vi.fn(),
+        };
+
+        mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
+        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockStreamText.mockReturnValue(fakeStreamResult);
+        mocks.mockRunSafetyWorkflow.mockResolvedValue({
+            status: "ready_for_review",
+            matchedClinicalPresentations: [],
+            matchedCategories: [],
+            matchedFeatures: [],
+            differentials: [],
+            criticAssessment: {
+                isConfident: true,
+                shouldReturnToInterview: false,
+                confidenceLabel: "high",
+                reasons: [],
+                topDifferentialScore: 0.9,
+                topDifferentialEvidenceCount: 1,
+                scoreGapToSecond: null,
+            },
+            groundingAssessment: {
+                isGrounded: true,
+                reasons: [],
+                groundedDifferentialCount: 1,
+                ungroundedDifferentialCount: 0,
+                topDiagnosisHasGroundedEvidence: true,
+                topDiagnosisHasFeatureEvidence: true,
+            },
+            candidateFeatures: [],
+        });
+        mocks.mockComposePatientResponse.mockResolvedValue("Patient-facing response");
+
+        await runInterviewAgent(
+            {
+                messages: [{ id: "1", role: "user", content: "Abdominal pain" }],
+            } as never,
+            writer as never
+        );
+
+        const streamConfig = mocks.mockStreamText.mock.calls[0][0];
+        const toolConfig = streamConfig.tools.runDifferentialDiagnosis;
+
+        const result = await toolConfig.execute({
+            patientDescription: "Lower abdominal pain",
+            consultationStage: "initial_assessment",
+        });
+
+        expect(mocks.mockComposePatientResponse).toHaveBeenCalledWith(
+            "Lower abdominal pain",
+            expect.objectContaining({ status: "ready_for_review" }),
+        );
+        expect(result).toEqual(
+            expect.objectContaining({
+                status: "ready_for_review",
+                composedResponse: "Patient-facing response",
+            }),
         );
     });
 });

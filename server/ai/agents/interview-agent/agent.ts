@@ -10,6 +10,7 @@ import { z } from "zod";
 import type { ChatRequest } from "@/server/ai/core/types";
 import { getDefaultChatModel } from "@/server/ai/core/models";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
+import { composePatientResponse } from "./patient-response";
 
 function buildWorkflowPatientDescription(input: {
   patientDescription: string;
@@ -64,11 +65,9 @@ The tool returns structured graph-grounded differential output. Your reply must 
 - Do not present the result as a confident final diagnosis.
 
 3. status = "ready_for_review"
-- Explain the top differentials clearly and concisely.
-- Briefly state why they fit based on the matched evidence.
-- Mention key distinguishing considerations.
-- Mention that the result is grounded in the medical knowledge graph.
-- Make it clear this is decision support, not a confirmed diagnosis.
+- If the tool returns composedResponse, use that patient-facing response as the main answer.
+- Do not ask follow-up questions in this mode.
+- Keep the explanation aligned with the grounded differential result.
 
 General rules:
 - For general non-clinical conversation, respond normally without calling the tool.
@@ -120,10 +119,24 @@ export async function runInterviewAgent(
             newInformationFocus,
           });
 
-          return runSafetyWorkflow(workflowPatientDescription, (event) =>
+          const safetyResult = await runSafetyWorkflow(workflowPatientDescription, (event) =>
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             writer.write({ type: "data-step", data: event } as any),
           );
+
+          if (safetyResult.status === "ready_for_review") {
+            const composedResponse = await composePatientResponse(
+              patientDescription,
+              safetyResult,
+            );
+
+            return {
+              ...safetyResult,
+              composedResponse,
+            };
+          }
+
+          return safetyResult;
         },
       }),
     },
