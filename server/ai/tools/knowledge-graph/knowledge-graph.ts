@@ -6,6 +6,7 @@ import { neo4jDatabase, neo4jDriver } from "./neo4j";
 import type {
   CategoryRecord,
   ClinicalPresentationRecord,
+  DiagnosisPathAuditRecord,
   DiagnosisRecord,
   FeatureRecord,
 } from "./types";
@@ -206,5 +207,70 @@ export async function getDiagnosesForFeaturePairs(
     featureKey: record.get("featureKey"),
     diagnosisKey: record.get("diagnosisKey"),
     diagnosisName: record.get("diagnosisName"),
+  }));
+}
+
+/**
+ * Re-verifies exact diagnosis evidence paths directly against Neo4j.
+ * Short-circuits to an empty array when no candidate paths are provided.
+ *
+ * @param {DiagnosisPathAuditRecord[]} paths Candidate evidence paths to audit.
+ * @returns {Promise<DiagnosisPathAuditRecord[]>} Only the paths that still exist in the graph.
+ */
+export async function verifyDiagnosisEvidencePaths(
+  paths: DiagnosisPathAuditRecord[],
+): Promise<DiagnosisPathAuditRecord[]> {
+  if (paths.length === 0) {
+    return [];
+  }
+
+  const { records } = await neo4jDriver.executeQuery(
+    `
+    UNWIND $paths AS path
+    CALL {
+      WITH path
+      WITH path WHERE path.evidenceType = 'category'
+      MATCH (cp:ClinicalPresentation {key: path.clinicalPresentationKey})
+            -[:HAS_CATEGORY]->(cat:Category {key: path.categoryKey})
+            -[:INCLUDES_DIAGNOSIS]->(dx:Diagnosis {key: path.diagnosisKey})
+      RETURN
+        'category' AS evidenceType,
+        cp.key AS clinicalPresentationKey,
+        cat.key AS categoryKey,
+        null AS featureKey,
+        dx.key AS diagnosisKey
+      UNION
+      WITH path
+      WITH path WHERE path.evidenceType = 'feature'
+      MATCH (cp:ClinicalPresentation {key: path.clinicalPresentationKey})
+            -[:HAS_FEATURE]->(feature:Feature {key: path.featureKey})
+            -[:SUGGESTS]->(dx:Diagnosis {key: path.diagnosisKey})
+      RETURN
+        'feature' AS evidenceType,
+        cp.key AS clinicalPresentationKey,
+        null AS categoryKey,
+        feature.key AS featureKey,
+        dx.key AS diagnosisKey
+    }
+    RETURN
+      evidenceType,
+      clinicalPresentationKey,
+      categoryKey,
+      featureKey,
+      diagnosisKey
+    `,
+    { paths },
+    {
+      database: neo4jDatabase,
+      routing: neo4j.routing.READ,
+    },
+  );
+
+  return records.map((record) => ({
+    evidenceType: record.get("evidenceType"),
+    clinicalPresentationKey: record.get("clinicalPresentationKey"),
+    categoryKey: record.get("categoryKey") ?? undefined,
+    featureKey: record.get("featureKey") ?? undefined,
+    diagnosisKey: record.get("diagnosisKey"),
   }));
 }

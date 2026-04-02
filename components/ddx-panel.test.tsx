@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/components/ddx-workflow-canvas", () => ({
-  DdxWorkflowCanvas: () => <div>workflow-canvas</div>,
+vi.mock("@/components/workflow-canvas", () => ({
+  WorkflowCanvas: () => <div>workflow-canvas</div>,
 }));
 
 import { DdxPanel } from "./ddx-panel";
@@ -17,6 +17,7 @@ describe("DdxPanel", () => {
           match_features: "complete",
           fetch_diagnoses: "complete",
           group_diagnoses: "complete",
+          safety_review: "complete",
         }}
         differentials={[
           {
@@ -51,6 +52,23 @@ describe("DdxPanel", () => {
             matchedText: ["right lower quadrant tenderness"],
           },
         ]}
+        criticAssessment={{
+          isConfident: false,
+          shouldReturnToInterview: true,
+          confidenceLabel: "medium",
+          reasons: ["The top differential score is below the confidence threshold."],
+          topDifferentialScore: 0.92,
+          topDifferentialEvidenceCount: 1,
+          scoreGapToSecond: null,
+        }}
+        groundingAssessment={{
+          isGrounded: true,
+          reasons: ["1 differential diagnosis failed direct knowledge graph path verification and was removed."],
+          groundedDifferentialCount: 1,
+          ungroundedDifferentialCount: 1,
+          topDiagnosisHasGroundedEvidence: true,
+          topDiagnosisHasFeatureEvidence: true,
+        }}
       />
     );
 
@@ -58,6 +76,19 @@ describe("DdxPanel", () => {
       screen.getByText("Feature: Right lower quadrant tenderness (site)")
     ).toBeInTheDocument();
     expect(screen.getByText("Evidence support score")).toBeInTheDocument();
+    expect(screen.getByText("Safety Review")).toBeInTheDocument();
+    expect(screen.getByText("Needs more information")).toBeInTheDocument();
+    expect(screen.getByText("Confidence: medium")).toBeInTheDocument();
+    expect(screen.getByText("Grounding Audit")).toBeInTheDocument();
+    expect(screen.getByText("Graph grounded")).toBeInTheDocument();
+    expect(screen.getByText("Grounded diagnoses: 1")).toBeInTheDocument();
+    expect(screen.getByText("Removed as ungrounded: 1")).toBeInTheDocument();
+    expect(
+      screen.getByText("The top differential score is below the confidence threshold.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("1 differential diagnosis failed direct knowledge graph path verification and was removed.")
+    ).toBeInTheDocument();
 
     const summary = screen.getByText("Appendicitis");
     summary.closest("details")?.setAttribute("open", "");

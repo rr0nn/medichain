@@ -10,7 +10,8 @@ export type WorkflowStepName =
   | "match_categories"
   | "match_features"
   | "fetch_diagnoses"
-  | "group_diagnoses";
+  | "group_diagnoses"
+  | "safety_review";
 
 export type WorkflowStepEvent = {
   type: "step";
