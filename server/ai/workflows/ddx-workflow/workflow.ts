@@ -8,6 +8,7 @@ import {
   getDiagnosesForFeaturePairs,
   getDiagnosesForPairs,
   getFeaturesForClinicalPresentations,
+  getSourcesForClinicalPresentations,
 } from "@/server/ai/tools/knowledge-graph/knowledge-graph";
 import type {
   CategoryMatch,
@@ -52,24 +53,18 @@ export async function runDifferentialDiagnosisWorkflow(
   onStep?.({ type: "step", step: "match_presentations", status: "complete" });
 
   // Keep only high-confidence and top-N matched clinical presentations to limit noise and downstream cost.
-  const matchedClinicalPresentations = clinicalPresentationResult.matches
-    .filter((match) => match.score >= 0.6)
-    .slice(0, 3)
-    .map((match) => {
-      const presentation = clinicalPresentations.find(
-        (candidate) => candidate.key === match.key,
-      );
-
-      return {
+  const shortlistedClinicalPresentationMatches =
+    clinicalPresentationResult.matches
+      .filter((match) => match.score >= 0.6)
+      .slice(0, 3)
+      .map((match) => ({
         key: match.key,
-        name: presentation?.name ?? match.key,
         score: match.score,
         matchedText: match.matchedText,
-      };
-    });
+      }));
 
   // If no matches at the clinical presentation level, stop before category lookup.
-  if (matchedClinicalPresentations.length === 0) {
+  if (shortlistedClinicalPresentationMatches.length === 0) {
     completeRemainingSteps(
       [
         "match_categories",
@@ -90,14 +85,41 @@ export async function runDifferentialDiagnosisWorkflow(
 
   // Load the graph branches associated with the shortlisted clinical presentations.
   onStep?.({ type: "step", step: "match_categories", status: "running" });
-  const [categories, features] = await Promise.all([
-    getCategoriesForClinicalPresentations(
-      matchedClinicalPresentations.map((match) => match.key),
-    ),
-    getFeaturesForClinicalPresentations(
-      matchedClinicalPresentations.map((match) => match.key),
-    ),
+  const clinicalPresentationKeys = shortlistedClinicalPresentationMatches.map(
+    (match) => match.key,
+  );
+  const [categories, features, sources] = await Promise.all([
+    getCategoriesForClinicalPresentations(clinicalPresentationKeys),
+    getFeaturesForClinicalPresentations(clinicalPresentationKeys),
+    getSourcesForClinicalPresentations(clinicalPresentationKeys),
   ]);
+  const sourcesByClinicalPresentationKey = new Map<string, typeof sources>();
+
+  for (const source of sources) {
+    const existingSources =
+      sourcesByClinicalPresentationKey.get(source.clinicalPresentationKey) ??
+      [];
+    existingSources.push(source);
+    sourcesByClinicalPresentationKey.set(
+      source.clinicalPresentationKey,
+      existingSources,
+    );
+  }
+
+  const matchedClinicalPresentations =
+    shortlistedClinicalPresentationMatches.map((match) => {
+      const presentation = clinicalPresentations.find(
+        (candidate) => candidate.key === match.key,
+      );
+
+      return {
+        key: match.key,
+        name: presentation?.name ?? match.key,
+        score: match.score,
+        matchedText: match.matchedText,
+        sources: sourcesByClinicalPresentationKey.get(match.key) ?? [],
+      };
+    });
 
   const matchedCategories: CategoryMatch[] = [];
   const matchedFeatures: FeatureMatch[] = [];

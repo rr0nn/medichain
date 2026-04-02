@@ -29,7 +29,13 @@ describe("runSafetyWorkflow", () => {
   it("returns ready_for_review when the differential is confident", async () => {
     mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
       matchedClinicalPresentations: [
-        { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
+        {
+          key: "cp-fever",
+          name: "Fever",
+          score: 0.9,
+          matchedText: ["fever"],
+          sources: [],
+        },
       ],
       matchedCategories: [
         {
@@ -104,7 +110,13 @@ describe("runSafetyWorkflow", () => {
   it("routes to needs_more_information when the top differential score is too low", async () => {
     mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
       matchedClinicalPresentations: [
-        { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
+        {
+          key: "cp-fever",
+          name: "Fever",
+          score: 0.9,
+          matchedText: ["fever"],
+          sources: [],
+        },
       ],
       matchedCategories: [],
       matchedFeatures: [],
@@ -177,7 +189,13 @@ describe("runSafetyWorkflow", () => {
 
     mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
       matchedClinicalPresentations: [
-        { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
+        {
+          key: "cp-fever",
+          name: "Fever",
+          score: 0.9,
+          matchedText: ["fever"],
+          sources: [],
+        },
       ],
       matchedCategories: [
         {

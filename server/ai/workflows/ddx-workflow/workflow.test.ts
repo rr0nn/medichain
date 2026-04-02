@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   mockGetClinicalPresentations: vi.fn(),
   mockGetCategoriesForClinicalPresentations: vi.fn(),
   mockGetFeaturesForClinicalPresentations: vi.fn(),
+  mockGetSourcesForClinicalPresentations: vi.fn(),
   mockGetDiagnosesForPairs: vi.fn(),
   mockGetDiagnosesForFeaturePairs: vi.fn(),
 }));
@@ -29,6 +30,8 @@ vi.mock("@/server/ai/tools/knowledge-graph/knowledge-graph", () => ({
     mocks.mockGetCategoriesForClinicalPresentations,
   getFeaturesForClinicalPresentations:
     mocks.mockGetFeaturesForClinicalPresentations,
+  getSourcesForClinicalPresentations:
+    mocks.mockGetSourcesForClinicalPresentations,
   getDiagnosesForPairs: mocks.mockGetDiagnosesForPairs,
   getDiagnosesForFeaturePairs: mocks.mockGetDiagnosesForFeaturePairs,
 }));
@@ -103,6 +106,11 @@ function diagnosisSupportScore({
 describe("runDifferentialDiagnosisWorkflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([]);
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([]);
+    mocks.mockGetSourcesForClinicalPresentations.mockResolvedValue([]);
+    mocks.mockGetDiagnosesForPairs.mockResolvedValue([]);
+    mocks.mockGetDiagnosesForFeaturePairs.mockResolvedValue([]);
   });
 
   it("returns empty results when no clinical presentations meet threshold", async () => {
@@ -198,7 +206,13 @@ describe("runDifferentialDiagnosisWorkflow", () => {
 
     expect(result).toEqual({
       matchedClinicalPresentations: [
-        { key: "cp-fever", name: "Fever", score: 0.9, matchedText: ["fever"] },
+        {
+          key: "cp-fever",
+          name: "Fever",
+          score: 0.9,
+          matchedText: ["fever"],
+          sources: [],
+        },
       ],
       matchedCategories: [],
       matchedFeatures: [],
@@ -328,6 +342,54 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     );
   });
 
+  it("attaches graph sources to matched clinical presentations", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-abdominal-pain", name: "Abdominal pain" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [
+        {
+          key: "cp-abdominal-pain",
+          score: 0.8,
+          matchedText: ["abdominal pain"],
+        },
+      ],
+    });
+
+    mocks.mockGetSourcesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-abdominal-pain",
+        sourceKey: "source:pocketbook_ddx_5e_abdominal_pain",
+        sourceTitle: "Abdominal pain",
+        edition: "5th edition",
+        pageStart: 123,
+        pageEnd: 126,
+      },
+    ]);
+
+    const result = await runDifferentialDiagnosisWorkflow("abdominal pain");
+
+    expect(result.matchedClinicalPresentations).toEqual([
+      {
+        key: "cp-abdominal-pain",
+        name: "Abdominal pain",
+        score: 0.8,
+        matchedText: ["abdominal pain"],
+        sources: [
+          {
+            clinicalPresentationKey: "cp-abdominal-pain",
+            sourceKey: "source:pocketbook_ddx_5e_abdominal_pain",
+            sourceTitle: "Abdominal pain",
+            edition: "5th edition",
+            pageStart: 123,
+            pageEnd: 126,
+          },
+        ],
+      },
+    ]);
+  });
+
   it("prioritizes feature evidence and uses category support secondarily", async () => {
     mocks.mockGetClinicalPresentations.mockResolvedValue([
       { key: "cp-fever", name: "Fever" },
@@ -453,9 +515,9 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     const result = await runDifferentialDiagnosisWorkflow("test");
 
     expect(result.matchedClinicalPresentations).toEqual([
-      { key: "cp1", name: "CP1", score: 0.95, matchedText: [] },
-      { key: "cp2", name: "CP2", score: 0.85, matchedText: [] },
-      { key: "cp3", name: "CP3", score: 0.75, matchedText: [] },
+      { key: "cp1", name: "CP1", score: 0.95, matchedText: [], sources: [] },
+      { key: "cp2", name: "CP2", score: 0.85, matchedText: [], sources: [] },
+      { key: "cp3", name: "CP3", score: 0.75, matchedText: [], sources: [] },
     ]);
   });
 });
