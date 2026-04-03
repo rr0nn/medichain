@@ -74,7 +74,7 @@ cp .env.example .env.local
 
 4. Seed the knowledge graph
 
-See the Neo4j setup notes below before running the app.
+See [Neo4j Setup](#neo4j-setup) below before running the app.
 
 5. Run the development server
 
@@ -103,6 +103,7 @@ MediChain requires a seeded Neo4j knowledge graph before the differential diagno
 1. Start or connect to a Neo4j instance.
 2. Configure the Neo4j environment variables in `.env.local`.
 3. Seed the database using the script in [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
+4. Review the graph model in [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md) if you need to inspect or extend the dataset.
 
 ## Project Structure
 
@@ -123,6 +124,7 @@ docs/
   project documentation
   knowledge-graph/
     schema.md
+    seeding.cypher
 ```
 
 ## Knowledge Graph

@@ -10,22 +10,24 @@ It is designed around three layers:
 - **Categories + Features (reasoning layer)**
 - **Diagnosis (output layer)**
 
-### Nodes:
+### Nodes
 
-Source
-ClinicalPresentation
-Category
-Diagnosis
-Feature
+- `Source`
+- `ClinicalPresentation`
+- `Category`
+- `Diagnosis`
+- `Feature`
 
-### Relationships:
+### Relationships
 
+```text
 (:Source)-[:HAS_EXCERPT]->(:Source)
 (:Source)-[:DOCUMENTS]->(:ClinicalPresentation)
 (:ClinicalPresentation)-[:HAS_CATEGORY]->(:Category)
 (:Category)-[:INCLUDES_DIAGNOSIS]->(:Diagnosis)
 (:ClinicalPresentation)-[:HAS_FEATURE]->(:Feature)
 (:Feature)-[:SUGGESTS]->(:Diagnosis)
+```
 
 ---
 
@@ -153,4 +155,3 @@ Represents:
 - `diagnosis:appendicitis`
 - `diagnosis:myocardial_infarction`
 - `diagnosis:ectopic_pregnancy`
-
