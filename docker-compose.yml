@@ -15,6 +15,21 @@ services:
       timeout: 5s
       retries: 10
       start_period: 5s
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgresql://medichain:medichain@db:5432/medichain
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["pnpm", "prisma", "migrate", "deploy"]
+    restart: "no"
   
   web:
     build:
@@ -31,7 +46,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    restart: unless_stopped
+    restart: unless-stopped
 
 
 volumes:

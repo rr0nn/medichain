@@ -8,13 +8,22 @@ RUN corepack enable
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # build stage
 FROM deps AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
+ENV NEO4J_URI=bolt://localhost:7687
+ENV NEO4J_USERNAME=neo4j
+ENV NEO4J_PASSWORD=password
+ENV NEO4J_DATABASE=neo4j
+ENV GOOGLE_GENERATIVE_AI_API_KEY=dummy
+
+RUN pnpm prisma generate
 RUN pnpm build
 
 # runner stage
