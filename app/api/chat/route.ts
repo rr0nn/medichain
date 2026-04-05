@@ -1,7 +1,6 @@
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 
 import type { ChatRequest } from "@/server/ai/core/types";
-import { runChatWorkflow } from "@/server/ai/workflows/chat-workflow/workflow";
 import {
   saveMessage,
   updateConversationTitle,
@@ -27,9 +26,8 @@ export async function POST(req: Request) {
             ]);
           }
         : undefined;
-
-      await runChatWorkflow(body, writer, onAssistantFinish);
-      await runInterviewerWorkflow(body, writer);
+          
+      await runInterviewerWorkflow(body, writer, onAssistantFinish);
     },
   });
 

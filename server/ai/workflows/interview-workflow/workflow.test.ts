@@ -33,7 +33,7 @@ describe("runInterviewerWorkflow", () => {
 
         const result = await runInterviewerWorkflow(input as never, writer);
 
-        expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(input, writer);
+        expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(input, writer, undefined);
         expect(result).toBe(fakeResult);
     });
 });

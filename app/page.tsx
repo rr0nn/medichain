@@ -19,18 +19,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import { ThemeSelector } from "@/components/theme-selector";
-<<<<<<< HEAD
 import { ConversationSidebar } from "@/components/conversation-sidebar";
-import type { WorkflowStepState } from "@/components/ddx-workflow-canvas";
-import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/workflow";
-=======
 import type { WorkflowStepState } from "@/components/workflow-canvas";
->>>>>>> origin/main
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
   DifferentialDiagnosis,
   FeatureMatch,
+  WorkflowStepEvent
 } from "@/server/ai/workflows/ddx-workflow/types";
 import type {
   CriticAssessment,
@@ -42,11 +38,8 @@ const initialSteps: WorkflowStepState = {
   match_categories: "idle",
   fetch_diagnoses: "idle",
   group_diagnoses: "idle",
-<<<<<<< HEAD
-  match_features: "idle"
-=======
+  match_features: "idle",
   safety_review: "idle",
->>>>>>> origin/main
 };
 
 export default function Chat() {

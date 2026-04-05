@@ -79,6 +79,7 @@ General rules:
 export async function runInterviewAgent(
   { messages }: ChatRequest,
   writer: UIMessageStreamWriter,
+  onAssistantFinish?: (text: string) => Promise<void>
 ) {
   const modelMessages = await convertToModelMessages(messages);
 
@@ -141,6 +142,15 @@ export async function runInterviewAgent(
       }),
     },
     stopWhen: stepCountIs(4),
+    onFinish: async ({ text }) => {
+      if (onAssistantFinish && text) {
+        try {
+          await onAssistantFinish(text);
+        } catch (err) {
+          console.error("[chat-agent] Failed to persist assistant message:", err);
+        }
+      }
+    },
   });
 
   writer.merge(result.toUIMessageStream());
