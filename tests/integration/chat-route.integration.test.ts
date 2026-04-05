@@ -68,7 +68,7 @@ describe("POST /api/chat integration", () => {
     await executePromise;
 
     expect(mocks.mockCreateUIMessageStream).toHaveBeenCalledTimes(1);
-    expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(body, writer);
+    expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(body, writer, undefined);
     expect(mocks.mockCreateUIMessageStreamResponse).toHaveBeenCalledWith({
       stream,
     });
