@@ -9,6 +9,30 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medichain -d medichain"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+  
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgresql://medichain:medichain@db:5432/medichain
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless_stopped
+
 
 volumes:
   postgres_data:
