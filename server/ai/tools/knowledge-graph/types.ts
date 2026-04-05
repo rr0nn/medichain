@@ -4,6 +4,15 @@ export type ClinicalPresentationRecord = {
   normalized_name: string;
 };
 
+export type SourceRecord = {
+  clinicalPresentationKey: string;
+  sourceKey: string;
+  sourceTitle: string;
+  edition?: string;
+  pageStart?: number;
+  pageEnd?: number;
+};
+
 export type CategoryRecord = {
   clinicalPresentationKey: string;
   categoryKey: string;
@@ -26,4 +35,12 @@ export type DiagnosisRecord = {
   featureKey?: string;
   diagnosisKey: string;
   diagnosisName: string;
+};
+
+export type DiagnosisPathAuditRecord = {
+  evidenceType: "category" | "feature";
+  clinicalPresentationKey: string;
+  categoryKey?: string;
+  featureKey?: string;
+  diagnosisKey: string;
 };

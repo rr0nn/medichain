@@ -4,5 +4,5 @@ Keep each workflow in its own folder so orchestration logic can grow without for
 
 Example:
 
-- `chat-workflow/workflow.ts`
+- `interview-workflow/workflow.ts`
 - `differential-diagnosis-workflow/workflow.ts`

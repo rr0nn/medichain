@@ -19,22 +19,34 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import { ThemeSelector } from "@/components/theme-selector";
+<<<<<<< HEAD
 import { ConversationSidebar } from "@/components/conversation-sidebar";
 import type { WorkflowStepState } from "@/components/ddx-workflow-canvas";
 import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/workflow";
+=======
+import type { WorkflowStepState } from "@/components/workflow-canvas";
+>>>>>>> origin/main
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
   DifferentialDiagnosis,
   FeatureMatch,
 } from "@/server/ai/workflows/ddx-workflow/types";
+import type {
+  CriticAssessment,
+  GroundingAssessment,
+} from "@/server/ai/workflows/safety-workflow/types";
 
 const initialSteps: WorkflowStepState = {
   match_presentations: "idle",
   match_categories: "idle",
   fetch_diagnoses: "idle",
   group_diagnoses: "idle",
+<<<<<<< HEAD
   match_features: "idle"
+=======
+  safety_review: "idle",
+>>>>>>> origin/main
 };
 
 export default function Chat() {
@@ -103,6 +115,8 @@ export default function Chat() {
     matchedClinicalPresentations: ClinicalPresentationMatch[];
     matchedCategories: CategoryMatch[];
     matchedFeatures: FeatureMatch[];
+    criticAssessment?: CriticAssessment;
+    groundingAssessment?: GroundingAssessment;
   } = (() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const m = messages[i];
@@ -119,6 +133,8 @@ export default function Chat() {
                 matchedClinicalPresentations?: ClinicalPresentationMatch[];
                 matchedCategories?: CategoryMatch[];
                 matchedFeatures?: FeatureMatch[];
+                criticAssessment?: CriticAssessment;
+                groundingAssessment?: GroundingAssessment;
               }
             | undefined;
           return {
@@ -127,6 +143,8 @@ export default function Chat() {
               output?.matchedClinicalPresentations ?? [],
             matchedCategories: output?.matchedCategories ?? [],
             matchedFeatures: output?.matchedFeatures ?? [],
+            criticAssessment: output?.criticAssessment,
+            groundingAssessment: output?.groundingAssessment,
           };
         }
       }
@@ -136,6 +154,8 @@ export default function Chat() {
       matchedClinicalPresentations: [],
       matchedCategories: [],
       matchedFeatures: [],
+      criticAssessment: undefined,
+      groundingAssessment: undefined,
     };
   })();
 
@@ -266,6 +286,8 @@ export default function Chat() {
           matchedClinicalPresentations={ddxResult.matchedClinicalPresentations}
           matchedCategories={ddxResult.matchedCategories}
           matchedFeatures={ddxResult.matchedFeatures}
+          criticAssessment={ddxResult.criticAssessment}
+          groundingAssessment={ddxResult.groundingAssessment}
         />
       </div>
     </div>

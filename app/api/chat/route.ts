@@ -7,6 +7,7 @@ import {
   updateConversationTitle,
   getMessages,
 } from "@/server/db/conversations";
+import { runInterviewerWorkflow } from "@/server/ai/workflows/interview-workflow/workflow";
 
 export async function POST(req: Request) {
   const body = (await req.json()) as ChatRequest;
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
         : undefined;
 
       await runChatWorkflow(body, writer, onAssistantFinish);
+      await runInterviewerWorkflow(body, writer);
     },
   });
 

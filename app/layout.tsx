@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./theme.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
@@ -30,7 +29,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("font-sans", geistSans.variable, geistMono.variable)}
+      className={`${geistSans.variable} ${geistMono.variable} font-sans`}
     >
       <body className="antialiased">
         <ThemeProvider>
