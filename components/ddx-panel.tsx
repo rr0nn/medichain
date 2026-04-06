@@ -31,6 +31,12 @@ type PathDetails = {
   evidenceTypeLabel?: string;
 };
 
+const legend = [
+  { label: "Presentation", colour: '#ffc0b5'},
+  { label: "Category", colour: '#f9ffa3'},
+  { label: "Diagnosis", colour: '#d0f2ff'},
+]
+
 export function DdxPanel({
   steps,
   differentials,
@@ -61,6 +67,8 @@ export function DdxPanel({
           )
         : undefined;
 
+ 
+
     return {
       clinicalPresentationName:
         presentationMatch?.name ?? path.clinicalPresentationKey,
@@ -81,16 +89,22 @@ export function DdxPanel({
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex h-20 shrink-0 items-center border-b border-border px-4">
-        <span className="top-3 rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground">
+    
+    <div className="flex h-full flex-col p-3 border-l">
+      <header className="flex h-20 shrink-0 items-center px-4">
+        <span className="top-4 rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground">
           Differential Diagnosis
         </span>
       </header>
 
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <DdxWorkflowCanvas steps={steps} />
+      <div className="border-b -mx-3 mb-4" />
 
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-3">
+        <div className="p-2">
+          <DdxWorkflowCanvas steps={steps} />
+      </div>
+        <div className="bg-background rounded-[30px]">
+           
         {differentials.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
             <p className="text-sm font-medium">
@@ -150,7 +164,7 @@ export function DdxPanel({
               return (
               <details
                 key={d.diagnosisKey}
-                className="group rounded-lg border border-border"
+                className="group rounded-[15px] border border-border bg-popover"
               >
                 <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
                   <span className="w-4 shrink-0 text-xs text-muted-foreground">
@@ -220,7 +234,20 @@ export function DdxPanel({
                     );
                   })}
                   <details>
-                    <summary>Diagnosis Subgraph Graph</summary>
+                    <summary>Diagnosis Subgraph</summary>
+
+                    <div className="mt-4 mb-4 flex items-center gap-4">
+                      {legend.map((item) => (
+                        <div key ={item.label} className="flex items-center gap-1">
+                          <div
+                            className="w-4 h-4 rounded-sm"
+                            style={{ backgroundColor: item.colour }}
+                      />
+                      <span className="text-xs text-muted-foreground">{item.label}</span>
+                      </div>
+
+                      ))}
+                    </div>
                     <DdxKG diagnosis = {evidencePath} diagnosisName = {d.diagnosisName}></DdxKG>
                   </details>
                   
@@ -231,6 +258,8 @@ export function DdxPanel({
           </div>
         )}
       </div>
+      </div>
+      
     </div>
   );
 }

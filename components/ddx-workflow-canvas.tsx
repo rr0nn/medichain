@@ -188,7 +188,7 @@ export function DdxWorkflowCanvas({ steps }: { steps: WorkflowStepState }) {
   if (!mounted) return <div className="h-52 w-full border-b border-border" />;
 
   return (
-    <div className="h-52 w-full border-b border-border">
+    <div className="h-52 w-full bg-background rounded-[30px] overflow-hidden">
       <ReactFlow
         nodes={nodes}
         edges={edges}

@@ -30,17 +30,19 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
     ];
 
     const labelNames = ['Presentation', 'Category', 'Diagnosis Result'];
+    const labelColours = ['#ffd7d0', '#fdffe3']
+    const labelColoursBackground = ['#fc9f8f', '#ffd67e', '#91e0ff']
 
     const makeNode = ({index, i, item, type, background} : NodeProps) => {
         return {
             id: `n-${i}-${item}`,
-            position: { x: index * 200, y: i * 200 },
+            position: { x: index * 200, y: i * 180 },
             data: { label: item },
             type: type, 
             style: {
                 background: background,  //cant find the right colour in theme to be fixed
                 color: '#000000',          
-                border: background === 'none' ? background : '2px solid #1b7d7e',
+                border: background === 'none' ? background : `${labelColoursBackground[i]} 2px solid`,
                 borderRadius: 15,
             },
         }
@@ -48,21 +50,9 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
 
     const nodes = grouped.flatMap((diagnosisPoint, i) =>
         diagnosisPoint.map((item, index) => {
-            return makeNode({index: index + 1.5, i, item, type: 'default', background: '#b2e2d9'})
+            return makeNode({index: index + 1.5, i, item, type: 'default', background: labelColours[i]})
         })
     );
-
-    const labelNodes = [];
-
-    for (let i = 0; i < 3; i++) {
-        labelNodes.push(makeNode({
-            index: 0.5,
-            i,
-            item: 'Level ' + `${i + 1}: ` + labelNames[i],
-            type: 'output',
-            background: 'none',
-        }))
-    }
     
     const allNodes = [...nodes,
         makeNode({
@@ -70,8 +60,8 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
             i: 2,
             item: diagnosisName,
             type: 'output',
-            background: '#cefdf1',
-        }),...labelNodes
+            background: '#d0f2ff',
+        })
     ];
 
     const makeEdge = ({i, from, sourceNumber, to, targetNumber, colour} : EdgeProps) => {
@@ -82,8 +72,8 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
             type: 'step',
             markerEnd: {
                 type: MarkerType.ArrowClosed, 
-                width: 15,
-                height: 15,
+                width: 10,
+                height: 10,
                 color: colour, 
             },
             style: {
@@ -100,7 +90,7 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
             sourceNumber: 0,
             to: link,
             targetNumber: 1,
-            colour: '#000000',
+            colour: '#757575',
         })
     });
 
@@ -111,7 +101,7 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
             sourceNumber: 1,
             to: diagnosisName,
             targetNumber: 2,
-            colour: '#ff0000',
+            colour: '#757575',
         })}
     );
 
