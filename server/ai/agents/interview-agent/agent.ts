@@ -3,6 +3,7 @@ import {
   stepCountIs,
   streamText,
   tool,
+  type UIMessage,
   type UIMessageStreamWriter,
 } from "ai";
 import { z } from "zod";
@@ -78,8 +79,7 @@ General rules:
 
 export async function runInterviewAgent(
   { messages }: ChatRequest,
-  writer: UIMessageStreamWriter,
-  onAssistantFinish?: (text: string) => Promise<void>
+  writer: UIMessageStreamWriter
 ) {
   const modelMessages = await convertToModelMessages(messages);
 
@@ -142,16 +142,7 @@ export async function runInterviewAgent(
       }),
     },
     stopWhen: stepCountIs(4),
-    onFinish: async ({ text }) => {
-      if (onAssistantFinish && text) {
-        try {
-          await onAssistantFinish(text);
-        } catch (err) {
-          console.error("[chat-agent] Failed to persist assistant message:", err);
-        }
-      }
-    },
   });
 
-  writer.merge(result.toUIMessageStream());
+  writer.merge(result.toUIMessageStream<UIMessage>());
 }

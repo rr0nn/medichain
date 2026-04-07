@@ -4,8 +4,7 @@ import { runInterviewAgent } from "@/server/ai/agents/interview-agent/agent";
 
 export async function runInterviewerWorkflow(
   input: ChatRequest,
-  writer: UIMessageStreamWriter,
-  onAssistantFinish?: (text: string) => Promise<void>
+  writer: UIMessageStreamWriter
 ) {
-  return runInterviewAgent(input, writer, onAssistantFinish);
+  return runInterviewAgent(input, writer);
 }

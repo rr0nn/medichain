@@ -1,4 +1,4 @@
-import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
+import { createUIMessageStream, createUIMessageStreamResponse, type UIMessage } from "ai";
 
 import type { ChatRequest } from "@/server/ai/core/types";
 import {
@@ -18,16 +18,20 @@ export async function POST(req: Request) {
   }
 
   const stream = createUIMessageStream({
+    originalMessages: body.messages,
     execute: async ({ writer }) => {
-      const onAssistantFinish = conversationId
-        ? async (text: string) => {
-            await saveMessage(conversationId, "assistant", [
-              { type: "text", text },
-            ]);
-          }
-        : undefined;
-          
-      await runInterviewerWorkflow(body, writer, onAssistantFinish);
+      await runInterviewerWorkflow(body, writer);
+    },
+    onFinish: async ({ responseMessage }) => {
+      if (!conversationId || responseMessage.role !== "assistant") {
+        return;
+      }
+
+      try {
+        await persistAssistantMessage(conversationId, responseMessage);
+      } catch (err) {
+        console.error("[chat] Failed to persist assistant message:", err);
+      }
     },
   });
 
@@ -69,4 +73,11 @@ async function persistUserMessage(conversationId: string, body: ChatRequest) {
   } catch (err) {
     console.error("[chat] Failed to persist user message:", err);
   }
+}
+
+async function persistAssistantMessage(
+  conversationId: string,
+  responseMessage: UIMessage,
+) {
+  await saveMessage(conversationId, "assistant", responseMessage.parts);
 }
