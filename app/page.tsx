@@ -160,7 +160,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-popover">
       {/* Sidebar */}
       <ConversationSidebar
         activeId={activeConversationId}
@@ -169,13 +169,13 @@ export default function Chat() {
       />
 
       {/* Chat Panel */}
-      <div className="flex flex-col flex-1 border-r border-border min-h-0 min-w-0">
-        <header className="flex items-center justify-between px-4 h-20 border-b border-border shrink-0">
+      <div className="flex flex-col w-1/2 min-h-0 p-3">
+        <header className="flex items-center justify-between px-4 h-20 shrink-0">
           <span className="top-3 bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl">MediChain</span>
           <ThemeSelector />
         </header>
-
-        <Conversation className="flex-1 min-h-0">
+        <div className="border-b -mx-3 mb-4" />
+        <Conversation className="bg-background flex-1 min-h-0 rounded-t-[30px]">
           <ConversationContent>
             {loadingMessages ? (
               <div className="flex flex-col gap-3 p-4">
@@ -238,13 +238,13 @@ export default function Chat() {
           <ConversationScrollButton />
         </Conversation>
 
-        <form onSubmit={submit} className="shrink-0 p-3 border-t border-border">
+        <form onSubmit={submit} className="shrink-0 p-3 bg-background rounded-b-[30px]">
           {!activeConversationId && (
             <p className="text-xs text-muted-foreground text-center mb-2">
               Start a new consultation from the sidebar to begin.
             </p>
           )}
-          <div className="flex items-end gap-2 rounded-lg border border-input bg-background px-3 py-2 focus-within:ring-1 focus-within:ring-ring transition-shadow">
+          <div className="flex items-center gap-2 rounded-3xl border border-input bg-popover px-3 py-3 focus-within:ring-1 focus-within:ring-ring transition-shadow">
             <textarea
               ref={textareaRef}
               className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
@@ -265,7 +265,7 @@ export default function Chat() {
               <ArrowUpIcon />
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1.5 text-right">
+          <p className="text-[11px] text-muted-foreground mt-1.5 text-right mr-3">
             ⌘↵ to send
           </p>
         </form>
