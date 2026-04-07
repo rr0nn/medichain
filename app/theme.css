@@ -1,5 +1,5 @@
 .medichain {
-  --background: #f3f3f3;
+  --background: #f5ffff;
   --foreground: #093738;
   --card: #f7fffe;
   --card-foreground: #093738;
@@ -15,7 +15,7 @@
   --accent-foreground: #062d2d;
   --destructive: #d45b5b;
   --border: #b4b4b4;
-  --input: #a1bbb6;
+  --input: #698882;
   --ring: #5fa7ff;
   --chart-1: #1b7d7e;
   --chart-2: #1bc2bd;
