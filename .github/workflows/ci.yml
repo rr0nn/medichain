@@ -25,6 +25,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
 
       - name: Run lint
         run: pnpm lint
@@ -39,3 +41,4 @@ jobs:
           NEO4J_USERNAME: neo4j
           NEO4J_PASSWORD: password
           NEO4J_DATABASE: neo4j
+          DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain

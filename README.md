@@ -30,10 +30,18 @@ The frontend displays:
 
 Before running the project, make sure you have:
 
-- Node.js 20+
-- npm
+- Docker + Docker Compose (v2)
+- Node.js 20+ (for local lint/test/dev workflows)
+- pnpm 10+
 - access to a Neo4j database
 - a Google Generative AI API key
+
+If you need pnpm locally:
+
+```bash
+corepack enable
+corepack prepare pnpm@10.33.0 --activate
+```
 
 ## Environment Variables
 
@@ -58,10 +66,13 @@ Optional Aura metadata:
 
 ## Setup
 
-1. Install dependencies
+### Team Onboarding (Docker, recommended)
+
+1. Clone and enter the repository
 
 ```bash
-npm install
+git clone <repo-url>
+cd capstone-project-26t1-3900-w09a-date
 ```
 
 2. Configure environment variables
@@ -70,30 +81,89 @@ npm install
 cp .env.example .env.local
 ```
 
-3. Start or connect to your Neo4j instance
+3. Fill `.env.local` with valid values for:
 
-4. Seed the knowledge graph
+- `GOOGLE_GENERATIVE_AI_API_KEY`
+- `NEO4J_URI`
+- `NEO4J_USERNAME`
+- `NEO4J_PASSWORD`
+- `NEO4J_DATABASE`
 
-See [Neo4j Setup](#neo4j-setup) below before running the app.
-
-5. Run the development server
+4. Build and start PostgreSQL
 
 ```bash
-npm run dev
+docker compose build web
+docker compose up -d db
 ```
 
-6. Open the app at `http://localhost:3000`
+5. Apply database migrations
+
+```bash
+docker compose run --rm migrate
+```
+
+6. Start the app
+
+```bash
+docker compose up -d web
+```
+
+7. Open the app at `http://localhost:3000`
+
+8. Verify containers are healthy
+
+```bash
+docker compose ps
+docker compose logs --tail=100 web
+```
+
+### Local Development (without app container)
+
+1. Configure environment variables
+
+```bash
+cp .env.example .env.local
+```
+
+2. Start PostgreSQL in Docker
+
+```bash
+docker compose up -d db
+docker compose run --rm migrate
+```
+
+3. Install dependencies
+
+```bash
+pnpm install
+```
+
+4. Run the development server
+
+```bash
+pnpm dev
+```
+
+5. Open the app at `http://localhost:3000`
+
+### Useful Docker Commands
+
+```bash
+docker compose up -d --build
+docker compose down
+docker compose down -v    # destructive: removes DB volume/data
+```
 
 ## Available Scripts
 
 ```bash
-npm run dev
-npm run build
-npm run start
-npm run test
-npm run test:watch
-npm run test:coverage
-npm run lint
+pnpm dev
+pnpm build
+pnpm start
+pnpm test
+pnpm test:watch
+pnpm test:coverage
+pnpm lint
 ```
 
 ## Neo4j Setup

@@ -1,8 +1,9 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { getToolName, isToolUIPart } from "ai";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
+import type { UIMessage } from "ai";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -18,13 +19,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import { ThemeSelector } from "@/components/theme-selector";
+import { ConversationSidebar } from "@/components/conversation-sidebar";
 import type { WorkflowStepState } from "@/components/workflow-canvas";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
   DifferentialDiagnosis,
   FeatureMatch,
-  WorkflowStepEvent,
+  WorkflowStepEvent
 } from "@/server/ai/workflows/ddx-workflow/types";
 import type {
   CriticAssessment,
@@ -34,14 +36,29 @@ import type {
 const initialSteps: WorkflowStepState = {
   match_presentations: "idle",
   match_categories: "idle",
-  match_features: "idle",
   fetch_diagnoses: "idle",
   group_diagnoses: "idle",
+  match_features: "idle",
   safety_review: "idle",
 };
 
 export default function Chat() {
-  const { messages, sendMessage, status } = useChat();
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  const { messages, sendMessage, status, setMessages } = useChat({
+    id: activeConversationId ?? undefined,
+    transport: new DefaultChatTransport({
+      prepareSendMessagesRequest: ({ id, messages, body }) => ({
+        api: `/api/conversations/${id}/chat`,
+        body: {
+          ...body,
+          messages,
+        },
+      }),
+    }),
+  });
+
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isLoading = status === "submitted" || status === "streaming";
@@ -52,6 +69,29 @@ export default function Chat() {
     ta.style.height = "auto";
     ta.style.height = `${Math.min(ta.scrollHeight, 128)}px`;
   }, [input]);
+
+  const loadConversation = useCallback(async (id: string) => {
+    setLoadingMessages(true);
+    try {
+      const res = await fetch(`/api/conversations/${id}/messages`);
+      if (res.ok) {
+        const msgs = await res.json() as UIMessage[];
+        setMessages(msgs);
+      }
+    } finally {
+      setLoadingMessages(false);
+    }
+  }, [setMessages]);
+
+  const handleSelectConversation = useCallback((id: string) => {
+    setActiveConversationId(id);
+    void loadConversation(id);
+  }, [loadConversation]);
+
+  const handleNewConversation = useCallback((id: string) => {
+    setActiveConversationId(id || null);
+    setMessages([]);
+  }, [setMessages]);
 
   const steps = useMemo<WorkflowStepState>(() => {
     if (status === "submitted") {
@@ -130,6 +170,13 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-popover">
+      {/* Sidebar */}
+      <ConversationSidebar
+        activeId={activeConversationId}
+        onSelect={handleSelectConversation}
+        onNew={handleNewConversation}
+      />
+
       {/* Chat Panel */}
       <div className="flex flex-col w-1/2 min-h-0 p-3">
         <header className="flex items-center justify-between px-4 h-20 shrink-0">
@@ -139,9 +186,15 @@ export default function Chat() {
         <div className="border-b -mx-3 mb-4" />
         <Conversation className="bg-background flex-1 min-h-0 rounded-t-[30px]">
           <ConversationContent>
-            {messages.length === 0 && !isLoading ? (
+            {loadingMessages ? (
+              <div className="flex flex-col gap-3 p-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className={`h-10 rounded-lg bg-muted animate-pulse ${i % 2 === 0 ? "self-end w-2/3" : "w-3/4"}`} />
+                ))}
+              </div>
+            ) : messages.length === 0 && !isLoading ? (
               <ConversationEmptyState
-                title="Describe a patient presentation"
+                title={activeConversationId ? "Start the consultation" : "Select or start a consultation"}
               />
             ) : (
               messages.map((message) => (
@@ -168,7 +221,7 @@ export default function Chat() {
                             key={i}
                             className="text-xs text-muted-foreground italic"
                           >
-                            Running the differential diagnosis workflow. Review structured matches on the right.
+                            Look on the right side running ddx . . .
                           </p>
                         );
                       }
@@ -195,23 +248,28 @@ export default function Chat() {
         </Conversation>
 
         <form onSubmit={submit} className="shrink-0 p-3 bg-background rounded-b-[30px]">
+          {!activeConversationId && (
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              Start a new consultation from the sidebar to begin.
+            </p>
+          )}
           <div className="flex items-center gap-2 rounded-3xl border border-input bg-popover px-3 py-3 focus-within:ring-1 focus-within:ring-ring transition-shadow">
             <textarea
               ref={textareaRef}
               className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
               rows={1}
               value={input}
-              placeholder="Describe a patient presentation..."
+              placeholder={activeConversationId ? "Describe a patient presentation..." : "Select a consultation first..."}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
               }}
-              disabled={isLoading}
+              disabled={isLoading || !activeConversationId}
             />
             <Button
               size="icon-sm"
               type="submit"
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isLoading || !activeConversationId}
             >
               <ArrowUpIcon />
             </Button>
@@ -223,7 +281,7 @@ export default function Chat() {
       </div>
 
       {/* DDx Panel */}
-      <div className="flex flex-col w-1/2 min-h-0">
+      <div className="flex flex-col w-[45%] min-h-0 shrink-0">
         <DdxPanel
           steps={steps}
           differentials={ddxResult.differentials}

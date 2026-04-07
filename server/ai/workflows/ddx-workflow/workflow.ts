@@ -19,6 +19,8 @@ import type {
 } from "./types";
 import { rankDifferentialDiagnoses } from "./diagnosis-ranking";
 
+export type { WorkflowStepEvent };
+
 type OnStep = (event: WorkflowStepEvent) => void;
 
 function completeRemainingSteps(

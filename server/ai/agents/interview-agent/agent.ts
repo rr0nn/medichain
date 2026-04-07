@@ -3,6 +3,7 @@ import {
   stepCountIs,
   streamText,
   tool,
+  type UIMessage,
   type UIMessageStreamWriter,
 } from "ai";
 import { z } from "zod";
@@ -78,7 +79,7 @@ General rules:
 
 export async function runInterviewAgent(
   { messages }: ChatRequest,
-  writer: UIMessageStreamWriter,
+  writer: UIMessageStreamWriter
 ) {
   const modelMessages = await convertToModelMessages(messages);
 
@@ -143,5 +144,5 @@ export async function runInterviewAgent(
     stopWhen: stepCountIs(4),
   });
 
-  writer.merge(result.toUIMessageStream());
+  writer.merge(result.toUIMessageStream<UIMessage>());
 }
