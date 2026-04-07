@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeAll } from "vitest";
 
 vi.mock("@/components/workflow-canvas", () => ({
   WorkflowCanvas: ({
@@ -10,6 +10,13 @@ vi.mock("@/components/workflow-canvas", () => ({
 }));
 
 import { DdxPanel } from "@/components/ddx-panel";
+ beforeAll(() => {
+  global.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof ResizeObserver;
+});
 
 describe("DdxPanel integration", () => {
   it("renders a realistic workflow result with matched evidence, safety state, and diagnosis paths", () => {
@@ -142,7 +149,7 @@ describe("DdxPanel integration", () => {
       ),
     ).toBeInTheDocument();
 
-    const summary = screen.getByText("Appendicitis");
+    const summary = screen.getAllByText("Appendicitis").find(element => element.closest("summary"))!;
     summary.closest("details")?.setAttribute("open", "");
 
     expect(screen.getByText("Category Evidence Path")).toBeInTheDocument();
