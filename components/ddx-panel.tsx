@@ -236,9 +236,9 @@ export function DdxPanel({
                   <details>
                     <summary>Diagnosis Subgraph</summary>
 
-                    <div className="mt-4 mb-4 flex items-center gap-4">
+                    <div className="inline-flex mt-4 mb-4 ml-2 flex items-center gap-4 bg-border/11 p-3 rounded-lg">
                       {legend.map((item) => (
-                        <div key ={item.label} className="flex items-center gap-1">
+                        <div key ={item.label} className="flex items-center gap-2">
                           <div
                             className="w-4 h-4 rounded-sm"
                             style={{ backgroundColor: item.colour }}
@@ -248,7 +248,11 @@ export function DdxPanel({
 
                       ))}
                     </div>
-                    <DdxKG diagnosis = {evidencePath} diagnosisName = {d.diagnosisName}></DdxKG>
+                    
+                    <div className="mt-1 mb-4 p-4 bg-sidebar-border/8 rounded-lg">
+                      <DdxKG diagnosis = {evidencePath} diagnosisName = {d.diagnosisName}></DdxKG>
+                    </div>
+                    
                   </details>
                   
                 </div>

@@ -29,7 +29,7 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
         Array.from(new Set(diagnosis.map(pair => pair[1]))),
     ];
 
-    const labelNames = ['Presentation', 'Category', 'Diagnosis Result'];
+
     const labelColours = ['#ffd7d0', '#fdffe3']
     const labelColoursBackground = ['#fc9f8f', '#ffd67e', '#91e0ff']
 
