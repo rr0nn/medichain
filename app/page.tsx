@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { getToolName, isToolUIPart } from "ai";
+import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
 import type { UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
@@ -48,6 +48,15 @@ export default function Chat() {
 
   const { messages, sendMessage, status, setMessages } = useChat({
     id: activeConversationId ?? undefined,
+    transport: new DefaultChatTransport({
+      prepareSendMessagesRequest: ({ id, messages, body }) => ({
+        api: `/api/conversations/${id}/chat`,
+        body: {
+          ...body,
+          messages,
+        },
+      }),
+    }),
   });
 
   const [input, setInput] = useState("");

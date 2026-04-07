@@ -8,14 +8,14 @@ import {
 } from "@/server/db/conversations";
 import { runInterviewerWorkflow } from "@/server/ai/workflows/interview-workflow/workflow";
 
-export async function POST(req: Request) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const body = (await req.json()) as ChatRequest;
-  const conversationId = body.id;
+  const { id: conversationId } = await params;
 
-  // Persist the new user message immediately (before streaming starts)
-  if (conversationId) {
-    await persistUserMessage(conversationId, body);
-  }
+  await persistUserMessage(conversationId, body);
 
   const stream = createUIMessageStream({
     originalMessages: body.messages,
@@ -23,14 +23,14 @@ export async function POST(req: Request) {
       await runInterviewerWorkflow(body, writer);
     },
     onFinish: async ({ responseMessage }) => {
-      if (!conversationId || responseMessage.role !== "assistant") {
+      if (responseMessage.role !== "assistant") {
         return;
       }
 
       try {
         await persistAssistantMessage(conversationId, responseMessage);
       } catch (err) {
-        console.error("[chat] Failed to persist assistant message:", err);
+        console.error("[conversation-chat] Failed to persist assistant message:", err);
       }
     },
   });
@@ -62,7 +62,6 @@ async function persistUserMessage(conversationId: string, body: ChatRequest) {
 
     await saveMessage(conversationId, "user", lastMessage.parts);
 
-    // Auto-title the conversation from first user message
     if (existingMessages.length === 0) {
       const textPart = lastMessage.parts.find((p) => p.type === "text");
       if (textPart && "text" in textPart) {
@@ -71,7 +70,7 @@ async function persistUserMessage(conversationId: string, body: ChatRequest) {
       }
     }
   } catch (err) {
-    console.error("[chat] Failed to persist user message:", err);
+    console.error("[conversation-chat] Failed to persist user message:", err);
   }
 }
 

@@ -25,15 +25,14 @@ vi.mock("@/server/db/conversations", () => ({
   updateConversationTitle: mocks.mockUpdateConversationTitle,
 }));
 
-import { POST } from "@/app/api/chat/route";
+import { POST } from "@/app/api/conversations/[id]/chat/route";
 
-describe("POST /api/chat integration", () => {
+describe("POST /api/conversations/[id]/chat integration", () => {
   it("parses the request body, runs the workflow, and returns the UI stream response", async () => {
     const writer = { write: vi.fn() };
     const stream = { kind: "ui-message-stream" };
     const response = new Response(null, { status: 200 });
     const body = {
-      id: "conv-1",
       messages: [
         {
           id: "msg-1",
@@ -86,11 +85,12 @@ describe("POST /api/chat integration", () => {
     mocks.mockRunInterviewAgent.mockResolvedValue(undefined);
 
     const result = await POST(
-      new Request("http://localhost/api/chat", {
+      new Request("http://localhost/api/conversations/conv-1/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
       }),
+      { params: Promise.resolve({ id: "conv-1" }) },
     );
 
     expect(executePromise).toBeDefined();
