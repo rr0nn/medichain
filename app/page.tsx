@@ -44,14 +44,12 @@ const initialSteps: WorkflowStepState = {
 
 export default function Chat() {
   const [modelProvider, setModelProvider] = useState<ModelProvider>("gemini");
-  const modelProviderRef = useRef(modelProvider);
-  modelProviderRef.current = modelProvider;
-
-  const [transport] = useState(
+  const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        body: () => ({ modelProvider: modelProviderRef.current }),
+        body: { modelProvider },
       }),
+    [modelProvider],
   );
   const { messages, sendMessage, status } = useChat({ transport });
   const [input, setInput] = useState("");

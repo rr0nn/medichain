@@ -8,7 +8,7 @@ import {
 import { z } from "zod";
 
 import type { ChatRequest } from "@/server/ai/core/types";
-import { getChatModel, type ModelProvider } from "@/server/ai/core/models";
+import { getChatModel } from "@/server/ai/core/models";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
 import { composePatientResponse } from "./patient-response";
 
