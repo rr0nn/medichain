@@ -6,10 +6,32 @@ import { neo4jDatabase, neo4jDriver } from "./neo4j";
 import type {
   CategoryRecord,
   ClinicalPresentationRecord,
+  DiagnosisPathAuditRecord,
   DiagnosisRecord,
   FeatureRecord,
+  SourceRecord,
 } from "./types";
 
+function toOptionalNumber(value: unknown): number | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "toNumber" in value &&
+    typeof value.toNumber === "function"
+  ) {
+    return value.toNumber();
+  }
+
+  return undefined;
+}
 
 /**
  * Returns all clinical presentation nodes, sorted by display name, for use as
@@ -17,7 +39,9 @@ import type {
  *
  * @returns {Promise<ClinicalPresentationRecord[]>} All clinical presentation nodes ordered by name.
  */
-export async function getClinicalPresentations(): Promise<ClinicalPresentationRecord[]> {
+export async function getClinicalPresentations(): Promise<
+  ClinicalPresentationRecord[]
+> {
   const { records } = await neo4jDriver.executeQuery(
     `
     MATCH (cp:ClinicalPresentation)
@@ -31,7 +55,7 @@ export async function getClinicalPresentations(): Promise<ClinicalPresentationRe
     {
       database: neo4jDatabase,
       routing: neo4j.routing.READ,
-    }
+    },
   );
 
   return records.map((record) => ({
@@ -49,7 +73,7 @@ export async function getClinicalPresentations(): Promise<ClinicalPresentationRe
  * @returns {Promise<CategoryRecord[]>} Category rows linked to the supplied clinical presentation keys.
  */
 export async function getCategoriesForClinicalPresentations(
-  clinicalPresentationKeys: string[]
+  clinicalPresentationKeys: string[],
 ): Promise<CategoryRecord[]> {
   if (clinicalPresentationKeys.length === 0) {
     return [];
@@ -70,7 +94,7 @@ export async function getCategoriesForClinicalPresentations(
     {
       database: neo4jDatabase,
       routing: neo4j.routing.READ,
-    }
+    },
   );
 
   return records.map((record) => ({
@@ -82,6 +106,51 @@ export async function getCategoriesForClinicalPresentations(
 }
 
 /**
+ * Returns source nodes documenting the supplied clinical presentation keys.
+ * Short-circuits to an empty array when no presentation keys are provided.
+ *
+ * @param {string[]} clinicalPresentationKeys Clinical presentation keys to expand into sources.
+ * @returns {Promise<SourceRecord[]>} Source rows linked to the supplied clinical presentation keys.
+ */
+export async function getSourcesForClinicalPresentations(
+  clinicalPresentationKeys: string[],
+): Promise<SourceRecord[]> {
+  if (clinicalPresentationKeys.length === 0) {
+    return [];
+  }
+
+  const { records } = await neo4jDriver.executeQuery(
+    `
+    MATCH (excerpt:Source)-[:DOCUMENTS]->(cp:ClinicalPresentation)
+    WHERE cp.key IN $clinicalPresentationKeys
+    OPTIONAL MATCH (book:Source)-[:HAS_EXCERPT]->(excerpt)
+    RETURN
+      cp.key AS clinicalPresentationKey,
+      excerpt.key AS sourceKey,
+      coalesce(book.title, excerpt.title) AS sourceTitle,
+      coalesce(book.edition, excerpt.edition) AS edition,
+      excerpt.page_start AS pageStart,
+      excerpt.page_end AS pageEnd
+    ORDER BY cp.name, coalesce(book.title, excerpt.title), excerpt.page_start, excerpt.page_end
+    `,
+    { clinicalPresentationKeys },
+    {
+      database: neo4jDatabase,
+      routing: neo4j.routing.READ,
+    },
+  );
+
+  return records.map((record) => ({
+    clinicalPresentationKey: record.get("clinicalPresentationKey"),
+    sourceKey: record.get("sourceKey"),
+    sourceTitle: record.get("sourceTitle"),
+    edition: record.get("edition") ?? undefined,
+    pageStart: toOptionalNumber(record.get("pageStart")),
+    pageEnd: toOptionalNumber(record.get("pageEnd")),
+  }));
+}
+
+/**
  * Returns feature nodes attached to the supplied clinical presentation keys.
  * Short-circuits to an empty array when no presentation keys are provided.
  *
@@ -89,7 +158,7 @@ export async function getCategoriesForClinicalPresentations(
  * @returns {Promise<FeatureRecord[]>} Feature rows linked to the supplied clinical presentation keys.
  */
 export async function getFeaturesForClinicalPresentations(
-  clinicalPresentationKeys: string[]
+  clinicalPresentationKeys: string[],
 ): Promise<FeatureRecord[]> {
   if (clinicalPresentationKeys.length === 0) {
     return [];
@@ -111,7 +180,7 @@ export async function getFeaturesForClinicalPresentations(
     {
       database: neo4jDatabase,
       routing: neo4j.routing.READ,
-    }
+    },
   );
 
   return records.map((record) => ({
@@ -131,7 +200,7 @@ export async function getFeaturesForClinicalPresentations(
  * @returns {Promise<DiagnosisRecord[]>} Diagnosis rows linked to the supplied presentation-category pairs.
  */
 export async function getDiagnosesForPairs(
-  pairs: Array<{ clinicalPresentationKey: string; categoryKey: string }>
+  pairs: Array<{ clinicalPresentationKey: string; categoryKey: string }>,
 ): Promise<DiagnosisRecord[]> {
   if (pairs.length === 0) {
     return [];
@@ -154,7 +223,7 @@ export async function getDiagnosesForPairs(
     {
       database: neo4jDatabase,
       routing: neo4j.routing.READ,
-    }
+    },
   );
 
   return records.map((record) => ({
@@ -174,7 +243,7 @@ export async function getDiagnosesForPairs(
  * @returns {Promise<DiagnosisRecord[]>} Diagnosis rows linked to the supplied presentation-feature pairs.
  */
 export async function getDiagnosesForFeaturePairs(
-  pairs: Array<{ clinicalPresentationKey: string; featureKey: string }>
+  pairs: Array<{ clinicalPresentationKey: string; featureKey: string }>,
 ): Promise<DiagnosisRecord[]> {
   if (pairs.length === 0) {
     return [];
@@ -197,7 +266,7 @@ export async function getDiagnosesForFeaturePairs(
     {
       database: neo4jDatabase,
       routing: neo4j.routing.READ,
-    }
+    },
   );
 
   return records.map((record) => ({
@@ -206,5 +275,70 @@ export async function getDiagnosesForFeaturePairs(
     featureKey: record.get("featureKey"),
     diagnosisKey: record.get("diagnosisKey"),
     diagnosisName: record.get("diagnosisName"),
+  }));
+}
+
+/**
+ * Re-verifies exact diagnosis evidence paths directly against Neo4j.
+ * Short-circuits to an empty array when no candidate paths are provided.
+ *
+ * @param {DiagnosisPathAuditRecord[]} paths Candidate evidence paths to audit.
+ * @returns {Promise<DiagnosisPathAuditRecord[]>} Only the paths that still exist in the graph.
+ */
+export async function verifyDiagnosisEvidencePaths(
+  paths: DiagnosisPathAuditRecord[],
+): Promise<DiagnosisPathAuditRecord[]> {
+  if (paths.length === 0) {
+    return [];
+  }
+
+  const { records } = await neo4jDriver.executeQuery(
+    `
+    UNWIND $paths AS path
+    CALL {
+      WITH path
+      WITH path WHERE path.evidenceType = 'category'
+      MATCH (cp:ClinicalPresentation {key: path.clinicalPresentationKey})
+            -[:HAS_CATEGORY]->(cat:Category {key: path.categoryKey})
+            -[:INCLUDES_DIAGNOSIS]->(dx:Diagnosis {key: path.diagnosisKey})
+      RETURN
+        'category' AS evidenceType,
+        cp.key AS clinicalPresentationKey,
+        cat.key AS categoryKey,
+        null AS featureKey,
+        dx.key AS diagnosisKey
+      UNION
+      WITH path
+      WITH path WHERE path.evidenceType = 'feature'
+      MATCH (cp:ClinicalPresentation {key: path.clinicalPresentationKey})
+            -[:HAS_FEATURE]->(feature:Feature {key: path.featureKey})
+            -[:SUGGESTS]->(dx:Diagnosis {key: path.diagnosisKey})
+      RETURN
+        'feature' AS evidenceType,
+        cp.key AS clinicalPresentationKey,
+        null AS categoryKey,
+        feature.key AS featureKey,
+        dx.key AS diagnosisKey
+    }
+    RETURN
+      evidenceType,
+      clinicalPresentationKey,
+      categoryKey,
+      featureKey,
+      diagnosisKey
+    `,
+    { paths },
+    {
+      database: neo4jDatabase,
+      routing: neo4j.routing.READ,
+    },
+  );
+
+  return records.map((record) => ({
+    evidenceType: record.get("evidenceType"),
+    clinicalPresentationKey: record.get("clinicalPresentationKey"),
+    categoryKey: record.get("categoryKey") ?? undefined,
+    featureKey: record.get("featureKey") ?? undefined,
+    diagnosisKey: record.get("diagnosisKey"),
   }));
 }

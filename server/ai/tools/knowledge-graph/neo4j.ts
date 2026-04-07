@@ -2,23 +2,51 @@
 // initializes the shared Neo4j driver and database name from environment
 // configuration, and exposes a cleanup helper for orderly shutdown.
 import neo4j from "neo4j-driver";
+import type { Driver } from "neo4j-driver";
 
-const uri = process.env.NEO4J_URI!;
-const username = process.env.NEO4J_USERNAME!;
-const password = process.env.NEO4J_PASSWORD!;
-const database = process.env.NEO4J_DATABASE!;
+const database = process.env.NEO4J_DATABASE ?? "neo4j";
 
-if (!uri || !username || !password || !database) {
-  throw new Error("Missing Neo4j environment variables.");
+let driver: Driver | null = null;
+
+function getConfiguredDriver(): Driver {
+  if (driver) {
+    return driver;
+  }
+
+  const uri = process.env.NEO4J_URI;
+  const username = process.env.NEO4J_USERNAME;
+  const password = process.env.NEO4J_PASSWORD;
+
+  if (!uri || !username || !password) {
+    throw new Error(
+      "Missing Neo4j environment variables: NEO4J_URI, NEO4J_USERNAME, and NEO4J_PASSWORD must be set."
+    );
+  }
+
+  driver = neo4j.driver(uri, neo4j.auth.basic(username, password));
+  return driver;
 }
 
-export const neo4jDriver = neo4j.driver(
-  uri,
-  neo4j.auth.basic(username, password)
-);
+export const neo4jDriver = new Proxy({} as Driver, {
+  get(_target, prop, receiver) {
+    const configuredDriver = getConfiguredDriver();
+    const value = Reflect.get(configuredDriver, prop, receiver);
+
+    if (typeof value === "function") {
+      return value.bind(configuredDriver);
+    }
+
+    return value;
+  },
+});
 
 export const neo4jDatabase = database;
 
 export async function closeNeo4jDriver() {
-  await neo4jDriver.close();
+  if (!driver) {
+    return;
+  }
+
+  await driver.close();
+  driver = null;
 }

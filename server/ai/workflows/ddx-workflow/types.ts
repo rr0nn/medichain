@@ -1,8 +1,11 @@
+import type { SourceRecord } from "@/server/ai/tools/knowledge-graph/types";
+
 export type ClinicalPresentationMatch = {
   key: string;
   name: string;
   score: number;
   matchedText: string[];
+  sources: SourceRecord[];
 };
 
 export type WorkflowStepName =
@@ -10,7 +13,8 @@ export type WorkflowStepName =
   | "match_categories"
   | "match_features"
   | "fetch_diagnoses"
-  | "group_diagnoses";
+  | "group_diagnoses"
+  | "safety_review";
 
 export type WorkflowStepEvent = {
   type: "step";

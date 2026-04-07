@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  DdxWorkflowCanvas,
+  WorkflowCanvas,
   type WorkflowStepState,
-} from "@/components/ddx-workflow-canvas";
+} from "@/components/workflow-canvas";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
@@ -11,6 +11,10 @@ import type {
   DifferentialDiagnosisEvidenceRef,
   FeatureMatch,
 } from "@/server/ai/workflows/ddx-workflow/types";
+import type {
+  CriticAssessment,
+  GroundingAssessment,
+} from "@/server/ai/workflows/safety-workflow/types";
 import { ChevronRight } from "lucide-react";
 
 import { DdxKG } from "./ddx-kg";
@@ -21,6 +25,8 @@ type Props = {
   matchedClinicalPresentations: ClinicalPresentationMatch[];
   matchedCategories: CategoryMatch[];
   matchedFeatures: FeatureMatch[];
+  criticAssessment?: CriticAssessment;
+  groundingAssessment?: GroundingAssessment;
 };
 
 type PathDetails = {
@@ -37,12 +43,65 @@ const legend = [
   { label: "Diagnosis", colour: '#d0f2ff'},
 ]
 
+function formatSourceLabel(input: {
+  sourceTitle: string;
+  edition?: string;
+  pageStart?: number;
+  pageEnd?: number;
+}) {
+  const titleWithEdition = input.edition
+    ? `${input.sourceTitle}, ${formatEditionLabel(input.edition)}`
+    : input.sourceTitle;
+
+  if (
+    input.pageStart !== undefined &&
+    input.pageEnd !== undefined &&
+    input.pageStart !== input.pageEnd
+  ) {
+    return `${titleWithEdition} (pp. ${input.pageStart}-${input.pageEnd})`;
+  }
+
+  if (input.pageStart !== undefined) {
+    return `${titleWithEdition} (p. ${input.pageStart})`;
+  }
+
+  return titleWithEdition;
+}
+
+function formatEditionLabel(edition: string) {
+  const trimmedEdition = edition.trim();
+
+  if (!/^\d+$/.test(trimmedEdition)) {
+    return trimmedEdition;
+  }
+
+  const numericEdition = Number(trimmedEdition);
+  const lastTwoDigits = numericEdition % 100;
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
+    return `${numericEdition}th edition`;
+  }
+
+  switch (numericEdition % 10) {
+    case 1:
+      return `${numericEdition}st edition`;
+    case 2:
+      return `${numericEdition}nd edition`;
+    case 3:
+      return `${numericEdition}rd edition`;
+    default:
+      return `${numericEdition}th edition`;
+  }
+}
+
 export function DdxPanel({
   steps,
   differentials,
   matchedClinicalPresentations,
   matchedCategories,
   matchedFeatures,
+  criticAssessment,
+  groundingAssessment,
 }: Props) {
   const getPathDetails = (
     path: DifferentialDiagnosisEvidenceRef
@@ -53,18 +112,18 @@ export function DdxPanel({
     const categoryMatch =
       path.evidenceType === "category"
         ? matchedCategories.find(
-            (match) =>
-              match.clinicalPresentationKey === path.clinicalPresentationKey &&
-              match.categoryKey === path.categoryKey
-          )
+          (match) =>
+            match.clinicalPresentationKey === path.clinicalPresentationKey &&
+            match.categoryKey === path.categoryKey
+        )
         : undefined;
     const featureMatch =
       path.evidenceType === "feature"
         ? matchedFeatures.find(
-            (match) =>
-              match.clinicalPresentationKey === path.clinicalPresentationKey &&
-              match.featureKey === path.featureKey
-          )
+          (match) =>
+            match.clinicalPresentationKey === path.clinicalPresentationKey &&
+            match.featureKey === path.featureKey
+        )
         : undefined;
 
  
@@ -97,12 +156,14 @@ export function DdxPanel({
         </span>
       </header>
 
-      <div className="border-b -mx-3 mb-4" />
+      <div className="border-b -mx-3 mb-6" />
 
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-3">
-        <div className="p-2">
-          <DdxWorkflowCanvas steps={steps} />
-      </div>
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-3 ">
+          <WorkflowCanvas
+          steps={steps}
+          matchedClinicalPresentationCount={matchedClinicalPresentations.length}
+          criticAssessment={criticAssessment}
+        />
         <div className="bg-background rounded-[30px]">
            
         {differentials.length === 0 ? (
@@ -118,23 +179,149 @@ export function DdxPanel({
           </div>
         ) : (
           <div className="space-y-4 p-4">
+            {criticAssessment && (
+              <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Safety Review
+                </p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span
+                    className={
+                      criticAssessment.shouldReturnToInterview
+                        ? "rounded-full bg-amber-500/10 px-2.5 py-1 text-amber-700 dark:text-amber-300"
+                        : "rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"
+                    }
+                  >
+                    {criticAssessment.shouldReturnToInterview
+                      ? "Needs more information"
+                      : "Ready for review"}
+                  </span>
+                  <span
+                    className={
+                      criticAssessment.isConfident
+                        ? "rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"
+                        : "rounded-full bg-amber-500/10 px-2.5 py-1 text-amber-700 dark:text-amber-300"
+                    }
+                  >
+                    Confidence: {criticAssessment.confidenceLabel}
+                  </span>
+                  {criticAssessment.topDifferentialScore !== null && (
+                    <span className="rounded-full bg-muted px-2.5 py-1">
+                      Top score: {criticAssessment.topDifferentialScore.toFixed(2)}
+                    </span>
+                  )}
+                  <span className="rounded-full bg-muted px-2.5 py-1">
+                    Top evidence paths: {criticAssessment.topDifferentialEvidenceCount}
+                  </span>
+                  {criticAssessment.scoreGapToSecond !== null && (
+                    <span className="rounded-full bg-muted px-2.5 py-1">
+                      Gap to second: {criticAssessment.scoreGapToSecond.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                {criticAssessment.reasons.length > 0 ? (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Review notes
+                    </p>
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {criticAssessment.reasons.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    The critic considered the current differential sufficiently supported for review.
+                  </p>
+                )}
+
+                {groundingAssessment && (
+                  <div className="space-y-2 rounded-md border border-border/70 bg-background/70 p-2.5">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Grounding Audit
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span
+                        className={
+                          groundingAssessment.isGrounded
+                            ? "rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"
+                            : "rounded-full bg-amber-500/10 px-2.5 py-1 text-amber-700 dark:text-amber-300"
+                        }
+                      >
+                        {groundingAssessment.isGrounded
+                          ? "Graph grounded"
+                          : "Grounding failed"}
+                      </span>
+                      <span className="rounded-full bg-muted px-2.5 py-1">
+                        Grounded diagnoses: {groundingAssessment.groundedDifferentialCount}
+                      </span>
+                      {groundingAssessment.ungroundedDifferentialCount > 0 && (
+                        <span className="rounded-full bg-muted px-2.5 py-1">
+                          Removed as ungrounded: {groundingAssessment.ungroundedDifferentialCount}
+                        </span>
+                      )}
+                      <span className="rounded-full bg-muted px-2.5 py-1">
+                        Top diagnosis grounded: {groundingAssessment.topDiagnosisHasGroundedEvidence ? "yes" : "no"}
+                      </span>
+                      <span className="rounded-full bg-muted px-2.5 py-1">
+                        Top diagnosis feature-backed: {groundingAssessment.topDiagnosisHasFeatureEvidence ? "yes" : "no"}
+                      </span>
+                    </div>
+                    {groundingAssessment.reasons.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                          Audit notes
+                        </p>
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          {groundingAssessment.reasons.map((reason) => (
+                            <li key={reason}>{reason}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="space-y-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Matched Evidence
               </p>
               <div className="flex flex-wrap gap-2">
                 {matchedClinicalPresentations.map((match) => (
-                  <span
+                  <div
                     key={`cp-${match.key}`}
-                    className="rounded-full bg-muted px-2.5 py-1 text-xs"
+                    className="space-y-1 rounded-md border border-border bg-muted/30 px-2.5 py-2"
                   >
-                    Presentation: {match.name}
-                  </span>
+                    <span className="block text-xs">
+                      Presentation: {match.name}
+                    </span>
+                    {match.sources.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {match.sources.map((source) => (
+                          <span
+                            key={`${match.key}-${source.sourceKey}`}
+                            className="rounded-full bg-background px-2 py-1 text-[11px] text-muted-foreground"
+                          >
+                            Source:{" "}
+                            {formatSourceLabel({
+                              sourceTitle: source.sourceTitle,
+                              edition: source.edition,
+                              pageStart: source.pageStart,
+                              pageEnd: source.pageEnd,
+                            })}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
                 {matchedCategories.map((match) => (
                   <span
                     key={`cat-${match.clinicalPresentationKey}-${match.categoryKey}`}
-                    className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300"
+                    className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300"
                   >
                     Category: {match.categoryName}
                   </span>
@@ -236,7 +423,7 @@ export function DdxPanel({
                   <details>
                     <summary>Diagnosis Subgraph</summary>
 
-                    <div className="inline-flex mt-4 mb-4 ml-2 flex items-center gap-4 bg-border/11 p-3 rounded-lg">
+                    <div className="inline-flex mt-4 mb-4 ml-2 flex items-center gap-4 bg-border/11 p-3 rounded-lg border border-input/30">
                       {legend.map((item) => (
                         <div key ={item.label} className="flex items-center gap-2">
                           <div
@@ -249,7 +436,7 @@ export function DdxPanel({
                       ))}
                     </div>
                     
-                    <div className="mt-1 mb-4 p-4 bg-sidebar-border/8 rounded-lg">
+                    <div className="mt-1 mb-4 p-4 bg-sidebar-border/8 rounded-lg border border-input/30">
                       <DdxKG diagnosis = {evidencePath} diagnosisName = {d.diagnosisName}></DdxKG>
                     </div>
                     
