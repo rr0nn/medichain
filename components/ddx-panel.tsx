@@ -17,6 +17,7 @@ import type {
 } from "@/server/ai/workflows/safety-workflow/types";
 import { ChevronRight } from "lucide-react";
 
+
 import { DdxKG } from "./ddx-kg";
 
 type Props = {
