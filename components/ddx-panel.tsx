@@ -17,8 +17,6 @@ import type {
 } from "@/server/ai/workflows/safety-workflow/types";
 import { ChevronRight } from "lucide-react";
 
-import { DdxKG } from "./ddx-kg";
-
 type Props = {
   steps: WorkflowStepState;
   differentials: DifferentialDiagnosis[];
@@ -36,12 +34,6 @@ type PathDetails = {
   evidenceMatchedText: string[];
   evidenceTypeLabel?: string;
 };
-
-const legend = [
-  { label: "Presentation", colour: '#ffc0b5'},
-  { label: "Category", colour: '#f9ffa3'},
-  { label: "Diagnosis", colour: '#d0f2ff'},
-]
 
 function formatSourceLabel(input: {
   sourceTitle: string;
@@ -126,8 +118,6 @@ export function DdxPanel({
         )
         : undefined;
 
- 
-
     return {
       clinicalPresentationName:
         presentationMatch?.name ?? path.clinicalPresentationKey,
@@ -148,24 +138,20 @@ export function DdxPanel({
   };
 
   return (
-    
-    <div className="flex h-full flex-col p-3 border-l">
-      <header className="flex h-20 shrink-0 items-center px-4">
-        <span className="top-4 rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground">
+    <div className="flex h-full flex-col">
+      <header className="flex h-20 shrink-0 items-center border-b border-border px-4">
+        <span className="top-3 rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground">
           Differential Diagnosis
         </span>
       </header>
 
-      <div className="border-b -mx-3 mb-6" />
-
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-3 ">
-          <WorkflowCanvas
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <WorkflowCanvas
           steps={steps}
           matchedClinicalPresentationCount={matchedClinicalPresentations.length}
           criticAssessment={criticAssessment}
         />
-        <div className="bg-background rounded-[30px]">
-           
+
         {differentials.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
             <p className="text-sm font-medium">
@@ -321,7 +307,7 @@ export function DdxPanel({
                 {matchedCategories.map((match) => (
                   <span
                     key={`cat-${match.clinicalPresentationKey}-${match.categoryKey}`}
-                    className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300"
+                    className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300"
                   >
                     Category: {match.categoryName}
                   </span>
@@ -342,115 +328,85 @@ export function DdxPanel({
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Differentials
               </p>
-            {differentials.map((d, i) => {
-              const evidencePath = d.evidence.map(path => {
-                const pathDetails = getPathDetails(path);
-                return [pathDetails.clinicalPresentationName, pathDetails.evidenceName];
-              });
-
-              return (
-              <details
-                key={d.diagnosisKey}
-                className="group rounded-[15px] border border-border bg-popover"
-              >
-                <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
-                  <span className="w-4 shrink-0 text-xs text-muted-foreground">
-                    {i + 1}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 truncate text-sm font-medium">
-                      {d.diagnosisName} <ChevronRight size={16} />
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {d.evidence.length} supporting path
-                      {d.evidence.length !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                      Evidence support score
-                    </p>
-                    <span className="text-xs tabular-nums text-muted-foreground">
-                      {d.score.toFixed(2)}
+              {differentials.map((d, i) => (
+                <details
+                  key={d.diagnosisKey}
+                  className="group rounded-lg border border-border"
+                >
+                  <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                    <span className="w-4 shrink-0 text-xs text-muted-foreground">
+                      {i + 1}
                     </span>
-                  </div>
-                </summary>
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 truncate text-sm font-medium">
+                        {d.diagnosisName} <ChevronRight size={16} />
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {d.evidence.length} supporting path
+                        {d.evidence.length !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        Evidence support score
+                      </p>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {d.score.toFixed(2)}
+                      </span>
+                    </div>
+                  </summary>
 
-                <div className="space-y-2 border-t border-border px-3 py-3">
-                  {d.evidence.map((path, pathIndex) => {
-                    const pathDetails = getPathDetails(path);
-    
-                    return (
-                      <div
-                        key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
-                        className="rounded-md bg-muted/40 px-3 py-2"
-                      >
-                        <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                          {path.evidenceType === "category"
-                            ? "Category Evidence Path"
-                            : "Feature Evidence Path"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Presentation evidence:{" "}
-                          {pathDetails.clinicalPresentationMatchedText.length > 0
-                            ? pathDetails.clinicalPresentationMatchedText.join(", ")
-                            : "not available"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {path.evidenceType === "category"
-                            ? "Category evidence"
-                            : "Feature evidence"}
-                          :{" "}
-                          {pathDetails.evidenceMatchedText.length > 0
-                            ? pathDetails.evidenceMatchedText.join(", ")
-                            : "not available"}
-                        </p>
-                        {path.evidenceType === "feature" && (
-                          <p className="text-xs text-muted-foreground">
-                            Feature type: {pathDetails.evidenceTypeLabel ?? "not available"}
+                  <div className="space-y-2 border-t border-border px-3 py-3">
+                    {d.evidence.map((path, pathIndex) => {
+                      const pathDetails = getPathDetails(path);
+
+                      return (
+                        <div
+                          key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
+                          className="rounded-md bg-muted/40 px-3 py-2"
+                        >
+                          <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            {path.evidenceType === "category"
+                              ? "Category Evidence Path"
+                              : "Feature Evidence Path"}
                           </p>
-                        )}
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                          {pathDetails.clinicalPresentationName}
-                          {" -> "}
-                          {pathDetails.evidenceName}
-                          {" -> "}
-                          {d.diagnosisName}
-                        </p>
-                      </div>
-                    );
-                  })}
-                  <details>
-                    <summary>Diagnosis Subgraph</summary>
-
-                    <div className="inline-flex mt-4 mb-4 ml-2 flex items-center gap-4 bg-border/11 p-3 rounded-lg border border-input/30">
-                      {legend.map((item) => (
-                        <div key ={item.label} className="flex items-center gap-2">
-                          <div
-                            className="w-4 h-4 rounded-sm"
-                            style={{ backgroundColor: item.colour }}
-                      />
-                      <span className="text-xs text-muted-foreground">{item.label}</span>
-                      </div>
-
-                      ))}
-                    </div>
-                    
-                    <div className="mt-1 mb-4 p-4 bg-sidebar-border/8 rounded-lg border border-input/30">
-                      <DdxKG diagnosis = {evidencePath} diagnosisName = {d.diagnosisName}></DdxKG>
-                    </div>
-                    
-                  </details>
-                  
-                </div>
-              </details>
-            )})}
+                          <p className="text-xs text-muted-foreground">
+                            Presentation evidence:{" "}
+                            {pathDetails.clinicalPresentationMatchedText.length > 0
+                              ? pathDetails.clinicalPresentationMatchedText.join(", ")
+                              : "not available"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {path.evidenceType === "category"
+                              ? "Category evidence"
+                              : "Feature evidence"}
+                            :{" "}
+                            {pathDetails.evidenceMatchedText.length > 0
+                              ? pathDetails.evidenceMatchedText.join(", ")
+                              : "not available"}
+                          </p>
+                          {path.evidenceType === "feature" && (
+                            <p className="text-xs text-muted-foreground">
+                              Feature type: {pathDetails.evidenceTypeLabel ?? "not available"}
+                            </p>
+                          )}
+                          <p className="text-xs leading-relaxed text-muted-foreground">
+                            {pathDetails.clinicalPresentationName}
+                            {" -> "}
+                            {pathDetails.evidenceName}
+                            {" -> "}
+                            {d.diagnosisName}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+              ))}
             </div>
           </div>
         )}
       </div>
-      </div>
-      
     </div>
   );
 }
