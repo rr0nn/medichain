@@ -36,7 +36,7 @@ export function DdxKG({diagnosis, diagnosisName} : DdxKGProps) {
     const makeNode = ({index, i, item, type, background} : NodeProps) => {
         return {
             id: `n-${i}-${item}`,
-            position: { x: index * 200, y: i * 180 },
+            position: { x: index * 200, y: i * 200 },
             data: { label: item },
             type: type, 
             style: {
