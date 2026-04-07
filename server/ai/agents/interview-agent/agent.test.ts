@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
     mockConvertToModelMessages: vi.fn(),
     mockStreamText: vi.fn(),
-    mockGetDefaultChatModel: vi.fn(),
+    mockGetChatModel: vi.fn(),
     mockRunSafetyWorkflow: vi.fn(),
     mockComposePatientResponse: vi.fn(),
 }));
@@ -19,7 +19,7 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("@/server/ai/core/models", () => ({
-    getDefaultChatModel: mocks.mockGetDefaultChatModel,
+    getChatModel: mocks.mockGetChatModel,
 }));
 
 vi.mock("@/server/ai/workflows/safety-workflow/workflow", () => ({
@@ -59,13 +59,13 @@ describe("runInterviewAgent", () => {
         };
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
-        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
 
         await runInterviewAgent(input as never, writer as never);
 
         expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(input.messages);
-        expect(mocks.mockGetDefaultChatModel).toHaveBeenCalledTimes(1);
+        expect(mocks.mockGetChatModel).toHaveBeenCalledTimes(1);
         expect(mocks.mockStreamText).toHaveBeenCalledWith(
             expect.objectContaining({
                 model: fakeModel,
@@ -97,7 +97,7 @@ describe("runInterviewAgent", () => {
         };
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
-        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
         mocks.mockRunSafetyWorkflow.mockResolvedValue({ status: "needs_more_information" });
 
@@ -123,7 +123,8 @@ describe("runInterviewAgent", () => {
                 "New information focus: onset.",
                 "Patient summary: Lower abdominal pain with nausea",
             ].join("\n"),
-            expect.any(Function)
+            expect.any(Function),
+            undefined,
         );
     });
 
@@ -139,7 +140,7 @@ describe("runInterviewAgent", () => {
         };
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
-        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
         mocks.mockRunSafetyWorkflow.mockResolvedValue({
             status: "ready_for_review",
@@ -186,6 +187,7 @@ describe("runInterviewAgent", () => {
         expect(mocks.mockComposePatientResponse).toHaveBeenCalledWith(
             "Lower abdominal pain",
             expect.objectContaining({ status: "ready_for_review" }),
+            undefined,
         );
         expect(result).toEqual(
             expect.objectContaining({

@@ -1,3 +1,4 @@
+import type { ModelProvider } from "@/server/ai/core/models";
 import { getFeaturesForClinicalPresentations } from "@/server/ai/tools/knowledge-graph/knowledge-graph";
 import { runDifferentialDiagnosisWorkflow } from "@/server/ai/workflows/ddx-workflow/workflow";
 import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/types";
@@ -47,10 +48,12 @@ function mergeSafetyAssessments(input: {
 export async function runSafetyWorkflow(
   patientDescription: string,
   onStep?: OnStep,
+  modelProvider?: ModelProvider,
 ): Promise<SafetyWorkflowResult> {
   const ddxResult = await runDifferentialDiagnosisWorkflow(
     patientDescription,
     onStep,
+    modelProvider,
   );
 
   onStep?.({ type: "step", step: "safety_review", status: "running" });

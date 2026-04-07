@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
+import { getDiagnosisModel, type ModelProvider } from "@/server/ai/core/models";
 import type { FeatureRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const SUPPORTED_FEATURE_TYPES = [
@@ -32,10 +32,11 @@ const featureMatchSchema = z.object({
 export async function matchFeatures(
   patientDescription: string,
   clinicalPresentation: { key: string; name: string },
-  features: FeatureRecord[]
+  features: FeatureRecord[],
+  modelProvider?: ModelProvider,
 ) {
   const { output } = await generateText({
-    model: getDefaultDiagnosisModel(),
+    model: getDiagnosisModel(modelProvider),
     prompt: `
 You are matching patient wording to feature nodes within one clinical presentation.
 

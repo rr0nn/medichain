@@ -4,7 +4,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
+import { getDiagnosisModel, type ModelProvider } from "@/server/ai/core/models";
 import type { CategoryRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const categoryMatchSchema = z.object({
@@ -21,10 +21,11 @@ const categoryMatchSchema = z.object({
 export async function matchCategories(
   patientDescription: string,
   clinicalPresentation: { key: string; name: string },
-  categories: CategoryRecord[]
+  categories: CategoryRecord[],
+  modelProvider?: ModelProvider,
 ) {
   const { output } = await generateText({
-    model: getDefaultDiagnosisModel(),
+    model: getDiagnosisModel(modelProvider),
     prompt: `
 You are matching patient wording to category nodes within one clinical presentation.
 

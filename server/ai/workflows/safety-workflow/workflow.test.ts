@@ -270,6 +270,25 @@ describe("runSafetyWorkflow", () => {
     });
   });
 
+  it("forwards modelProvider to the differential diagnosis workflow", async () => {
+    mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
+      matchedClinicalPresentations: [],
+      matchedCategories: [],
+      matchedFeatures: [],
+      differentials: [],
+    });
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([]);
+
+    await runSafetyWorkflow("fever", undefined, "claude");
+
+    expect(mocks.mockRunDifferentialDiagnosisWorkflow).toHaveBeenCalledWith(
+      "fever",
+      undefined,
+      "claude",
+    );
+  });
+
   it("emits critic and follow-up step events", async () => {
     const onStep = vi.fn();
 

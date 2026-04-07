@@ -4,7 +4,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
+import { getDiagnosisModel, type ModelProvider } from "@/server/ai/core/models";
 import type { ClinicalPresentationRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const clinicalPresentationMatchSchema = z.object({
@@ -20,10 +20,11 @@ const clinicalPresentationMatchSchema = z.object({
 
 export async function matchClinicalPresentations(
   patientDescription: string,
-  candidates: ClinicalPresentationRecord[]
+  candidates: ClinicalPresentationRecord[],
+  modelProvider?: ModelProvider,
 ) {
   const { output } = await generateText({
-    model: getDefaultDiagnosisModel(),
+    model: getDiagnosisModel(modelProvider),
     prompt: `
 You are matching patient wording to graph nodes.
 

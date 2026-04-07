@@ -1,3 +1,4 @@
+import type { ModelProvider } from "@/server/ai/core/models";
 import { matchCategories } from "@/server/ai/agents/category-matcher-agent/agent";
 import { matchClinicalPresentations } from "@/server/ai/agents/clinical-presentation-matcher-agent/agent";
 import { matchFeatures } from "@/server/ai/agents/feature-matcher-agent/agent";
@@ -40,6 +41,7 @@ function completeRemainingSteps(
 export async function runDifferentialDiagnosisWorkflow(
   patientDescription: string,
   onStep?: OnStep,
+  modelProvider?: ModelProvider,
 ): Promise<DifferentialDiagnosisWorkflowResult> {
   // Start with every known clinical presentation that could anchor the patient's complaint.
   onStep?.({ type: "step", step: "match_presentations", status: "running" });
@@ -49,6 +51,7 @@ export async function runDifferentialDiagnosisWorkflow(
   const clinicalPresentationResult = await matchClinicalPresentations(
     patientDescription,
     clinicalPresentations,
+    modelProvider,
   );
   onStep?.({ type: "step", step: "match_presentations", status: "complete" });
 
@@ -146,6 +149,7 @@ export async function runDifferentialDiagnosisWorkflow(
         patientDescription,
         { key: presentation.key, name: presentation.name },
         presentationCategories,
+        modelProvider,
       );
 
       for (const categoryMatch of categoryResult.matches.filter(
@@ -195,6 +199,7 @@ export async function runDifferentialDiagnosisWorkflow(
       patientDescription,
       { key: presentation.key, name: presentation.name },
       presentationFeatures,
+      modelProvider,
     );
 
     for (const featureMatch of featureResult.matches.filter(

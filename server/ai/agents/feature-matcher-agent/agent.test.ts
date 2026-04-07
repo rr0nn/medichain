@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   mockGenerateText: vi.fn(),
-  mockGetDefaultDiagnosisModel: vi.fn(),
+  mockGetDiagnosisModel: vi.fn(),
   mockOutputObject: vi.fn(),
 }));
 
@@ -14,7 +14,7 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("@/server/ai/core/models", () => ({
-  getDefaultDiagnosisModel: mocks.mockGetDefaultDiagnosisModel,
+  getDiagnosisModel: mocks.mockGetDiagnosisModel,
 }));
 
 import { matchFeatures } from "./agent";
@@ -61,7 +61,7 @@ describe("matchFeatures", () => {
       },
     ];
 
-    mocks.mockGetDefaultDiagnosisModel.mockReturnValue(fakeModel);
+    mocks.mockGetDiagnosisModel.mockReturnValue(fakeModel);
     mocks.mockOutputObject.mockReturnValue(fakeOutputSchema);
     mocks.mockGenerateText.mockResolvedValue(fakeResponse);
 

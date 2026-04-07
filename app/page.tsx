@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { getToolName, isToolUIPart } from "ai";
+import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Conversation,
@@ -17,7 +17,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
+import { ModelSelector } from "@/components/model-selector";
 import { ThemeSelector } from "@/components/theme-selector";
+import type { ModelProvider } from "@/server/ai/core/models";
 import type { WorkflowStepState } from "@/components/workflow-canvas";
 import type {
   CategoryMatch,
@@ -41,7 +43,17 @@ const initialSteps: WorkflowStepState = {
 };
 
 export default function Chat() {
-  const { messages, sendMessage, status } = useChat();
+  const [modelProvider, setModelProvider] = useState<ModelProvider>("gemini");
+  const modelProviderRef = useRef(modelProvider);
+  modelProviderRef.current = modelProvider;
+
+  const [transport] = useState(
+    () =>
+      new DefaultChatTransport({
+        body: () => ({ modelProvider: modelProviderRef.current }),
+      }),
+  );
+  const { messages, sendMessage, status } = useChat({ transport });
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isLoading = status === "submitted" || status === "streaming";
@@ -134,7 +146,10 @@ export default function Chat() {
       <div className="flex flex-col w-1/2 border-r border-border min-h-0">
         <header className="flex items-center justify-between px-4 h-20 border-b border-border shrink-0">
           <span className="top-3 bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl">MediChain</span>
-          <ThemeSelector />
+          <div className="flex items-center gap-4">
+            <ModelSelector value={modelProvider} onChange={setModelProvider} disabled={isLoading} />
+            <ThemeSelector />
+          </div>
         </header>
 
         <Conversation className="flex-1 min-h-0">

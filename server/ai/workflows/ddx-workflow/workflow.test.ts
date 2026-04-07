@@ -492,6 +492,66 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     );
   });
 
+  it("forwards modelProvider to all matcher agents", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.9, matchedText: ["fever"] }],
+    });
+
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+    ]);
+
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        featureNormalizedName: "rigors",
+        featureType: "associated_symptom",
+      },
+    ]);
+
+    mocks.mockMatchCategories.mockResolvedValue({
+      matches: [{ key: "cat-infectious", score: 0.8, matchedText: ["fever"] }],
+    });
+
+    mocks.mockMatchFeatures.mockResolvedValue({
+      matches: [{ key: "feature-rigors", score: 0.9, matchedText: ["rigors"] }],
+    });
+
+    mocks.mockGetDiagnosesForPairs.mockResolvedValue([]);
+    mocks.mockGetDiagnosesForFeaturePairs.mockResolvedValue([]);
+
+    await runDifferentialDiagnosisWorkflow("fever", undefined, "claude");
+
+    expect(mocks.mockMatchClinicalPresentations).toHaveBeenCalledWith(
+      "fever",
+      expect.any(Array),
+      "claude",
+    );
+    expect(mocks.mockMatchCategories).toHaveBeenCalledWith(
+      "fever",
+      expect.objectContaining({ key: "cp-fever" }),
+      expect.any(Array),
+      "claude",
+    );
+    expect(mocks.mockMatchFeatures).toHaveBeenCalledWith(
+      "fever",
+      expect.objectContaining({ key: "cp-fever" }),
+      expect.any(Array),
+      "claude",
+    );
+  });
+
   it("keeps only the top 3 clinical presentations with score >= 0.6", async () => {
     mocks.mockGetClinicalPresentations.mockResolvedValue([
       { key: "cp1", name: "CP1" },
