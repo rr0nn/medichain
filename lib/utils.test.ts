@@ -1,5 +1,7 @@
-// This is directly testing the only exported function in utils.ts, which wraps clsx
-// and tailwind-merge.
+/**
+ * @fileoverview Tests the shared frontend utility helpers.
+ * @contributors John Kollannur
+ */
 
 import { describe, expect, it } from "vitest";
 import { cn } from "./utils";

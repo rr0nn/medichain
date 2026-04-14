@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Configures Vitest for unit and integration testing in this project.
+ * @contributors John Kollannur
+ */
+
 import { defineConfig } from "vitest/config";
 import path from "path";
 

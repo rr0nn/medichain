@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Defines the shared types used throughout the differential diagnosis workflow.
+ * @contributors Johnson Zhang, John Kollannur
+ */
+
 import type { SourceRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 export type ClinicalPresentationMatch = {

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Stores and retrieves conversations and messages through Prisma.
+ * @contributors Aryan Wadhawan
+ */
+
 import type { UIMessage } from "ai";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./client";

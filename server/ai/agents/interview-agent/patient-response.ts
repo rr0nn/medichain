@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Composes patient-facing replies from grounded workflow output.
+ * @contributors Johnson Zhang
+ */
+
 import { generateText } from "ai";
 
 import { getDefaultChatModel } from "@/server/ai/core/models";

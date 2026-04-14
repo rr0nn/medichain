@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Builds the workflow result for cases that need more information before review.
+ * @contributors Johnson Zhang
+ */
+
 import type { FeatureRecord } from "@/server/ai/tools/knowledge-graph/types";
 import type {
   CategoryMatch,

@@ -1,6 +1,8 @@
-// Diagnosis knowledge graph access module:
-// provides typed read helpers for traversing the Neo4j diagnosis graph from
-// clinical presentations to categories and then to diagnoses.
+/**
+ * @fileoverview Contains typed Neo4j read helpers for traversing the diagnosis knowledge graph.
+ * @contributors Johnson Zhang
+ */
+
 import neo4j from "neo4j-driver";
 import { neo4jDatabase, neo4jDriver } from "./neo4j";
 import type {

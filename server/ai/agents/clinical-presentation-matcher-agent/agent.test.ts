@@ -1,5 +1,7 @@
-// This test focuses on the contract of the agent wrapper: it should build
-// the prompt, use the diagnosis model, and return output from the SDK response.
+/**
+ * @fileoverview Tests how the clinical presentation matcher scores known presentations.
+ * @contributors John Kollannur
+ */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

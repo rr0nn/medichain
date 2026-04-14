@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests how the feature matcher scores presentation-specific features.
+ * @contributors Johnson Zhang
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({

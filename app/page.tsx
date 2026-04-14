@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Powers the main consultation screen, including chat, workflow state, and differential results.
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Jason Yang, John Kollannur, Aryan Wadhawan
+ */
+
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
 import type { UIMessage } from "ai";

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests the Neo4j query helpers used to retrieve diagnosis and evidence data.
+ * @contributors Johnson Zhang
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({

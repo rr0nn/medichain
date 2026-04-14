@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Scores and ranks candidate differentials using matched graph evidence.
+ * @contributors Johnson Zhang
+ */
+
 import type { DiagnosisRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 import type {

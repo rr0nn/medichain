@@ -1,4 +1,10 @@
 "use client";
+
+/**
+ * @fileoverview Renders the knowledge-graph view that explains evidence behind ranked differentials.
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi
+ */
+
 import { ReactFlow, Background, Controls, MarkerType } from '@xyflow/react';
 
 type DiagnosisEvidencePath = {

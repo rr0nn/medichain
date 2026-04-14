@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Returns the saved message history for a single conversation.
+ * @contributors Aryan Wadhawan
+ */
+
 import { NextResponse } from "next/server";
 import { getMessages } from "@/server/db/conversations";
 

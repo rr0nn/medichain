@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Centralizes the server-side AI model helpers used by agents and workflows.
+ * @contributors Johnson Zhang
+ */
+
 import { google } from "@ai-sdk/google";
 
 export function getDefaultChatModel() {

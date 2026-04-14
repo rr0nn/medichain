@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Orchestrates the differential diagnosis flow from matching through ranking.
+ * @contributors Johnson Zhang, Aryan Wadhawan, John Kollannur
+ */
+
 import { matchCategories } from "@/server/ai/agents/category-matcher-agent/agent";
 import { matchClinicalPresentations } from "@/server/ai/agents/clinical-presentation-matcher-agent/agent";
 import { matchFeatures } from "@/server/ai/agents/feature-matcher-agent/agent";

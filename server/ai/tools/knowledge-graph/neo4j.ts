@@ -1,6 +1,8 @@
-// Neo4j connection module:
-// initializes the shared Neo4j driver and database name from environment
-// configuration, and exposes a cleanup helper for orderly shutdown.
+/**
+ * @fileoverview Creates and reuses the shared Neo4j driver and database configuration.
+ * @contributors John Kollannur, Johnson Zhang
+ */
+
 import neo4j from "neo4j-driver";
 import type { Driver } from "neo4j-driver";
 

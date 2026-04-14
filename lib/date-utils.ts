@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Formats timestamps into short relative labels for the UI.
+ * @contributors Aryan Wadhawan
+ */
+
 export function formatDistanceToNow(date: Date): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Handles chat requests for an existing conversation and streams interview-agent responses.
+ * @contributors Johnson Zhang, Jason Yang, Aryan Wadhawan
+ */
+
 import { createUIMessageStream, createUIMessageStreamResponse, type UIMessage } from "ai";
 
 import type { ChatRequest } from "@/server/ai/core/types";

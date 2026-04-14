@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Integration tests for the conversation chat route across streaming and persistence boundaries.
+ * @contributors Johnson Zhang, Jason Yang, John Kollannur
+ */
+
 import { describe,  expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({

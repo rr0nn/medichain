@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Evaluates confidence signals for a generated differential diagnosis result.
+ * @contributors Johnson Zhang, John Kollannur
+ */
+
 import type { DifferentialDiagnosis } from "@/server/ai/workflows/ddx-workflow/types";
 
 import type { CriticAssessment } from "./types";

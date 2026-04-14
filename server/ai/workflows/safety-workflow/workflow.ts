@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Runs safety review over differential results before the final response is composed.
+ * @contributors Johnson Zhang
+ */
+
 import { getFeaturesForClinicalPresentations } from "@/server/ai/tools/knowledge-graph/knowledge-graph";
 import { runDifferentialDiagnosisWorkflow } from "@/server/ai/workflows/ddx-workflow/workflow";
 import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/types";

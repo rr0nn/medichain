@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Displays workflow progress, safety review output, and ranked differentials.
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
+ */
+
 import {
   WorkflowCanvas,
   type WorkflowStepState,

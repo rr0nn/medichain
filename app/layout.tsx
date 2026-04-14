@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Sets up the root app layout, global fonts, and shared client providers.
+ * @contributors Johnson Zhang, John Kollannur, Aryan Wadhawan
+ */
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
