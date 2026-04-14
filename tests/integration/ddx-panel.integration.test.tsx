@@ -1,5 +1,5 @@
 /**
- * @fileoverview Covers differential panel rendering with workflow-shaped integration data.
+ * @fileoverview Integration tests for differential panel rendering with workflow-shaped data.
  * @contributors Johnson Zhang, Aleisha Ly, John Kollannur
  */
 
