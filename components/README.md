@@ -4,8 +4,8 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 
 ## Structure
 
-- `ui/`: low-level presentational primitives such as buttons, tooltips, and separators
-- `ai-elements/`: chat-specific building blocks used to render messages and conversation containers
+- `ui/`: shared UI primitives installed from shadcn/ui, such as buttons, tooltips, and separators
+- `ai-elements/`: shared chat primitives installed from Vercel AI Elements, used to render messages and conversation containers
 - root-level feature components: higher-level MediChain UI such as the differential panel, workflow canvas, theme selector, and conversation sidebar
 
 ## Key Components
@@ -19,8 +19,9 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 
 ## Conventions
 
-- Put shared primitives in `ui/`.
-- Put reusable chat rendering pieces in `ai-elements/`.
+- `ui/` is the default location for external primitive installs from shadcn/ui.
+- `ai-elements/` is the default location for external chat UI primitives from Vercel AI Elements.
+- Treat both folders as shared primitive layers and edit them carefully when syncing or adapting upstream code.
 - Keep domain-heavy data shaping out of components when it can live in `server/` or `lib/`.
 - Co-locate component tests next to the component when the test is tightly coupled to its rendered behavior.
 
@@ -30,8 +31,6 @@ Current component coverage includes:
 
 - `ddx-panel.test.tsx`
 - integration tests under [`../tests/integration`](../tests/integration)
-
-Prefer React Testing Library with user-visible assertions.
 
 ## Related Documentation
 

@@ -7,6 +7,8 @@ This folder contains shared test setup and integration tests that exercise behav
 - `setup.ts`: shared Vitest setup used across the test suite
 - `integration/`: integration tests covering route, workflow, and UI behavior
 
+Most unit tests are colocated with the source files they validate. This folder is mainly for shared test setup and broader integration coverage.
+
 ## Current Integration Coverage
 
 - conversation chat route behavior

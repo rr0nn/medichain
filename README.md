@@ -72,6 +72,12 @@ Required variables:
 - `NEO4J_PASSWORD`
 - `NEO4J_DATABASE`
 
+Variable roles:
+
+- `DATABASE_URL`: PostgreSQL connection string for conversation and message persistence
+- `GOOGLE_GENERATIVE_AI_API_KEY`: API key used by the server-side AI agents and workflows
+- `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`: Neo4j connection settings for the diagnosis knowledge graph
+
 Optional Aura metadata:
 
 - `AURA_INSTANCEID`

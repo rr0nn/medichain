@@ -40,3 +40,4 @@ At a high level, the server-side diagnosis path is:
 - [`agents/README.md`](agents/README.md)
 - [`tools/README.md`](tools/README.md)
 - [`workflows/README.md`](workflows/README.md)
+- [`../../docs/knowledge-graph/README.md`](../../docs/knowledge-graph/README.md)
