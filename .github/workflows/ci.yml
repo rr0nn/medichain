@@ -4,9 +4,28 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Placeholder build-time values so Prisma client generation and Next.js build steps
+  # can execute in CI without connecting to real databases or external AI services.
+  DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
+  NEO4J_URI: bolt://localhost:7687
+  NEO4J_USERNAME: neo4j
+  NEO4J_PASSWORD: password
+  NEO4J_DATABASE: neo4j
+  GOOGLE_GENERATIVE_AI_API_KEY: dummy
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
-  lint-test-build:
+  quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -15,7 +34,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.33.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,20 +44,77 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        env:
-          DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
 
+      # ESLint checks for code-style problems, common React/Next.js mistakes,
+      # and issues that can often fail at runtime but are cheaper to catch statically.
       - name: Run lint
         run: pnpm lint
 
+      # TypeScript verifies that imports, props, return types, and other type contracts
+      # still line up across the codebase without depending on generated .next files.
+      - name: Run typecheck
+        run: pnpm typecheck
+
+      # Vitest runs the repository's unit tests plus integration tests in tests/integration
+      # so logic and cross-module behavior regressions fail before merge.
       - name: Run tests
         run: pnpm test
 
+      # A production Next.js build validates route compilation, server/client bundling,
+      # and build-time environment assumptions used by the deployed app.
       - name: Run build
         run: pnpm build
-        env:
-          NEO4J_URI: bolt://localhost:7687
-          NEO4J_USERNAME: neo4j
-          NEO4J_PASSWORD: password
-          NEO4J_DATABASE: neo4j
-          DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # GitHub dependency review inspects package changes in the pull request and flags
+      # newly introduced vulnerabilities or other higher-risk dependency updates.
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Docker build acts as a packaging smoke test: it verifies the production image can be
+      # built from scratch, including dependency install, Prisma generation, and app bundling.
+      - name: Build Docker image
+        run: docker build --target runner --tag medichain:${{ github.sha }} .
+
+      # Start the built container and confirm the app can answer an HTTP request,
+      # which catches runtime startup issues that a plain image build would miss.
+      - name: Run Docker smoke test
+        run: |
+          docker run -d \
+            --name medichain-smoke \
+            -p 3000:3000 \
+            -e DATABASE_URL=postgresql://medichain:medichain@db:5432/medichain \
+            -e NEO4J_URI=bolt://db:7687 \
+            -e NEO4J_USERNAME=neo4j \
+            -e NEO4J_PASSWORD=password \
+            -e NEO4J_DATABASE=neo4j \
+            -e GOOGLE_GENERATIVE_AI_API_KEY=dummy \
+            medichain:${{ github.sha }}
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs medichain-smoke
+          exit 1
+
+      - name: Cleanup Docker smoke test
+        if: always()
+        run: docker rm -f medichain-smoke || true
