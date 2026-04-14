@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests end-to-end orchestration of the differential diagnosis workflow.
+ * @contributors Johnson Zhang, John Kollannur
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({

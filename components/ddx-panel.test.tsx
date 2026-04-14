@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests rendering of the differential panel, including evidence and safety details.
+ * @contributors Johnson Zhang, Aleisha Ly, John Kollannur
+ */
+
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeAll } from "vitest";
 
@@ -6,12 +11,12 @@ vi.mock("@/components/workflow-canvas", () => ({
 }));
 
 import { DdxPanel } from "./ddx-panel";
- beforeAll(() => {
+beforeAll(() => {
   global.ResizeObserver = class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-} as unknown as typeof ResizeObserver;
+    observe() { }
+    unobserve() { }
+    disconnect() { }
+  } as unknown as typeof ResizeObserver;
 });
 
 describe("DdxPanel", () => {

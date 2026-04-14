@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Renders the theme switcher used to change the app appearance.
+ * @contributors Johnson Zhang
+ */
+
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 

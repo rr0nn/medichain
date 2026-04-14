@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Matches a patient description to graph features within a clinical presentation.
+ * @contributors Johnson Zhang
+ */
+
 import { generateText, Output } from "ai";
 import { z } from "zod";
 

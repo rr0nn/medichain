@@ -1,6 +1,8 @@
-// Category matcher agent:
-// maps free-text patient wording to category nodes within an already selected
-// clinical presentation, returning ranked category-key matches for downstream use.
+/**
+ * @fileoverview Matches a patient description to the most relevant diagnosis categories.
+ * @contributors Johnson Zhang
+ */
+
 import { generateText, Output } from "ai";
 import { z } from "zod";
 

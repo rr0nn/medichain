@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Shows the consultation list and controls for switching or starting sessions.
+ * @contributors Aryan Wadhawan
+ */
+
 import { useEffect, useState, useCallback } from "react";
 import { PlusIcon, MessageSquareIcon, Trash2Icon, PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Visualizes diagnostic workflow progress and the current safety review state.
+ * @contributors Aryan Wadhawan, Johnson Zhang
+ */
+
 import {
   Background,
   Handle,

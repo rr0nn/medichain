@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Defines the result and assessment types used by the safety workflow.
+ * @contributors Johnson Zhang
+ */
+
 import type { DifferentialDiagnosisWorkflowResult } from "@/server/ai/workflows/ddx-workflow/types";
 import type { FeatureRecord } from "@/server/ai/tools/knowledge-graph/types";
 

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests composition of patient-facing responses from grounded differential results.
+ * @contributors Johnson Zhang
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({

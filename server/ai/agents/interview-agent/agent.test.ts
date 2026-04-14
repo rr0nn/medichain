@@ -1,5 +1,7 @@
-// This matches the file exactly: runInterviewAgent just converts incoming messages,
-// gets the default chat model, and passes both into streamText.
+/**
+ * @fileoverview Tests interview-agent tool use and response orchestration.
+ * @contributors Johnson Zhang, John Kollannur, Aryan Wadhawan
+ */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

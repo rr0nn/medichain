@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Checks whether differential results remain grounded in graph evidence.
+ * @contributors Johnson Zhang
+ */
+
 import { verifyDiagnosisEvidencePaths } from "@/server/ai/tools/knowledge-graph/knowledge-graph";
 import type { DifferentialDiagnosis } from "@/server/ai/workflows/ddx-workflow/types";
 

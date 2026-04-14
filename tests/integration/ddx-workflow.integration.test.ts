@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests differential workflow integration across matchers and graph lookups.
+ * @contributors John Kollannur
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -142,12 +147,12 @@ describe("runDifferentialDiagnosisWorkflow integration", () => {
       onStep,
     );
 
-    expect(mocks.mockGetCategoriesForClinicalPresentations).toHaveBeenCalledWith(
-      ["cp-abdominal-pain"],
-    );
-    expect(mocks.mockGetFeaturesForClinicalPresentations).toHaveBeenCalledWith(
-      ["cp-abdominal-pain"],
-    );
+    expect(
+      mocks.mockGetCategoriesForClinicalPresentations,
+    ).toHaveBeenCalledWith(["cp-abdominal-pain"]);
+    expect(mocks.mockGetFeaturesForClinicalPresentations).toHaveBeenCalledWith([
+      "cp-abdominal-pain",
+    ]);
     expect(mocks.mockGetSourcesForClinicalPresentations).toHaveBeenCalledWith([
       "cp-abdominal-pain",
     ]);
@@ -212,7 +217,7 @@ describe("runDifferentialDiagnosisWorkflow integration", () => {
         },
       ]),
     );
-    
+
     expect(onStep.mock.calls.map(([event]) => event)).toEqual([
       { type: "step", step: "match_presentations", status: "running" },
       { type: "step", step: "match_presentations", status: "complete" },

@@ -1,5 +1,7 @@
-// Tests the behaviour of mapping category records into { key, name, normalized_name }
-// before sending them to generateText.
+/**
+ * @fileoverview Tests how the category matcher scores structured diagnosis categories.
+ * @contributors John Kollannur
+ */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

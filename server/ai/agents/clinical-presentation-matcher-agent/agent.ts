@@ -1,6 +1,8 @@
-// Clinical presentation matcher agent:
-// maps free-text patient wording to candidate clinical presentation nodes,
-// returning ranked presentation-key matches for downstream selection.
+/**
+ * @fileoverview Matches a patient description to known clinical presentations in the graph.
+ * @contributors Johnson Zhang
+ */
+
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
