@@ -1,51 +1,63 @@
 # MediChain
 
-MediChain is a knowledge graph-grounded clinical decision support prototype for differential diagnosis. It combines a Neo4j-backed medical knowledge graph with AI workflows that match patient presentations, retrieve graph-supported evidence, rank differential diagnoses, and present grounded results in a patient-facing interface.
+MediChain is a prototype system that demonstrates how a knowledge graph-grounded, multi-agent chatbot can support transparent and explainable differential diagnosis reasoning. It is designed to improve clinical efficiency while providing a user-friendly interface for non-technical users.
 
-## Overview
+## What The App Does
 
-The system is organized into three main layers:
+- collects a patient presentation through a conversational interface
+- matches the presentation to known clinical presentations, categories, and features in the knowledge graph
+- retrieves graph-grounded candidate diagnoses and supporting source references
+- ranks the differential using explicit matched evidence from the graph
+- runs a safety review before presenting results for clinical review
+- surfaces a transparent workflow so users can inspect how the differential was derived
+- composes a patient-facing response that communicates the grounded result in accessible language
 
-- `interview-workflow`: handles conversational interaction and collects patient presentation details
-- `ddx-workflow`: generates graph-grounded differential diagnoses from matched clinical presentations, categories, and features
-- `safety-workflow`: audits grounding, reviews confidence, and determines whether the result is ready for review or needs more information
+## Architecture Summary
 
-The frontend displays:
+The project is split into three main layers:
 
-- matched clinical presentations
-- matched category and feature evidence
-- grounded differential diagnoses
-- source references from the knowledge graph
+- `app/`: Next.js application shell, pages, styles, and API route handlers
+- `components/`: client-side UI for chat, workflow state, and differential display
+- `server/`: server-side orchestration, AI workflows, graph access, and persistence
+
+Within `server/ai/`, the diagnosis pipeline is organized as:
+
+- `agents/`: focused matchers and the interview agent
+- `tools/`: reusable graph and support utilities
+- `workflows/`: orchestration steps for interview, differential generation, and safety review
 
 ## Tech Stack
 
-- Next.js
-- React
+- Next.js 16
+- React 19
 - TypeScript
+- Prisma + PostgreSQL
 - Neo4j
 - Vercel AI SDK
 - Google Generative AI
+- Vitest
 
 ## Prerequisites
 
 Before running the project, make sure you have:
 
-- Docker + Docker Compose (v2)
-- Node.js 20+ (for local lint/test/dev workflows)
+- Node.js 20+
 - pnpm 10+
-- access to a Neo4j database
+- Docker + Docker Compose v2
+- access to a PostgreSQL database
+- access to a Neo4j database seeded with the project graph
 - a Google Generative AI API key
 
-If you need pnpm locally:
+If pnpm is not installed locally:
 
 ```bash
 corepack enable
 corepack prepare pnpm@10.33.0 --activate
 ```
 
-## Environment Variables
+## Environment Setup
 
-Copy `.env.example` to `.env.local` and fill in your own values.
+Copy `.env.example` to `.env.local`:
 
 ```bash
 cp .env.example .env.local
@@ -53,6 +65,7 @@ cp .env.example .env.local
 
 Required variables:
 
+- `DATABASE_URL`
 - `GOOGLE_GENERATIVE_AI_API_KEY`
 - `NEO4J_URI`
 - `NEO4J_USERNAME`
@@ -64,158 +77,112 @@ Optional Aura metadata:
 - `AURA_INSTANCEID`
 - `AURA_INSTANCENAME`
 
-## Setup
+## Getting Started
 
-### Team Onboarding (Docker, recommended)
+### Docker-Based Setup
 
-1. Clone and enter the repository
-
-```bash
-git clone <repo-url>
-cd capstone-project-26t1-3900-w09a-date
-```
-
-2. Configure environment variables
+1. Clone the repository and enter it.
+2. Create `.env.local` from `.env.example`.
+3. Start PostgreSQL:
 
 ```bash
-cp .env.example .env.local
-```
-
-3. Fill `.env.local` with valid values for:
-
-- `GOOGLE_GENERATIVE_AI_API_KEY`
-- `NEO4J_URI`
-- `NEO4J_USERNAME`
-- `NEO4J_PASSWORD`
-- `NEO4J_DATABASE`
-
-4. Build and start PostgreSQL
-
-```bash
-docker compose build web
 docker compose up -d db
 ```
 
-5. Apply database migrations
+4. Apply Prisma migrations:
 
 ```bash
 docker compose run --rm migrate
 ```
 
-6. Start the app
+5. Start the app container:
 
 ```bash
 docker compose up -d web
 ```
 
-7. Open the app at `http://localhost:3000`
+6. Open `http://localhost:3000`.
 
-8. Verify containers are healthy
+### Local Development
 
-```bash
-docker compose ps
-docker compose logs --tail=100 web
-```
-
-### Local Development (without app container)
-
-1. Configure environment variables
-
-```bash
-cp .env.example .env.local
-```
-
-2. Start PostgreSQL in Docker
+1. Create `.env.local`.
+2. Start PostgreSQL and apply migrations:
 
 ```bash
 docker compose up -d db
 docker compose run --rm migrate
 ```
 
-3. Install dependencies
+3. Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-4. Run the development server
+4. Start the development server:
 
 ```bash
 pnpm dev
 ```
 
-5. Open the app at `http://localhost:3000`
-
-### Useful Docker Commands
-
-```bash
-docker compose up -d --build
-docker compose down
-docker compose down -v    # destructive: removes DB volume/data
-```
-
-## Available Scripts
+## Useful Commands
 
 ```bash
 pnpm dev
 pnpm build
 pnpm start
+pnpm lint
 pnpm test
 pnpm test:watch
 pnpm test:coverage
-pnpm lint
 ```
 
-## Neo4j Setup
+Docker helpers:
 
-MediChain requires a seeded Neo4j knowledge graph before the differential diagnosis workflow can return grounded results.
+```bash
+docker compose up -d --build
+docker compose down
+docker compose down -v
+```
+
+`docker compose down -v` is destructive and removes local database volume data.
+
+## Knowledge Graph Setup
+
+The diagnosis pipeline depends on a seeded Neo4j graph.
 
 1. Start or connect to a Neo4j instance.
-2. Configure the Neo4j environment variables in `.env.local`.
-3. Seed the database using the script in [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
-4. Review the graph model in [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md) if you need to inspect or extend the dataset.
+2. Configure the Neo4j variables in `.env.local`.
+3. Seed the graph using [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
+4. Review the schema in [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md).
 
 ## Project Structure
 
 ```text
-app/
-  frontend pages and API routes
-
-components/
-  frontend UI components, including the workflow canvas and differential panel
-
-server/ai/
-  backend AI orchestration
-  agents/
-  tools/
-  workflows/
-
-docs/
-  project documentation
-  knowledge-graph/
-    schema.md
-    seeding.cypher
+app/                    Next.js pages, routes, and global styles
+components/             UI building blocks and feature components
+docs/                   Supporting project documentation
+lib/                    Small shared frontend utilities
+prisma/                 Database schema and migrations
+server/
+  ai/                   AI orchestration, agents, tools, and workflows
+  db/                   Prisma-based persistence layer
+tests/                  Integration tests and shared test setup
+public/                 Static assets
 ```
 
-## Knowledge Graph
+## Recommended Read Order
 
-The differential diagnosis pipeline is grounded in a Neo4j knowledge graph built around:
-
-- `ClinicalPresentation`
-- `Category`
-- `Feature`
-- `Diagnosis`
-- `Source`
-
-See [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md) for the current schema.
+- [`app/README.md`](app/README.md)
+- [`components/README.md`](components/README.md)
+- [`server/README.md`](server/README.md)
+- [`server/ai/README.md`](server/ai/README.md)
+- [`prisma/README.md`](prisma/README.md)
+- [`docs/knowledge-graph/README.md`](docs/knowledge-graph/README.md)
+- [`tests/README.md`](tests/README.md)
 
 ## Notes
 
-- Differential diagnoses are graph-grounded, not free-form model outputs.
-- Safety review may route the case back for more information if grounding or confidence is insufficient.
-- Source references shown in the UI are derived from the knowledge graph.
-
-## Related Documentation
-
-- [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md)
-- [`server/ai/README.md`](server/ai/README.md)
+- Differentials are intended to be graph-grounded rather than free-form model output.
+- Safety review can route the conversation back for clarification when evidence is weak.
+- API routes should stay thin and delegate work into `server/`.
