@@ -174,6 +174,7 @@ public/                 Static assets
 ## Recommended Read Order
 
 - [`app/README.md`](app/README.md)
+- [`app/api/README.md`](app/api/README.md)
 - [`components/README.md`](components/README.md)
 - [`server/README.md`](server/README.md)
 - [`server/ai/README.md`](server/ai/README.md)

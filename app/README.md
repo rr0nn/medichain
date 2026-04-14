@@ -15,10 +15,7 @@ This folder contains the Next.js application entry points: the main page, global
 - `page.tsx`: main chat and differential diagnosis page
 - `globals.css`: global styles and Tailwind layer setup
 - `theme.css`: theme tokens and shared visual variables
-- `api/conversations/route.ts`: list and create conversations
-- `api/conversations/[id]/route.ts`: fetch and delete a single conversation
-- `api/conversations/[id]/messages/route.ts`: load persisted conversation messages
-- `api/conversations/[id]/chat/route.ts`: stream interview-agent responses for a conversation
+- `api/`: internal application API routes for conversations, messages, and chat streaming
 
 ## Design Rules
 
@@ -39,5 +36,6 @@ Edit `app/` when you need to:
 ## Related Documentation
 
 - [`../README.md`](../README.md)
+- [`api/README.md`](api/README.md)
 - [`../components/README.md`](../components/README.md)
 - [`../server/README.md`](../server/README.md)

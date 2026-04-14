@@ -17,6 +17,7 @@ At a high level, the server-side diagnosis path is:
 2. the differential workflow matches clinical presentations, categories, and features
 3. graph tools retrieve candidate diagnoses and source references from Neo4j
 4. the safety workflow reviews confidence and grounding before the response is surfaced
+5. the interview layer composes the final patient-facing response from the reviewed result
 
 ## Entry Points
 
