@@ -174,7 +174,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-popover">
+    <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <ConversationSidebar
         activeId={activeConversationId}
@@ -183,13 +183,13 @@ export default function Chat() {
       />
 
       {/* Chat Panel */}
-      <div className="flex flex-col w-1/2 min-h-0 p-3">
-        <header className="flex items-center justify-between px-4 h-20 shrink-0">
-          <span className="top-3 bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl">MediChain</span>
+      <div className="flex flex-col w-1/2 min-h-0 p-3 gap-3">
+        <header className="flex items-center justify-between px-4 h-16 shrink-0">
+          <span className="bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl shadow-[0_4px_16px_rgba(27,125,126,0.25)]">MediChain</span>
           <ThemeSelector />
         </header>
-        <div className="border-b -mx-3 mb-4" />
-        <Conversation className="bg-background flex-1 min-h-0 rounded-t-[30px]">
+        <div className="glass flex flex-col flex-1 min-h-0 rounded-[30px] overflow-hidden">
+        <Conversation className="flex-1 min-h-0 bg-transparent">
           <ConversationContent>
             {loadingMessages ? (
               <div className="flex flex-col gap-3 p-4">
@@ -252,13 +252,13 @@ export default function Chat() {
           <ConversationScrollButton />
         </Conversation>
 
-        <form onSubmit={submit} className="shrink-0 p-3 bg-background rounded-b-[30px]">
+        <form onSubmit={submit} className="shrink-0 p-3 border-t border-[color:var(--glass-border)]">
           {!activeConversationId && (
             <p className="text-xs text-muted-foreground text-center mb-2">
               Start a new consultation from the sidebar to begin.
             </p>
           )}
-          <div className="flex items-center gap-2 rounded-3xl border border-input bg-popover px-3 py-3 focus-within:ring-1 focus-within:ring-ring transition-shadow">
+          <div className="flex items-center gap-2 rounded-3xl bg-background/80 border border-[color:var(--glass-border)] px-3 py-3 shadow-[inset_0_1px_0_var(--glass-highlight)] focus-within:ring-1 focus-within:ring-ring transition-shadow">
             <textarea
               ref={textareaRef}
               className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
@@ -283,6 +283,7 @@ export default function Chat() {
             ⌘↵ to send
           </p>
         </form>
+        </div>
       </div>
 
       {/* DDx Panel */}

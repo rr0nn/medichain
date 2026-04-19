@@ -1,4 +1,17 @@
 .medichain {
+  --bg-base: #eaf9f6;
+  --bg-orb-1: #1bc2bd;
+  --bg-orb-2: #5fa7ff;
+  --bg-orb-3: #7bfee2;
+
+  --glass-bg: rgba(247, 255, 254, 0.50);
+  --glass-bg-strong: rgba(247, 255, 254, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.60);
+  --glass-highlight: rgba(255, 255, 255, 0.90);
+  --glass-shadow:
+    0 1px 2px rgba(9, 55, 56, 0.08),
+    0 8px 32px rgba(9, 55, 56, 0.12);
+
   --background: #f3f3f3;
   --foreground: #093738;
   --card: #f7fffe;

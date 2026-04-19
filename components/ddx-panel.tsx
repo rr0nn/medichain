@@ -148,22 +148,20 @@ export function DdxPanel({
 
   return (
 
-    <div className="flex h-full flex-col p-3 border-l">
-      <header className="flex h-20 shrink-0 items-center px-4">
-        <span className="top-4 rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground">
+    <div className="flex h-full flex-col p-3 gap-3">
+      <header className="flex h-16 shrink-0 items-center px-4">
+        <span className="rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground shadow-[0_4px_16px_rgba(27,125,126,0.25)]">
           Differential Diagnosis
         </span>
       </header>
 
-      <div className="border-b -mx-3 mb-6" />
-
-      <div className="flex-1 overflow-y-auto min-h-0 space-y-3 ">
+      <div className="glass flex-1 overflow-y-auto min-h-0 rounded-[30px] p-4 space-y-3">
         <WorkflowCanvas
           steps={steps}
           matchedClinicalPresentationCount={matchedClinicalPresentations.length}
           criticAssessment={criticAssessment}
         />
-        <div className="bg-background rounded-[30px]">
+        <div className="bg-background/80 border border-[color:var(--glass-border)] rounded-[22px] shadow-[inset_0_1px_0_var(--glass-highlight)]">
 
           {differentials.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
