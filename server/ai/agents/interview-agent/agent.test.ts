@@ -8,7 +8,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
     mockConvertToModelMessages: vi.fn(),
     mockStreamText: vi.fn(),
-    mockGetDefaultChatModel: vi.fn(),
+    mockGetChatModel: vi.fn(),
+    mockResolveProvider: vi.fn((p?: string) => p ?? "gemini"),
     mockRunSafetyWorkflow: vi.fn(),
     mockComposePatientResponse: vi.fn(),
 }));
@@ -21,7 +22,8 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("@/server/ai/core/models", () => ({
-    getDefaultChatModel: mocks.mockGetDefaultChatModel,
+    getChatModel: mocks.mockGetChatModel,
+    resolveProvider: mocks.mockResolveProvider,
 }));
 
 vi.mock("@/server/ai/workflows/safety-workflow/workflow", () => ({
@@ -39,7 +41,7 @@ describe("runInterviewAgent", () => {
         vi.clearAllMocks();
     });
 
-    it("converts messages and streams text with the default chat model", async () => {
+    it("converts messages and streams text with the resolved chat model", async () => {
         const input = {
             messages: [
                 { id: "1", role: "user", content: "Hello" },
@@ -61,13 +63,14 @@ describe("runInterviewAgent", () => {
         };
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
-        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
 
         await runInterviewAgent(input as never, writer as never);
 
         expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(input.messages);
-        expect(mocks.mockGetDefaultChatModel).toHaveBeenCalledTimes(1);
+        expect(mocks.mockResolveProvider).toHaveBeenCalledWith(undefined);
+        expect(mocks.mockGetChatModel).toHaveBeenCalledWith("gemini");
         expect(mocks.mockStreamText).toHaveBeenCalledWith(
             expect.objectContaining({
                 model: fakeModel,
@@ -99,7 +102,7 @@ describe("runInterviewAgent", () => {
         };
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
-        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
         mocks.mockRunSafetyWorkflow.mockResolvedValue({ status: "needs_more_information" });
 
@@ -141,7 +144,7 @@ describe("runInterviewAgent", () => {
         };
 
         mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
-        mocks.mockGetDefaultChatModel.mockReturnValue(fakeModel);
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
         mocks.mockStreamText.mockReturnValue(fakeStreamResult);
         mocks.mockRunSafetyWorkflow.mockResolvedValue({
             status: "ready_for_review",

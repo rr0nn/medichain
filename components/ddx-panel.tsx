@@ -318,7 +318,12 @@ export function DdxPanel({
                   {matchedCategories.map((match) => (
                     <span
                       key={`cat-${match.clinicalPresentationKey}-${match.categoryKey}`}
-                      className="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-1 text-xs text-blue-700 dark:text-blue-300"
+                      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs"
+                      style={{
+                        background: "var(--kg-category-bg)",
+                        border: "1px solid var(--kg-category-border)",
+                        color: "var(--foreground)",
+                      }}
                     >
                       Category: {match.categoryName}
                     </span>
@@ -326,7 +331,12 @@ export function DdxPanel({
                   {matchedFeatures.map((match) => (
                     <span
                       key={`feature-${match.clinicalPresentationKey}-${match.featureKey}`}
-                      className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-700 dark:text-emerald-300"
+                      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs"
+                      style={{
+                        background: "var(--kg-feature-bg)",
+                        border: "1px solid var(--kg-feature-border)",
+                        color: "var(--foreground)",
+                      }}
                     >
                       Feature: {match.featureName}
                       {match.featureType ? ` (${match.featureType})` : ""}

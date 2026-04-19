@@ -284,11 +284,11 @@ export function WorkflowCanvas({
   );
 
   if (!mounted) {
-    return <div className="h-80 w-full border-b border-border" />;
+    return <div className="h-80 w-full rounded-[22px] border border-[color:var(--glass-border)] bg-background/60" />;
   }
 
   return (
-    <div className="h-80 w-full p-2 bg-background rounded-[30px]">
+    <div className="h-80 w-full p-2 rounded-[22px] border border-[color:var(--glass-border)] bg-background/80 shadow-[inset_0_1px_0_var(--glass-highlight)]">
       <ReactFlow
         nodes={nodes}
         edges={edges}

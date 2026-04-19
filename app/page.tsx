@@ -215,8 +215,8 @@ export default function Chat() {
                 <Message from={message.role} key={message.id}>
                   <MessageContent
                     className={message.role === "user"
-                            ? "!bg-chart-2 !text-primary-foreground self-end p-2 rounded-lg mb-2"
-                            : "bg-muted/40 text-secondary-foreground self-start p-2 rounded-lg mb-2"
+                            ? "!bg-primary !text-primary-foreground self-end px-3 py-2 rounded-2xl rounded-br-md mb-2 shadow-[0_2px_8px_rgba(27,125,126,0.15)]"
+                            : "bg-card text-card-foreground border border-[color:var(--glass-border)] self-start px-3 py-2 rounded-2xl rounded-bl-md mb-2 shadow-[inset_0_1px_0_var(--glass-highlight)]"
                     }
                   >
                     {message.parts.map((part, i) => {
