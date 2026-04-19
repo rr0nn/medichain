@@ -13,7 +13,7 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 ## Key Components
 
 - `ddx/ddx-panel.tsx`: renders workflow state, evidence summary, safety review, and ranked differentials
-- `ddx/ddx-kg.tsx`: visualizes diagnosis evidence paths from the knowledge graph
+- `ddx/evidence-subgraph.tsx`: visualizes diagnosis evidence paths as a subgraph of the knowledge graph
 - `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
 - `layout/conversation-sidebar.tsx`: conversation list and session switching UI
 - `theme/theme-selector.tsx` and `theme/theme-provider.tsx`: theme switching support

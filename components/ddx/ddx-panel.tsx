@@ -25,7 +25,7 @@ import { ChevronRight } from "lucide-react";
 import { formatDdxName } from "@/lib/format-ddx-name";
 import { formatSourceLabel } from "@/lib/format-source-label";
 
-import { DdxKG } from "./ddx-kg";
+import { EvidenceSubgraph } from "./evidence-subgraph";
 import { EvidenceSummary } from "./evidence-summary";
 import { SafetyReview } from "./safety-review";
 
@@ -156,11 +156,21 @@ export function DdxPanel({
       </header>
 
       <div className="glass flex-1 overflow-y-auto min-h-0 rounded-[30px] p-4 space-y-3">
-        <WorkflowCanvas
-          steps={steps}
-          matchedClinicalPresentationCount={matchedClinicalPresentations.length}
-          criticAssessment={criticAssessment}
-        />
+        <section className="space-y-2">
+          <div className="px-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Analysis Workflow
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Shows progress through presentation matching, evidence matching, diagnosis ranking, and safety review.
+            </p>
+          </div>
+          <WorkflowCanvas
+            steps={steps}
+            matchedClinicalPresentationCount={matchedClinicalPresentations.length}
+            criticAssessment={criticAssessment}
+          />
+        </section>
         <div className="bg-background/80 border border-[color:var(--glass-border)] rounded-[22px] shadow-[inset_0_1px_0_var(--glass-highlight)]">
 
           {differentials.length === 0 ? (
@@ -197,12 +207,16 @@ export function DdxPanel({
                       className="group rounded-[15px] border border-border bg-popover"
                     >
                       <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                        <ChevronRight
+                          size={16}
+                          className="shrink-0 text-muted-foreground transition-transform group-open:rotate-90"
+                        />
                         <span className="w-4 shrink-0 text-xs text-muted-foreground">
                           {i + 1}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="flex items-center gap-2 truncate text-sm font-medium">
-                            {formatDdxName(d.diagnosisName)} <ChevronRight size={16} />
+                          <p className="truncate text-sm font-medium">
+                            {formatDdxName(d.diagnosisName)}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {d.evidence.length} supporting path
@@ -211,7 +225,7 @@ export function DdxPanel({
                         </div>
                         <div className="shrink-0 text-right">
                           <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                            Evidence support score
+                            Support score
                           </p>
                           <span className="text-xs tabular-nums text-muted-foreground">
                             {d.score.toFixed(2)}
@@ -224,7 +238,7 @@ export function DdxPanel({
                           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                             Evidence Graph
                           </p>
-                          <DdxKG diagnosis={evidencePath} diagnosisName={d.diagnosisName} />
+                          <EvidenceSubgraph diagnosis={evidencePath} diagnosisName={d.diagnosisName} />
                         </div>
 
                         <details className="group/evidence-details rounded-md border border-border/70 bg-muted/20">
@@ -239,7 +253,7 @@ export function DdxPanel({
                                   Evidence Details
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  Shows the matched presentation, source, and path evidence for each supporting link.
+                                  Shows the matched presentation, source details, and supporting evidence for each path.
                                 </p>
                               </div>
                             </div>
@@ -259,9 +273,7 @@ export function DdxPanel({
                                   <div className="flex flex-wrap items-start justify-between gap-2">
                                     <div className="min-w-0">
                                       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                                        {path.evidenceType === "category"
-                                          ? "Category Path"
-                                          : "Feature Path"}
+                                        Supporting Path
                                       </p>
                                       <p
                                         className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground"

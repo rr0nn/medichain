@@ -30,13 +30,13 @@ type DiagnosisEvidencePath = {
   featureType?: string;
 };
 
-type DdxKGProps = {
+type EvidenceSubgraphProps = {
   diagnosis: DiagnosisEvidencePath[];
   diagnosisName: string;
 };
 
 type Tier = "presentation" | "category" | "feature" | "diagnosis";
-type DdxKGNodeData = {
+type EvidenceSubgraphNodeData = {
   label: string;
   tier: Tier;
   detail?: string;
@@ -102,7 +102,9 @@ type PresentationBand = {
   >;
 };
 
-function DdxKGNode({ data }: NodeProps & { data: DdxKGNodeData }) {
+function EvidenceSubgraphNode({
+  data,
+}: NodeProps & { data: EvidenceSubgraphNodeData }) {
   const { bg, border } = TIER_STYLE[data.tier];
 
   return (
@@ -142,7 +144,7 @@ function DdxKGNode({ data }: NodeProps & { data: DdxKGNodeData }) {
   );
 }
 
-const nodeTypes = { ddx: DdxKGNode };
+const nodeTypes = { ddx: EvidenceSubgraphNode };
 
 function estimatedLabelLines(label: string) {
   return Math.max(1, Math.ceil(label.trim().length / CHARS_PER_LINE));
@@ -197,7 +199,10 @@ function AutoFitView({ graphKey }: { graphKey: string }) {
   return null;
 }
 
-export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
+export function EvidenceSubgraph({
+  diagnosis,
+  diagnosisName,
+}: EvidenceSubgraphProps) {
   const presentations = useMemo(
     () => Array.from(new Set(diagnosis.map((path) => path.clinicalPresentationName))),
     [diagnosis],
@@ -303,7 +308,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
       presentations.map((name, index) => [name, bands[index]] as const),
     );
 
-    const presentationNodes: Node<DdxKGNodeData>[] = presentations.map((name, index) => ({
+    const presentationNodes: Node<EvidenceSubgraphNodeData>[] = presentations.map((name, index) => ({
       id: `pres-${name}`,
       type: "ddx",
       position: {
@@ -317,7 +322,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
       },
     }));
 
-    const evidenceFlowNodes: Node<DdxKGNodeData>[] = evidenceNodes.map((evidence) => {
+    const evidenceFlowNodes: Node<EvidenceSubgraphNodeData>[] = evidenceNodes.map((evidence) => {
       const band = bandCenterByPresentation.get(evidence.presentationName);
       const positionedEvidence = band?.evidence.find((entry) => entry.id === evidence.id);
       const label = positionedEvidence?.label ?? formatDdxName(evidence.evidenceName);
@@ -343,7 +348,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
       ? bands[0].centerY
       : bands.reduce((sum, band) => sum + band.centerY, 0) / bands.length;
 
-    const diagnosisNode: Node<DdxKGNodeData> = {
+    const diagnosisNode: Node<EvidenceSubgraphNodeData> = {
       id: `dx-${diagnosisName}`,
       type: "ddx",
       position: {
