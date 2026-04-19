@@ -40,7 +40,7 @@ type DdxKGNodeData = {
   label: string;
   tier: Tier;
   detail?: string;
-  emphasized?: boolean;
+  title?: string;
 };
 
 const TIER_STYLE: Record<Tier, { bg: string; border: string }> = {
@@ -63,13 +63,14 @@ const TIER_STYLE: Record<Tier, { bg: string; border: string }> = {
 };
 
 const CANVAS_PADDING_X = 72;
-const CANVAS_PADDING_Y = 56;
+const CANVAS_PADDING_Y = 72;
 const COLUMN_GAP_X = 240;
-const PRESENTATION_CENTER_Y = 168;
-const CATEGORY_CENTER_Y = 84;
-const FEATURE_CENTER_Y = 252;
-const PRESENTATION_GAP_Y = 92;
-const EVIDENCE_GAP_Y = 88;
+const BAND_GAP_Y = 72;
+const EVIDENCE_GAP_Y = 28;
+const NODE_BASE_HEIGHT = 56;
+const NODE_DETAIL_HEIGHT = 18;
+const NODE_LINE_HEIGHT = 16;
+const CHARS_PER_LINE = 24;
 
 const TIER_LABEL: Record<Tier, string> = {
   presentation: "Presentation",
@@ -80,26 +81,39 @@ const TIER_LABEL: Record<Tier, string> = {
 
 const FIT_VIEW_OPTIONS = { padding: 0.16, minZoom: 0.55, maxZoom: 1 };
 
-function laneY(index: number, count: number, center: number, gap: number) {
-  const totalHeight = (count - 1) * gap;
-  return center - totalHeight / 2 + index * gap;
-}
+type EvidenceNodeEntry = {
+  id: string;
+  presentationName: string;
+  evidenceName: string;
+  evidenceType: "category" | "feature";
+  featureType?: string;
+};
+
+type PresentationBand = {
+  centerY: number;
+  height: number;
+  evidence: Array<
+    EvidenceNodeEntry & {
+      label: string;
+      detail?: string;
+      estimatedHeight: number;
+      y: number;
+    }
+  >;
+};
 
 function DdxKGNode({ data }: NodeProps & { data: DdxKGNodeData }) {
   const { bg, border } = TIER_STYLE[data.tier];
 
   return (
     <div
+      title={data.title ?? data.label}
       style={{
         background: bg,
         borderColor: border,
-        boxShadow: data.emphasized
-          ? `0 8px 24px color-mix(in oklch, ${border} 35%, transparent)`
-          : "0 1px 2px rgba(0,0,0,0.06)",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
       }}
-      className={`rounded-lg border px-3 py-2.5 text-left text-foreground ${
-        data.emphasized ? "w-44" : "w-40"
-      }`}
+      className="w-40 rounded-lg border px-3 py-2.5 text-left text-foreground"
     >
       <Handle
         type="target"
@@ -110,9 +124,7 @@ function DdxKGNode({ data }: NodeProps & { data: DdxKGNodeData }) {
         {TIER_LABEL[data.tier]}
       </p>
       <p
-        className={`mt-1 leading-tight ${
-          data.emphasized ? "text-[12px] font-semibold" : "text-[11px] font-medium"
-        }`}
+        className="mt-1 text-[11px] font-medium leading-tight"
       >
         {data.label}
       </p>
@@ -131,6 +143,37 @@ function DdxKGNode({ data }: NodeProps & { data: DdxKGNodeData }) {
 }
 
 const nodeTypes = { ddx: DdxKGNode };
+
+function estimatedLabelLines(label: string) {
+  return Math.max(1, Math.ceil(label.trim().length / CHARS_PER_LINE));
+}
+
+function estimatedNodeHeight(label: string, detail?: string) {
+  return (
+    NODE_BASE_HEIGHT +
+    (estimatedLabelLines(label) - 1) * NODE_LINE_HEIGHT +
+    (detail ? NODE_DETAIL_HEIGHT : 0)
+  );
+}
+
+function stackHeight(heights: number[], gap: number) {
+  return heights.reduce((sum, height) => sum + height, 0) +
+    gap * Math.max(0, heights.length - 1);
+}
+
+function buildVerticalCenters(heights: number[], centerY: number, gap: number) {
+  const totalHeight =
+    heights.reduce((sum, height) => sum + height, 0) + gap * Math.max(0, heights.length - 1);
+  const centers: number[] = [];
+  let cursor = centerY - totalHeight / 2;
+
+  for (const height of heights) {
+    centers.push(cursor + height / 2);
+    cursor += height + gap;
+  }
+
+  return centers;
+}
 
 function AutoFitView({ graphKey }: { graphKey: string }) {
   const nodesInitialized = useNodesInitialized();
@@ -160,104 +203,162 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
     [diagnosis],
   );
 
-  const categoryEvidence = useMemo(
+  const evidenceNodes = useMemo(
     () =>
       Array.from(
         new Map(
-          diagnosis
-            .filter((path) => path.evidenceType === "category")
-            .map((path) => [path.evidenceName, { name: path.evidenceName }]),
-        ).values(),
-      ),
-    [diagnosis],
-  );
-
-  const featureEvidence = useMemo(
-    () =>
-      Array.from(
-        new Map(
-          diagnosis
-            .filter((path) => path.evidenceType === "feature")
-            .map((path) => [
-              path.evidenceName,
-              { name: path.evidenceName, featureType: path.featureType },
-            ]),
+          diagnosis.map((path) => [
+            `${path.clinicalPresentationName}::${path.evidenceType}::${path.evidenceName}`,
+            {
+              id: `ev-${path.clinicalPresentationName}-${path.evidenceType}-${path.evidenceName}`,
+              presentationName: path.clinicalPresentationName,
+              evidenceName: path.evidenceName,
+              evidenceType: path.evidenceType,
+              featureType: path.featureType,
+            } satisfies EvidenceNodeEntry,
+          ]),
         ).values(),
       ),
     [diagnosis],
   );
 
   const nodes = useMemo(() => {
+    const simpleLinearCase = presentations.length === 1 && evidenceNodes.length === 1;
+
+    const evidenceByPresentation = new Map<string, EvidenceNodeEntry[]>();
+    for (const evidence of evidenceNodes) {
+      const existing = evidenceByPresentation.get(evidence.presentationName) ?? [];
+      existing.push(evidence);
+      evidenceByPresentation.set(evidence.presentationName, existing);
+    }
+
+    const evidenceGroupsByPresentation = new Map<
+      string,
+      Array<
+        EvidenceNodeEntry & {
+          label: string;
+          detail?: string;
+          estimatedHeight: number;
+        }
+      >
+    >();
+
+    for (const presentationName of presentations) {
+      const orderedGroup = [...(evidenceByPresentation.get(presentationName) ?? [])]
+        .sort((left, right) => {
+          if (left.evidenceType !== right.evidenceType) {
+            return left.evidenceType === "category" ? -1 : 1;
+          }
+
+          return left.evidenceName.localeCompare(right.evidenceName);
+        })
+        .map((evidence) => {
+          const label = formatDdxName(evidence.evidenceName);
+          const detail =
+            evidence.evidenceType === "feature" && evidence.featureType
+              ? `Type: ${formatDdxName(evidence.featureType)}`
+              : undefined;
+
+          return {
+            ...evidence,
+            label,
+            detail,
+            estimatedHeight: estimatedNodeHeight(label, detail),
+          };
+        });
+
+      evidenceGroupsByPresentation.set(presentationName, orderedGroup);
+    }
+
+    const bands: PresentationBand[] = [];
+    for (const presentationName of presentations) {
+      const presentationLabel = formatDdxName(presentationName);
+      const presentationHeight = estimatedNodeHeight(presentationLabel);
+      const evidenceGroup = evidenceGroupsByPresentation.get(presentationName) ?? [];
+      const evidenceHeights = evidenceGroup.map((entry) => entry.estimatedHeight);
+      const evidenceStackHeight = simpleLinearCase
+        ? evidenceHeights[0] ?? 0
+        : stackHeight(evidenceHeights, EVIDENCE_GAP_Y);
+      const bandHeight = Math.max(presentationHeight, evidenceStackHeight);
+      const previousBand = bands.at(-1);
+      const centerY = previousBand
+        ? previousBand.centerY + previousBand.height / 2 + BAND_GAP_Y + bandHeight / 2
+        : CANVAS_PADDING_Y + bandHeight / 2;
+
+      const evidenceCenters = simpleLinearCase
+        ? [centerY]
+        : buildVerticalCenters(evidenceHeights, centerY, EVIDENCE_GAP_Y);
+
+      bands.push({
+        centerY,
+        height: bandHeight,
+        evidence: evidenceGroup.map((entry, index) => ({
+          ...entry,
+          y: evidenceCenters[index] ?? centerY,
+        })),
+      });
+    }
+
+    const bandCenterByPresentation = new Map(
+      presentations.map((name, index) => [name, bands[index]] as const),
+    );
+
     const presentationNodes: Node<DdxKGNodeData>[] = presentations.map((name, index) => ({
       id: `pres-${name}`,
       type: "ddx",
       position: {
         x: CANVAS_PADDING_X,
-        y: laneY(
-          index,
-          presentations.length,
-          CANVAS_PADDING_Y + PRESENTATION_CENTER_Y,
-          PRESENTATION_GAP_Y,
-        ),
-      },
-      data: { label: formatDdxName(name), tier: "presentation" },
-    }));
-
-    const categoryNodes: Node<DdxKGNodeData>[] = categoryEvidence.map((evidence, index) => ({
-      id: `ev-category-${evidence.name}`,
-      type: "ddx",
-      position: {
-        x: CANVAS_PADDING_X + COLUMN_GAP_X,
-        y: laneY(
-          index,
-          categoryEvidence.length,
-          CANVAS_PADDING_Y + CATEGORY_CENTER_Y,
-          EVIDENCE_GAP_Y,
-        ),
+        y: bands[index].centerY,
       },
       data: {
-        label: formatDdxName(evidence.name),
-        tier: "category",
+        label: formatDdxName(name),
+        tier: "presentation",
+        title: formatDdxName(name),
       },
     }));
 
-    const featureNodes: Node<DdxKGNodeData>[] = featureEvidence.map((evidence, index) => ({
-      id: `ev-feature-${evidence.name}`,
-      type: "ddx",
-      position: {
-        x: CANVAS_PADDING_X + COLUMN_GAP_X,
-        y: laneY(
-          index,
-          featureEvidence.length,
-          CANVAS_PADDING_Y + FEATURE_CENTER_Y,
-          EVIDENCE_GAP_Y,
-        ),
-      },
-      data: {
-        label: formatDdxName(evidence.name),
-        tier: "feature",
-        detail: evidence.featureType
-          ? `Type: ${formatDdxName(evidence.featureType)}`
-          : undefined,
-      },
-    }));
+    const evidenceFlowNodes: Node<DdxKGNodeData>[] = evidenceNodes.map((evidence) => {
+      const band = bandCenterByPresentation.get(evidence.presentationName);
+      const positionedEvidence = band?.evidence.find((entry) => entry.id === evidence.id);
+      const label = positionedEvidence?.label ?? formatDdxName(evidence.evidenceName);
+      const detail = positionedEvidence?.detail;
+
+      return {
+        id: evidence.id,
+        type: "ddx",
+        position: {
+          x: CANVAS_PADDING_X + COLUMN_GAP_X,
+          y: positionedEvidence?.y ?? band?.centerY ?? CANVAS_PADDING_Y,
+        },
+        data: {
+          label,
+          tier: evidence.evidenceType,
+          detail,
+          title: detail ? `${label}\n${detail}` : label,
+        },
+      };
+    });
+
+    const diagnosisY = simpleLinearCase
+      ? bands[0].centerY
+      : bands.reduce((sum, band) => sum + band.centerY, 0) / bands.length;
 
     const diagnosisNode: Node<DdxKGNodeData> = {
       id: `dx-${diagnosisName}`,
       type: "ddx",
       position: {
         x: CANVAS_PADDING_X + COLUMN_GAP_X * 2,
-        y: CANVAS_PADDING_Y + PRESENTATION_CENTER_Y,
+        y: diagnosisY,
       },
       data: {
         label: formatDdxName(diagnosisName),
         tier: "diagnosis",
-        emphasized: true,
+        title: formatDdxName(diagnosisName),
       },
     };
 
-    return [...presentationNodes, ...categoryNodes, ...featureNodes, diagnosisNode];
-  }, [categoryEvidence, diagnosisName, featureEvidence, presentations]);
+    return [...presentationNodes, ...evidenceFlowNodes, diagnosisNode];
+  }, [diagnosisName, evidenceNodes, presentations]);
 
   const edges = useMemo(() => {
     const edgeStyle = {
@@ -275,14 +376,14 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
       ...diagnosis.map((path, index) => ({
         id: `e-pres-ev-${index}`,
         source: `pres-${path.clinicalPresentationName}`,
-        target: `ev-${path.evidenceType}-${path.evidenceName}`,
+        target: `ev-${path.clinicalPresentationName}-${path.evidenceType}-${path.evidenceName}`,
         type: "smoothstep" as const,
         style: edgeStyle,
         markerEnd: marker,
       })),
       ...diagnosis.map((path, index) => ({
         id: `e-ev-dx-${index}`,
-        source: `ev-${path.evidenceType}-${path.evidenceName}`,
+        source: `ev-${path.clinicalPresentationName}-${path.evidenceType}-${path.evidenceName}`,
         target: `dx-${diagnosisName}`,
         type: "smoothstep" as const,
         style: edgeStyle,
@@ -313,6 +414,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        nodeOrigin={[0, 0.5]}
         proOptions={{ hideAttribution: true }}
         nodesDraggable={false}
         nodesConnectable={false}
