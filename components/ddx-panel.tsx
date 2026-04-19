@@ -23,6 +23,7 @@ import type {
 import { ChevronRight } from "lucide-react";
 
 import { formatDdxName } from "@/lib/format-ddx-name";
+import { formatSourceLabel } from "@/lib/format-source-label";
 
 import { DdxKG } from "./ddx-kg";
 import { EvidenceSummary } from "./evidence-summary";
@@ -41,10 +42,53 @@ type Props = {
 type PathDetails = {
   clinicalPresentationName: string;
   clinicalPresentationMatchedText: string[];
+  clinicalPresentationSources: ClinicalPresentationMatch["sources"];
   evidenceName: string;
   evidenceMatchedText: string[];
   evidenceTypeLabel?: string;
 };
+
+function formatEvidenceHeadingLabel(name: string) {
+  const words = name.trim().split(/\s+/);
+
+  if (words.length <= 3) {
+    return name;
+  }
+
+  return `${words.slice(0, 3).join(" ")}...`;
+}
+
+function EvidenceMetaList({
+  label,
+  items,
+  emptyLabel,
+}: {
+  label: string;
+  items: string[];
+  emptyLabel: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      {items.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5">
+          {items.map((item) => (
+            <span
+              key={`${label}-${item}`}
+              className="max-w-full rounded-md border border-border/70 bg-muted/30 px-2 py-1 text-[11px] leading-relaxed text-muted-foreground"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">{emptyLabel}</p>
+      )}
+    </div>
+  );
+}
 
 export function DdxPanel({
   steps,
@@ -84,6 +128,7 @@ export function DdxPanel({
       clinicalPresentationName:
         formatDdxName(presentationMatch?.name ?? path.clinicalPresentationKey),
       clinicalPresentationMatchedText: presentationMatch?.matchedText ?? [],
+      clinicalPresentationSources: presentationMatch?.sources ?? [],
       evidenceName:
         formatDdxName(
           path.evidenceType === "category"
@@ -174,60 +219,187 @@ export function DdxPanel({
                         </div>
                       </summary>
 
-                      <div className="space-y-2 border-t border-border px-3 py-3">
-                        {d.evidence.map((path, pathIndex) => {
-                          const pathDetails = getPathDetails(path);
+                      <div className="space-y-3 border-t border-border px-3 py-3">
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            Evidence Graph
+                          </p>
+                          <DdxKG diagnosis={evidencePath} diagnosisName={d.diagnosisName} />
+                        </div>
 
-                          return (
-                            <div
-                              key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
-                              className="rounded-md bg-muted/40 px-3 py-2"
-                            >
-                              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                                {path.evidenceType === "category"
-                                  ? "Category Evidence Path"
-                                  : "Feature Evidence Path"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                Presentation evidence:{" "}
-                                {pathDetails.clinicalPresentationMatchedText.length > 0
-                                  ? pathDetails.clinicalPresentationMatchedText.join(", ")
-                                  : "not available"}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {path.evidenceType === "category"
-                                  ? "Category evidence"
-                                  : "Feature evidence"}
-                                :{" "}
-                                {pathDetails.evidenceMatchedText.length > 0
-                                  ? pathDetails.evidenceMatchedText.join(", ")
-                                  : "not available"}
-                              </p>
-                              {path.evidenceType === "feature" && (
-                                <p className="text-xs text-muted-foreground">
-                                  Feature type: {pathDetails.evidenceTypeLabel ?? "not available"}
+                        <details className="group/evidence-details rounded-md border border-border/70 bg-muted/20">
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-left [&::-webkit-details-marker]:hidden">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <ChevronRight
+                                size={14}
+                                className="shrink-0 text-muted-foreground transition-transform group-open/evidence-details:rotate-90"
+                              />
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                  Evidence Details
                                 </p>
-                              )}
-                              <p className="text-xs leading-relaxed text-muted-foreground">
-                                {pathDetails.clinicalPresentationName}
-                                {" -> "}
-                                {pathDetails.evidenceName}
-                                {" -> "}
-                                {formatDdxName(d.diagnosisName)}
-                              </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Shows the matched presentation, source, and path evidence for each supporting link.
+                                </p>
+                              </div>
                             </div>
-                          );
-                        })}
-                        <details className="group/subgraph">
-                          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
-                            <ChevronRight size={14} className="transition-transform group-open/subgraph:rotate-90" />
-                            Diagnosis Subgraph
+                            <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
+                              {d.evidence.length} path{d.evidence.length === 1 ? "" : "s"}
+                            </span>
                           </summary>
-                          <div className="mt-2 mb-2">
-                            <DdxKG diagnosis={evidencePath} diagnosisName={d.diagnosisName} />
+                          <div className="space-y-3 border-t border-border/70 px-3 py-3">
+                            {d.evidence.map((path, pathIndex) => {
+                              const pathDetails = getPathDetails(path);
+
+                              return (
+                                <div
+                                  key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
+                                  className="space-y-3 rounded-xl border border-border/70 bg-background/80 p-3"
+                                >
+                                  <div className="flex flex-wrap items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                                        {path.evidenceType === "category"
+                                          ? "Category Path"
+                                          : "Feature Path"}
+                                      </p>
+                                      <p
+                                        className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground"
+                                        title={`${pathDetails.clinicalPresentationName} -> ${pathDetails.evidenceName} -> ${formatDdxName(d.diagnosisName)}`}
+                                      >
+                                        <span className="shrink-0">
+                                          {pathDetails.clinicalPresentationName}
+                                        </span>
+                                        <span className="shrink-0 text-muted-foreground">
+                                          {"->"}
+                                        </span>
+                                        <span className="min-w-0 truncate">
+                                          {formatEvidenceHeadingLabel(pathDetails.evidenceName)}
+                                        </span>
+                                        <span className="shrink-0 text-muted-foreground">
+                                          {"->"}
+                                        </span>
+                                        <span className="shrink-0">
+                                          {formatDdxName(d.diagnosisName)}
+                                        </span>
+                                      </p>
+                                    </div>
+                                    <span
+                                      className="shrink-0 rounded-full px-2.5 py-1 text-[11px] text-foreground"
+                                      style={{
+                                        background:
+                                          path.evidenceType === "category"
+                                            ? "var(--kg-category-bg)"
+                                            : "var(--kg-feature-bg)",
+                                        borderColor:
+                                          path.evidenceType === "category"
+                                            ? "var(--kg-category-border)"
+                                            : "var(--kg-feature-border)",
+                                        borderWidth: "1px",
+                                      }}
+                                    >
+                                      {path.evidenceType === "category" ? "Category" : "Feature"}
+                                    </span>
+                                  </div>
+
+                                  <div className="grid gap-3 lg:grid-cols-2">
+                                    <div className="space-y-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+                                      <div>
+                                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Presentation
+                                        </p>
+                                        <p className="mt-1 text-sm font-medium text-foreground">
+                                          {pathDetails.clinicalPresentationName}
+                                        </p>
+                                      </div>
+
+                                      <EvidenceMetaList
+                                        label="Matched Text"
+                                        items={pathDetails.clinicalPresentationMatchedText}
+                                        emptyLabel="No matched presentation text."
+                                      />
+
+                                      <div className="space-y-1.5">
+                                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          Sources
+                                        </p>
+                                        {pathDetails.clinicalPresentationSources.length > 0 ? (
+                                          <div className="flex flex-wrap gap-1.5">
+                                            {pathDetails.clinicalPresentationSources.map((source) => (
+                                              <span
+                                                key={`${path.clinicalPresentationKey}-${source.sourceKey}`}
+                                                className="max-w-full whitespace-normal break-words rounded-md border border-border/70 bg-muted/30 px-2 py-1 text-[11px] leading-relaxed text-muted-foreground"
+                                              >
+                                                Source:{" "}
+                                                {formatSourceLabel({
+                                                  sourceTitle: source.sourceTitle,
+                                                  edition: source.edition,
+                                                  pageStart: source.pageStart,
+                                                  pageEnd: source.pageEnd,
+                                                })}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-xs text-muted-foreground">
+                                            No source details available.
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div
+                                      className="space-y-3 rounded-lg border p-3"
+                                      style={{
+                                        background:
+                                          path.evidenceType === "category"
+                                            ? "var(--kg-category-bg)"
+                                            : "var(--kg-feature-bg)",
+                                        borderColor:
+                                          path.evidenceType === "category"
+                                            ? "var(--kg-category-border)"
+                                            : "var(--kg-feature-border)",
+                                      }}
+                                    >
+                                      <div>
+                                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                          {path.evidenceType === "category"
+                                            ? "Category"
+                                            : "Feature"}
+                                        </p>
+                                        <p className="mt-1 text-sm font-medium text-foreground">
+                                          {pathDetails.evidenceName}
+                                        </p>
+                                        {path.evidenceType === "feature" ? (
+                                          <p className="mt-1 text-xs text-muted-foreground">
+                                            Type:{" "}
+                                            {pathDetails.evidenceTypeLabel
+                                              ? formatDdxName(pathDetails.evidenceTypeLabel)
+                                              : "Not available"}
+                                          </p>
+                                        ) : null}
+                                      </div>
+
+                                      <EvidenceMetaList
+                                        label="Matched Text"
+                                        items={pathDetails.evidenceMatchedText}
+                                        emptyLabel={`No matched ${path.evidenceType} text.`}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <p className="text-xs leading-relaxed text-muted-foreground">
+                                    Supporting path for{" "}
+                                    <span className="font-medium text-foreground">
+                                      {formatDdxName(d.diagnosisName)}
+                                    </span>
+                                    .
+                                  </p>
+                                </div>
+                              );
+                            })}
                           </div>
                         </details>
-
                       </div>
                     </details>
                   )
