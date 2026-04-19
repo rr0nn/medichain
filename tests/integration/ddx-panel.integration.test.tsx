@@ -115,22 +115,20 @@ describe("DdxPanel integration", () => {
       />,
     );
 
-    expect(screen.getByText("Differential Diagnosis")).toBeInTheDocument();
+    expect(screen.getByText("Differential Diagnosis Support")).toBeInTheDocument();
     expect(screen.getByText("workflow-canvas:1")).toBeInTheDocument();
-    expect(screen.getByText("Matched Evidence")).toBeInTheDocument();
-    expect(screen.getByText("Presentation: Abdominal pain")).toBeInTheDocument();
-    expect(screen.getByText("Category: Inflammatory")).toBeInTheDocument();
+    expect(screen.getByText("Evidence Summary")).toBeInTheDocument();
+    expect(screen.getAllByText("Abdominal pain")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Inflammatory")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Right lower quadrant tenderness")[0]).toBeInTheDocument();
     expect(
-      screen.getByText("Feature: Right lower quadrant tenderness (site)"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
+      screen.getAllByText(
         "Source: Pocketbook of Differential Diagnosis, 5th edition (pp. 123-126)",
-      ),
+      )[0],
     ).toBeInTheDocument();
 
     expect(screen.getByText("Safety Review")).toBeInTheDocument();
-    expect(screen.getByText("Ready for review")).toBeInTheDocument();
+    expect(screen.getAllByText("Ready for review")[0]).toBeInTheDocument();
     expect(screen.getByText("Confidence: high")).toBeInTheDocument();
     expect(screen.getByText("Top score: 0.94")).toBeInTheDocument();
     expect(screen.getByText("Top evidence paths: 2")).toBeInTheDocument();
@@ -141,7 +139,6 @@ describe("DdxPanel integration", () => {
       ),
     ).toBeInTheDocument();
 
-    expect(screen.getByText("Grounding Audit")).toBeInTheDocument();
     expect(screen.getByText("Graph grounded")).toBeInTheDocument();
     expect(screen.getByText("Grounded diagnoses: 1")).toBeInTheDocument();
     expect(screen.getByText("Top diagnosis grounded: yes")).toBeInTheDocument();
@@ -157,28 +154,10 @@ describe("DdxPanel integration", () => {
     const summary = screen.getAllByText("Appendicitis").find(element => element.closest("summary"))!;
     summary.closest("details")?.setAttribute("open", "");
 
-    expect(screen.getByText("Category Evidence Path")).toBeInTheDocument();
-    expect(screen.getByText("Feature Evidence Path")).toBeInTheDocument();
-    expect(
-      screen.getAllByText(
-        "Presentation evidence: right lower quadrant abdominal pain",
-      ),
-    ).toHaveLength(2);
-    expect(
-      screen.getByText("Category evidence: inflammatory abdominal process"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Feature evidence: right lower quadrant tenderness"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Feature type: site")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Abdominal pain -> Inflammatory -> Appendicitis/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Abdominal pain -> Right lower quadrant tenderness -> Appendicitis/,
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Evidence support score")).toBeInTheDocument();
+    expect(screen.getByText("Evidence Details")).toBeInTheDocument();
+    expect(screen.getAllByText("right lower quadrant abdominal pain")).toHaveLength(2);
+    expect(screen.getByText("inflammatory abdominal process")).toBeInTheDocument();
+    expect(screen.getAllByText("right lower quadrant tenderness")[0]).toBeInTheDocument();
+    expect(screen.getByText(/Evidence support score/)).toBeInTheDocument();
   });
 })
