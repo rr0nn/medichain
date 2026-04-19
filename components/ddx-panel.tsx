@@ -25,7 +25,7 @@ import { ChevronRight } from "lucide-react";
 import { formatDdxName } from "@/lib/format-ddx-name";
 
 import { DdxKG } from "./ddx-kg";
-import { MatchedEvidence } from "./matched-evidence";
+import { EvidenceSummary } from "./evidence-summary";
 import { SafetyReview } from "./safety-review";
 
 type Props = {
@@ -131,12 +131,6 @@ export function DdxPanel({
             </div>
           ) : (
             <div className="space-y-4 p-4">
-              <MatchedEvidence
-                matchedClinicalPresentations={matchedClinicalPresentations}
-                matchedCategories={matchedCategories}
-                matchedFeatures={matchedFeatures}
-              />
-
               <div className="space-y-2">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Differentials
@@ -239,6 +233,12 @@ export function DdxPanel({
                   )
                 })}
               </div>
+
+              <EvidenceSummary
+                matchedClinicalPresentations={matchedClinicalPresentations}
+                matchedCategories={matchedCategories}
+                matchedFeatures={matchedFeatures}
+              />
 
               <SafetyReview
                 criticAssessment={criticAssessment}

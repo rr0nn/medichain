@@ -4,6 +4,7 @@
  * @fileoverview Displays matched clinical presentations, categories, and features.
  */
 
+import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { formatDdxName } from "@/lib/format-ddx-name";
@@ -87,7 +88,7 @@ function formatEditionLabel(edition: string) {
   }
 }
 
-export function MatchedEvidence({
+export function EvidenceSummary({
   matchedClinicalPresentations,
   matchedCategories,
   matchedFeatures,
@@ -96,11 +97,33 @@ export function MatchedEvidence({
   matchedCategories: CategoryMatch[];
   matchedFeatures: FeatureMatch[];
 }) {
+  const totalCount =
+    matchedClinicalPresentations.length +
+    matchedCategories.length +
+    matchedFeatures.length;
+
   return (
-    <div className="space-y-2">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Matched Evidence
-      </p>
+    <details className="group space-y-2">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5 text-left [&::-webkit-details-marker]:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <ChevronRight
+            size={14}
+            className="shrink-0 text-muted-foreground transition-transform group-open:rotate-90"
+          />
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Evidence Summary
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Shows all matched presentations, categories, and features across the current differential results.
+            </p>
+          </div>
+        </div>
+        <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
+          {totalCount} item{totalCount === 1 ? "" : "s"}
+        </span>
+      </summary>
+
       <div className="grid gap-3 lg:grid-cols-3">
         <EvidenceSection
           title="Presentations"
@@ -187,6 +210,6 @@ export function MatchedEvidence({
             : null}
         </EvidenceSection>
       </div>
-    </div>
+    </details>
   );
 }
