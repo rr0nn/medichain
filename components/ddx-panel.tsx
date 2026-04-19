@@ -422,13 +422,14 @@ export function DdxPanel({
                             </div>
                           );
                         })}
-                        <details>
-                          <summary>Diagnosis Subgraph</summary>
-
-                          <div className="mt-1 mb-4 p-4 bg-sidebar-border/8 rounded-lg border border-input/30">
-                            <DdxKG diagnosis={evidencePath} diagnosisName={d.diagnosisName}></DdxKG>
+                        <details className="group/subgraph">
+                          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+                            <ChevronRight size={14} className="transition-transform group-open/subgraph:rotate-90" />
+                            Diagnosis Subgraph
+                          </summary>
+                          <div className="mt-2 mb-2">
+                            <DdxKG diagnosis={evidencePath} diagnosisName={d.diagnosisName} />
                           </div>
-
                         </details>
 
                       </div>
