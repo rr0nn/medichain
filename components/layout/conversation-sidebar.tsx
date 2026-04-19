@@ -23,12 +23,14 @@ interface ConversationSidebarProps {
   activeId: string | null;
   onSelect: (id: string) => void;
   onNew: (id: string) => void;
+  refreshToken?: number;
 }
 
 export function ConversationSidebar({
   activeId,
   onSelect,
   onNew,
+  refreshToken = 0,
 }: ConversationSidebarProps) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,7 @@ export function ConversationSidebar({
 
   useEffect(() => {
     void fetchConversations();
-  }, [fetchConversations]);
+  }, [fetchConversations, refreshToken]);
 
   const handleNew = async () => {
     setCreating(true);

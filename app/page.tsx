@@ -8,7 +8,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import {
   Conversation,
   ConversationScrollButton,
@@ -26,6 +26,8 @@ export default function Chat() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [modelProvider, setModelProvider] = useState<ModelProvider>("gemini");
+  const [conversationListVersion, setConversationListVersion] = useState(0);
+  const [pendingInitialMessage, setPendingInitialMessage] = useState<string | null>(null);
   const modelProviderRef = useRef<ModelProvider>(modelProvider);
   modelProviderRef.current = modelProvider;
 
@@ -72,11 +74,53 @@ export default function Chat() {
   const steps = useWorkflowSteps(messages, status);
   const ddxResult = useDdxResult(messages);
 
-  const handleSubmit = useCallback(() => {
-    if (!input.trim() || isLoading) return;
-    sendMessage({ text: input });
+  useEffect(() => {
+    if (!activeConversationId || !pendingInitialMessage) {
+      return;
+    }
+
+    sendMessage({ text: pendingInitialMessage });
+    setPendingInitialMessage(null);
+  }, [activeConversationId, pendingInitialMessage, sendMessage]);
+
+  const createConversation = useCallback(async (title?: string) => {
+    const response = await fetch("/api/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(title ? { title } : {}),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to create conversation");
+    }
+
+    const conversation = await response.json() as { id: string };
+    setConversationListVersion((value) => value + 1);
+    return conversation.id;
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    const nextMessage = input.trim();
+    if (!nextMessage || isLoading) return;
+
     setInput("");
-  }, [input, isLoading, sendMessage]);
+
+    if (!activeConversationId) {
+      const title = nextMessage.slice(0, 60).trim();
+
+      try {
+        const conversationId = await createConversation(title);
+        setPendingInitialMessage(nextMessage);
+        setActiveConversationId(conversationId);
+      } catch (error) {
+        console.error("[chat] Failed to create conversation:", error);
+        setInput(nextMessage);
+      }
+      return;
+    }
+
+    sendMessage({ text: nextMessage });
+  }, [activeConversationId, createConversation, input, isLoading, sendMessage]);
 
   return (
     <div className="flex h-screen gap-3 overflow-hidden p-3">
@@ -84,6 +128,7 @@ export default function Chat() {
         activeId={activeConversationId}
         onSelect={handleSelectConversation}
         onNew={handleNewConversation}
+        refreshToken={conversationListVersion}
       />
 
       <div className="flex min-h-0 min-w-0 flex-[1] flex-col gap-3">
@@ -100,6 +145,7 @@ export default function Chat() {
               isLoading={isLoading}
               activeConversationId={activeConversationId}
               status={status}
+              onPromptSelect={setInput}
             />
             <ConversationScrollButton />
           </Conversation>

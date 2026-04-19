@@ -25,7 +25,7 @@ export function ChatComposer({
   onSubmit,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const canSubmit = Boolean(input.trim()) && !isLoading && Boolean(activeConversationId);
+  const canSubmit = Boolean(input.trim()) && !isLoading;
 
   const handleSubmit = () => {
     if (!canSubmit) {
@@ -45,6 +45,14 @@ export function ChatComposer({
     textarea.style.height = `${Math.min(textarea.scrollHeight, 128)}px`;
   }, [input]);
 
+  useEffect(() => {
+    if (activeConversationId || isLoading) {
+      return;
+    }
+
+    textareaRef.current?.focus();
+  }, [activeConversationId, isLoading]);
+
   return (
     <form
       onSubmit={(event) => {
@@ -53,11 +61,6 @@ export function ChatComposer({
       }}
       className="shrink-0 border-t border-[color:var(--glass-border)]/80 bg-background/30 p-3 backdrop-blur-sm"
     >
-      {!activeConversationId && (
-        <p className="mb-2 rounded-xl border border-[color:var(--glass-border)] bg-background/35 px-3 py-2 text-center text-xs text-muted-foreground shadow-[inset_0_1px_0_var(--glass-highlight)]">
-          Start a new consultation from the sidebar to begin.
-        </p>
-      )}
       <div className="rounded-[26px] border border-[color:var(--glass-border)] bg-background/65 px-3 py-3 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm transition-[border-color,box-shadow,background-color] focus-within:border-[color:color-mix(in_oklch,var(--ring)_48%,var(--glass-border))] focus-within:bg-background/75 focus-within:shadow-[inset_0_1px_0_var(--glass-highlight),0_0_0_1px_var(--ring),var(--shadow-brand)]">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
           <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -76,7 +79,7 @@ export function ChatComposer({
             placeholder={
               activeConversationId
                 ? "Describe the patient presentation, timing, severity, and relevant findings..."
-                : "Select a consultation first..."
+                : "Describe the presenting complaint to start a consultation..."
             }
             onChange={(event) => onInputChange(event.target.value)}
             onKeyDown={(event) => {
@@ -93,7 +96,7 @@ export function ChatComposer({
                 handleSubmit();
               }
             }}
-            disabled={isLoading || !activeConversationId}
+            disabled={isLoading}
           />
           <Button
             size="icon-sm"

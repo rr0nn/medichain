@@ -24,7 +24,14 @@ type ChatMessageListProps = {
   isLoading: boolean;
   activeConversationId: string | null;
   status: string;
+  onPromptSelect?: (value: string) => void;
 };
+
+const STARTER_PROMPTS = [
+  "52-year-old with crushing central chest pain radiating to the left arm for 2 hours.",
+  "Child with fever, cough, increased work of breathing, and reduced oral intake.",
+  "Progressive right lower quadrant pain with nausea, anorexia, and guarding.",
+];
 
 export function ChatMessageList({
   messages,
@@ -32,11 +39,20 @@ export function ChatMessageList({
   isLoading,
   activeConversationId,
   status,
+  onPromptSelect,
 }: ChatMessageListProps) {
   const assistantBubbleClass =
     "self-start mb-3 max-w-[min(44rem,88%)] rounded-2xl rounded-bl-md border border-[color:var(--glass-border)] bg-background/45 px-3.5 py-2.5 text-card-foreground shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm";
   const userBubbleClass =
     "self-end mb-4 max-w-[min(40rem,82%)] rounded-2xl rounded-br-md border border-[color:color-mix(in_oklch,var(--primary)_42%,var(--glass-border))] bg-[color:color-mix(in_oklch,var(--glass-bg-strong)_52%,var(--primary)_48%)] px-3.5 py-2.5 text-foreground shadow-[inset_0_1px_0_var(--glass-highlight),var(--shadow-brand)] backdrop-blur-sm";
+  const hasDraftConversation = Boolean(activeConversationId);
+  const emptyStateTitle = hasDraftConversation ? "Start the consultation" : "Start a consultation";
+  const emptyStateDescription = hasDraftConversation
+    ? "Describe the presentation in natural language, then review the knowledge graph-grounded reasoning on the right."
+    : "Type directly into the composer below. Your first message will create a new consultation automatically.";
+  const emptyStateBody = hasDraftConversation
+    ? "Describe the presentation in natural language, then review the knowledge graph-grounded reasoning on the right."
+    : "Send the first intake note from the composer to begin immediately.";
 
   return (
     <ConversationContent className="gap-6 px-5 py-5">
@@ -52,12 +68,8 @@ export function ChatMessageList({
       ) : messages.length === 0 && !isLoading ? (
         <ConversationEmptyState
           className="mx-auto my-8 max-w-xl rounded-[28px] border border-[color:var(--glass-border)] bg-background/35 px-6 py-8 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm"
-          title={activeConversationId ? "Start the consultation" : "Select or start a consultation"}
-          description={
-            activeConversationId
-              ? "Describe the presentation in natural language, then review the knowledge graph-grounded reasoning on the right."
-              : "Open an existing consultation or create a new one from the sidebar to begin."
-          }
+          title={emptyStateTitle}
+          description={emptyStateDescription}
         >
           <div className="flex w-full max-w-lg flex-col gap-4 text-left">
             <div className="flex items-start gap-3">
@@ -65,29 +77,28 @@ export function ChatMessageList({
                 <StethoscopeIcon className="size-4" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-medium text-foreground">
-                  {activeConversationId ? "Start the consultation" : "Select or start a consultation"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {activeConversationId
-                    ? "Describe the presentation in natural language, then review the knowledge graph-grounded reasoning on the right."
-                    : "Open an existing consultation or create a new one from the sidebar to begin."}
-                </p>
+                <h3 className="text-sm font-medium text-foreground">{emptyStateTitle}</h3>
+                <p className="text-sm text-muted-foreground">{emptyStateBody}</p>
               </div>
             </div>
-            {activeConversationId ? (
-              <div className="rounded-[22px] border border-[color:var(--glass-border)] bg-background/45 p-4 shadow-[inset_0_1px_0_var(--glass-highlight)]">
-                <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                  <ClipboardListIcon className="size-3.5" />
-                  Example intake details
-                </div>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>52-year-old with crushing central chest pain radiating to the left arm for 2 hours.</li>
-                  <li>Child with fever, cough, increased work of breathing, and reduced oral intake.</li>
-                  <li>Progressive right lower quadrant pain with nausea, anorexia, and guarding.</li>
-                </ul>
+            <div className="rounded-[22px] border border-[color:var(--glass-border)] bg-background/45 p-4 shadow-[inset_0_1px_0_var(--glass-highlight)]">
+              <div className="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                <ClipboardListIcon className="size-3.5" />
+                Example intake details
               </div>
-            ) : null}
+              <div className="flex flex-col gap-2">
+                {STARTER_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => onPromptSelect?.(prompt)}
+                    className="rounded-2xl border border-[color:var(--glass-border)] bg-background/55 px-3 py-2 text-left text-sm text-muted-foreground transition hover:bg-background/70 hover:text-foreground"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </ConversationEmptyState>
       ) : (
