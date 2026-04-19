@@ -6,75 +6,26 @@
  */
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, getToolName, isToolUIPart } from "ai";
+import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import {
   Conversation,
-  ConversationContent,
-  ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import {
-  ModelSelector,
-  ModelSelectorContent,
-  ModelSelectorEmpty,
-  ModelSelectorGroup,
-  ModelSelectorInput,
-  ModelSelectorItem,
-  ModelSelectorList,
-  ModelSelectorLogo,
-  ModelSelectorName,
-  ModelSelectorTrigger,
-} from "@/components/ai-elements/model-selector";
-import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from "@/components/ai-elements/message";
-import { Button } from "@/components/ui/button";
-import { ArrowUpIcon, CheckIcon, ChevronDownIcon } from "lucide-react";
+import { ChatComposer } from "@/components/chat/chat-composer";
+import { ChatHeader } from "@/components/chat/chat-header";
+import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { DdxPanel } from "@/components/ddx/ddx-panel";
-import { ThemeSelector } from "@/components/theme/theme-selector";
 import { ConversationSidebar } from "@/components/layout/conversation-sidebar";
 import type { ModelProvider } from "@/server/ai/core/models";
-import type { WorkflowStepState } from "@/components/ddx/workflow-canvas";
-import type {
-  CategoryMatch,
-  ClinicalPresentationMatch,
-  DifferentialDiagnosis,
-  FeatureMatch,
-  WorkflowStepEvent
-} from "@/server/ai/workflows/ddx-workflow/types";
-import type {
-  CriticAssessment,
-  GroundingAssessment,
-} from "@/server/ai/workflows/safety-workflow/types";
-
-const initialSteps: WorkflowStepState = {
-  match_presentations: "idle",
-  match_categories: "idle",
-  fetch_diagnoses: "idle",
-  group_diagnoses: "idle",
-  match_features: "idle",
-  safety_review: "idle",
-};
-
-const MODEL_OPTIONS: Array<{
-  value: ModelProvider;
-  label: string;
-  provider: "google" | "anthropic";
-  group: "Google" | "Anthropic";
-}> = [
-  { value: "gemini", label: "Gemini 2.5 Flash", provider: "google", group: "Google" },
-  { value: "claude", label: "Claude Sonnet 4.5", provider: "anthropic", group: "Anthropic" },
-];
+import { useDdxResult } from "@/hooks/use-ddx-result";
+import { useWorkflowSteps } from "@/hooks/use-workflow-steps";
 
 export default function Chat() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [modelProvider, setModelProvider] = useState<ModelProvider>("gemini");
-  const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
   const modelProviderRef = useRef<ModelProvider>(modelProvider);
   modelProviderRef.current = modelProvider;
 
@@ -93,15 +44,7 @@ export default function Chat() {
   });
 
   const [input, setInput] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isLoading = status === "submitted" || status === "streaming";
-
-  useEffect(() => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    ta.style.height = "auto";
-    ta.style.height = `${Math.min(ta.scrollHeight, 128)}px`;
-  }, [input]);
 
   const loadConversation = useCallback(async (id: string) => {
     setLoadingMessages(true);
@@ -126,255 +69,50 @@ export default function Chat() {
     setMessages([]);
   }, [setMessages]);
 
-  const steps = useMemo<WorkflowStepState>(() => {
-    if (status === "submitted") {
-      return initialSteps;
-    }
+  const steps = useWorkflowSteps(messages, status);
+  const ddxResult = useDdxResult(messages);
 
-    const lastMsg = [...messages].reverse().find((m) => m.role === "assistant");
-    if (!lastMsg) return initialSteps;
-
-    const newSteps: WorkflowStepState = { ...initialSteps };
-    for (const part of lastMsg.parts) {
-      if (part.type === "data-step") {
-        const event = (part as { type: string; data: WorkflowStepEvent }).data;
-        newSteps[event.step] = event.status;
-      }
-    }
-
-    return newSteps;
-  }, [messages, status]);
-
-  const ddxResult: {
-    differentials: DifferentialDiagnosis[];
-    matchedClinicalPresentations: ClinicalPresentationMatch[];
-    matchedCategories: CategoryMatch[];
-    matchedFeatures: FeatureMatch[];
-    criticAssessment?: CriticAssessment;
-    groundingAssessment?: GroundingAssessment;
-  } = (() => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      const m = messages[i];
-      if (m.role !== "assistant") continue;
-      for (const part of m.parts) {
-        if (
-          isToolUIPart(part) &&
-          getToolName(part) === "runDifferentialDiagnosis" &&
-          part.state === "output-available"
-        ) {
-          const output = part.output as
-            | {
-                differentials?: DifferentialDiagnosis[];
-                matchedClinicalPresentations?: ClinicalPresentationMatch[];
-                matchedCategories?: CategoryMatch[];
-                matchedFeatures?: FeatureMatch[];
-                criticAssessment?: CriticAssessment;
-                groundingAssessment?: GroundingAssessment;
-              }
-            | undefined;
-          return {
-            differentials: output?.differentials ?? [],
-            matchedClinicalPresentations:
-              output?.matchedClinicalPresentations ?? [],
-            matchedCategories: output?.matchedCategories ?? [],
-            matchedFeatures: output?.matchedFeatures ?? [],
-            criticAssessment: output?.criticAssessment,
-            groundingAssessment: output?.groundingAssessment,
-          };
-        }
-      }
-    }
-    return {
-      differentials: [],
-      matchedClinicalPresentations: [],
-      matchedCategories: [],
-      matchedFeatures: [],
-      criticAssessment: undefined,
-      groundingAssessment: undefined,
-    };
-  })();
-
-  const submit = (e?: React.FormEvent) => {
-    e?.preventDefault();
+  const handleSubmit = useCallback(() => {
     if (!input.trim() || isLoading) return;
     sendMessage({ text: input });
     setInput("");
-  };
-
-  const selectedModel =
-    MODEL_OPTIONS.find((option) => option.value === modelProvider) ?? MODEL_OPTIONS[0];
-
-  const modelGroups = [...new Set(MODEL_OPTIONS.map((option) => option.group))];
+  }, [input, isLoading, sendMessage]);
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
       <ConversationSidebar
         activeId={activeConversationId}
         onSelect={handleSelectConversation}
         onNew={handleNewConversation}
       />
 
-      {/* Chat Panel */}
       <div className="flex flex-col w-1/2 min-h-0 p-3 gap-3">
-        <header className="flex items-center justify-between px-4 h-16 shrink-0">
-          <span className="bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl shadow-[0_4px_16px_rgba(27,125,126,0.25)]">MediChain</span>
-          <div className="flex items-center gap-4">
-            <ModelSelector
-              open={isModelSelectorOpen}
-              onOpenChange={setIsModelSelectorOpen}
-            >
-              <ModelSelectorTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={isLoading}
-                  className="w-[220px] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/80 shadow-[inset_0_1px_0_var(--glass-highlight)]"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <ModelSelectorLogo provider={selectedModel.provider} />
-                    <ModelSelectorName>{selectedModel.label}</ModelSelectorName>
-                  </div>
-                  <ChevronDownIcon className="shrink-0 text-muted-foreground" />
-                </Button>
-              </ModelSelectorTrigger>
-              <ModelSelectorContent
-                title="Select model"
-                className="sm:max-w-sm"
-              >
-                <ModelSelectorInput placeholder="Search models..." />
-                <ModelSelectorList>
-                  <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                  {modelGroups.map((group) => (
-                    <ModelSelectorGroup heading={group} key={group}>
-                      {MODEL_OPTIONS
-                        .filter((option) => option.group === group)
-                        .map((option) => (
-                          <ModelSelectorItem
-                            key={option.value}
-                            onSelect={() => {
-                              setModelProvider(option.value);
-                              setIsModelSelectorOpen(false);
-                            }}
-                            value={option.label}
-                          >
-                            <ModelSelectorLogo provider={option.provider} />
-                            <ModelSelectorName>{option.label}</ModelSelectorName>
-                            {modelProvider === option.value ? (
-                              <CheckIcon className="ml-auto size-4" />
-                            ) : (
-                              <div className="ml-auto size-4" />
-                            )}
-                          </ModelSelectorItem>
-                        ))}
-                    </ModelSelectorGroup>
-                  ))}
-                </ModelSelectorList>
-              </ModelSelectorContent>
-            </ModelSelector>
-            <ThemeSelector />
-          </div>
-        </header>
+        <ChatHeader
+          modelProvider={modelProvider}
+          onModelChange={setModelProvider}
+          isLoading={isLoading}
+        />
         <div className="glass flex flex-col flex-1 min-h-0 rounded-[30px] overflow-hidden">
-        <Conversation className="flex-1 min-h-0 bg-transparent">
-          <ConversationContent>
-            {loadingMessages ? (
-              <div className="flex flex-col gap-3 p-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className={`h-10 rounded-lg bg-muted animate-pulse ${i % 2 === 0 ? "self-end w-2/3" : "w-3/4"}`} />
-                ))}
-              </div>
-            ) : messages.length === 0 && !isLoading ? (
-              <ConversationEmptyState
-                title={activeConversationId ? "Start the consultation" : "Select or start a consultation"}
-              />
-            ) : (
-              messages.map((message) => (
-                <Message from={message.role} key={message.id}>
-                  <MessageContent
-                    className={message.role === "user"
-                            ? "!bg-primary !text-primary-foreground self-end px-3 py-2 rounded-2xl rounded-br-md mb-2 shadow-[0_2px_8px_rgba(27,125,126,0.15)]"
-                            : "bg-card text-card-foreground border border-[color:var(--glass-border)] self-start px-3 py-2 rounded-2xl rounded-bl-md mb-2 shadow-[inset_0_1px_0_var(--glass-highlight)]"
-                    }
-                  >
-                    {message.parts.map((part, i) => {
-                      if (part.type === "text") {
-                        return (
-                          <MessageResponse key={i}>{part.text}</MessageResponse>
-                        );
-                      }
-                      if (
-                        isToolUIPart(part) &&
-                        (part.state === "input-streaming" ||
-                          part.state === "input-available")
-                      ) {
-                        return (
-                          <p
-                            key={i}
-                            className="text-xs text-muted-foreground italic"
-                          >
-                            Look on the right side running ddx . . .
-                          </p>
-                        );
-                      }
-                      return null;
-                    })}
-                  </MessageContent>
-                </Message>
-              ))
-            )}
-
-            {status === "submitted" && (
-              <Message from="assistant">
-                <MessageContent>
-                  <div className="flex gap-1 py-1">
-                    <span className="size-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
-                    <span className="size-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
-                    <span className="size-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
-                  </div>
-                </MessageContent>
-              </Message>
-            )}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
-
-        <form onSubmit={submit} className="shrink-0 p-3 border-t border-[color:var(--glass-border)]">
-          {!activeConversationId && (
-            <p className="text-xs text-muted-foreground text-center mb-2">
-              Start a new consultation from the sidebar to begin.
-            </p>
-          )}
-          <div className="flex items-center gap-2 rounded-3xl bg-background/80 border border-[color:var(--glass-border)] px-3 py-3 shadow-[inset_0_1px_0_var(--glass-highlight)] focus-within:ring-1 focus-within:ring-ring transition-shadow">
-            <textarea
-              ref={textareaRef}
-              className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
-              rows={1}
-              value={input}
-              placeholder={activeConversationId ? "Describe a patient presentation..." : "Select a consultation first..."}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit();
-              }}
-              disabled={isLoading || !activeConversationId}
+          <Conversation className="flex-1 min-h-0 bg-transparent">
+            <ChatMessageList
+              messages={messages}
+              loadingMessages={loadingMessages}
+              isLoading={isLoading}
+              activeConversationId={activeConversationId}
+              status={status}
             />
-            <Button
-              size="icon-sm"
-              type="submit"
-              disabled={!input.trim() || isLoading || !activeConversationId}
-            >
-              <ArrowUpIcon />
-            </Button>
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1.5 text-right mr-3">
-            ⌘↵ to send
-          </p>
-        </form>
+            <ConversationScrollButton />
+          </Conversation>
+          <ChatComposer
+            activeConversationId={activeConversationId}
+            input={input}
+            isLoading={isLoading}
+            onInputChange={setInput}
+            onSubmit={handleSubmit}
+          />
         </div>
       </div>
 
-      {/* DDx Panel */}
       <div className="flex flex-col w-[45%] min-h-0 shrink-0">
         <DdxPanel
           steps={steps}

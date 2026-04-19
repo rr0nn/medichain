@@ -6,12 +6,14 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 
 - `ui/`: shared UI primitives installed from shadcn/ui, such as buttons, tooltips, and separators
 - `ai-elements/`: shared chat primitives installed from Vercel AI Elements, used to render messages and conversation containers
+- `chat/`: app-specific chat layout sections such as the chat header, message list, and composer
 - `ddx/`: differential diagnosis feature components, including the panel, evidence graph, evidence summary, safety review, and workflow canvas
 - `layout/`: application shell components such as the background layer and conversation sidebar
 - `theme/`: theme switching components and the theme provider
 
 ## Key Components
 
+- `chat/chat-header.tsx`, `chat/chat-message-list.tsx`, and `chat/chat-composer.tsx`: structure the left-side consultation experience
 - `ddx/ddx-panel.tsx`: renders workflow state, evidence summary, safety review, and ranked differentials
 - `ddx/evidence-subgraph.tsx`: visualizes diagnosis evidence paths as a subgraph of the knowledge graph
 - `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
