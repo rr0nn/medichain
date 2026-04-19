@@ -14,6 +14,8 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 ## Key Components
 
 - `chat/chat-header.tsx`, `chat/chat-message-list.tsx`, and `chat/chat-composer.tsx`: structure the left-side consultation experience
+- `hooks/use-conversation-session.ts`: owns URL-synced chat session lifecycle, message loading, and first-message conversation creation flow
+- `hooks/use-conversation-list.ts`: owns sidebar list loading, deletion, collapse state, and refresh behavior
 - `ddx/ddx-panel.tsx`: renders workflow state, evidence summary, safety review, and ranked differentials
 - `ddx/evidence-subgraph.tsx`: visualizes diagnosis evidence paths as a subgraph of the knowledge graph
 - `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
@@ -29,6 +31,8 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 - Organize app-specific components by feature or app concern before adding new top-level files.
 - Treat both folders as shared primitive layers and edit them carefully when syncing or adapting upstream code.
 - Keep domain-heavy data shaping out of components when it can live in `server/` or `lib/`.
+- Keep route sync, fetch orchestration, and conversation lifecycle logic in hooks or client helpers rather than in render components.
+- Keep `chat/` focused on the active consultation pane, and keep `conversation-*` naming for history/session list concerns.
 - Co-locate component tests next to the component when the test is tightly coupled to its rendered behavior.
 
 ## Testing

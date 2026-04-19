@@ -20,8 +20,9 @@ This folder contains the Next.js application entry points: the main page, global
 
 - Keep API route handlers thin.
 - Move orchestration and persistence logic into `server/`.
-- Keep page-level state here only when it is genuinely route-scoped.
+- Keep page-level state here only when it is genuinely route-scoped, and prefer feature hooks for client orchestration.
 - Shared UI belongs in `components/`, not in route files.
+- Treat `page.tsx` as a composition layer that wires hooks and feature components together, rather than a home for fetch-heavy UI logic.
 
 ## When To Edit This Folder
 
