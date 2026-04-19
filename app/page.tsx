@@ -24,7 +24,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx-panel";
 import { ThemeSelector } from "@/components/theme-selector";
+import { ModelSelector } from "@/components/model-selector";
 import { ConversationSidebar } from "@/components/conversation-sidebar";
+import type { ModelProvider } from "@/server/ai/core/models";
 import type { WorkflowStepState } from "@/components/workflow-canvas";
 import type {
   CategoryMatch,
@@ -50,6 +52,9 @@ const initialSteps: WorkflowStepState = {
 export default function Chat() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [modelProvider, setModelProvider] = useState<ModelProvider>("gemini");
+  const modelProviderRef = useRef<ModelProvider>(modelProvider);
+  modelProviderRef.current = modelProvider;
 
   const { messages, sendMessage, status, setMessages } = useChat({
     id: activeConversationId ?? undefined,
@@ -59,6 +64,7 @@ export default function Chat() {
         body: {
           ...body,
           messages,
+          modelProvider: modelProviderRef.current,
         },
       }),
     }),
@@ -186,7 +192,10 @@ export default function Chat() {
       <div className="flex flex-col w-1/2 min-h-0 p-3 gap-3">
         <header className="flex items-center justify-between px-4 h-16 shrink-0">
           <span className="bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl shadow-[0_4px_16px_rgba(27,125,126,0.25)]">MediChain</span>
-          <ThemeSelector />
+          <div className="flex items-center gap-4">
+            <ModelSelector value={modelProvider} onChange={setModelProvider} disabled={isLoading} />
+            <ThemeSelector />
+          </div>
         </header>
         <div className="glass flex flex-col flex-1 min-h-0 rounded-[30px] overflow-hidden">
         <Conversation className="flex-1 min-h-0 bg-transparent">

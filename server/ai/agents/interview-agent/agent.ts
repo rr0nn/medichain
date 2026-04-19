@@ -14,7 +14,7 @@ import {
 import { z } from "zod";
 
 import type { ChatRequest } from "@/server/ai/core/types";
-import { getDefaultChatModel } from "@/server/ai/core/models";
+import { getChatModel, resolveProvider } from "@/server/ai/core/models";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
 import { composePatientResponse } from "./patient-response";
 
@@ -83,13 +83,14 @@ General rules:
 - If the tool output is weak or sparse, say so plainly instead of overstating confidence.`;
 
 export async function runInterviewAgent(
-  { messages }: ChatRequest,
+  { messages, modelProvider }: ChatRequest,
   writer: UIMessageStreamWriter
 ) {
   const modelMessages = await convertToModelMessages(messages);
+  const provider = resolveProvider(modelProvider);
 
   const result = streamText({
-    model: getDefaultChatModel(),
+    model: getChatModel(provider),
     system: SYSTEM_PROMPT,
     messages: modelMessages,
     tools: {
