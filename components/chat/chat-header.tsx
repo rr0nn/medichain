@@ -56,9 +56,20 @@ export function ChatHeader({
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between px-4">
-      <span className="rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground shadow-[var(--shadow-brand)]">
-        MediChain
-      </span>
+      <div className="inline-flex items-center gap-3 rounded-[22px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg-strong)] px-3 py-2 shadow-[inset_0_1px_0_var(--glass-highlight),var(--glass-shadow)] backdrop-blur-md">
+        {/* Simple placeholder brand mark for the prototype header. */}
+        <span className="inline-flex size-8 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-[inset_0_1px_0_var(--glass-highlight)]">
+          <span className="size-2 rounded-full bg-primary" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            KG-Grounded
+          </p>
+          <p className="text-lg font-semibold leading-none text-foreground">
+            MediChain
+          </p>
+        </div>
+      </div>
       <div className="flex items-center gap-3">
         <ModelSelector
           open={isModelSelectorOpen}

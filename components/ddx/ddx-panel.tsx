@@ -45,13 +45,30 @@ export function DdxPanel({
 }: Props) {
   return (
     <div className="flex h-full flex-col gap-3">
-      <header className="flex h-16 shrink-0 items-center px-4">
-        <span className="rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground shadow-[var(--shadow-brand)]">
-          Differential Diagnosis
-        </span>
-      </header>
-
       <div className="glass flex-1 min-h-0 space-y-3 overflow-y-auto rounded-[30px] border border-[color:var(--glass-border)] p-4 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-md">
+        <header className="space-y-2 border-b border-[color:var(--glass-border)]/70 pb-4">
+          <div className="space-y-1">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Explainable Diagnostic Reasoning
+            </p>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 space-y-1">
+                <h2 className="text-xl font-semibold leading-tight text-foreground">
+                  Differential Diagnosis Support
+                </h2>
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  Transparent, knowledge graph-grounded review of likely
+                  diagnoses and supporting graph context for the current
+                  consultation.
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
+                Live Analysis
+              </span>
+            </div>
+          </div>
+        </header>
+
         <section className="space-y-2">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
