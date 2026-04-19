@@ -25,6 +25,7 @@ import { ChevronRight } from "lucide-react";
 import { formatDdxName } from "@/lib/format-ddx-name";
 
 import { DdxKG } from "./ddx-kg";
+import { MatchedEvidence } from "./matched-evidence";
 
 type Props = {
   steps: WorkflowStepState;
@@ -43,57 +44,6 @@ type PathDetails = {
   evidenceMatchedText: string[];
   evidenceTypeLabel?: string;
 };
-
-function formatSourceLabel(input: {
-  sourceTitle: string;
-  edition?: string;
-  pageStart?: number;
-  pageEnd?: number;
-}) {
-  const titleWithEdition = input.edition
-    ? `${input.sourceTitle}, ${formatEditionLabel(input.edition)}`
-    : input.sourceTitle;
-
-  if (
-    input.pageStart !== undefined &&
-    input.pageEnd !== undefined &&
-    input.pageStart !== input.pageEnd
-  ) {
-    return `${titleWithEdition} (pp. ${input.pageStart}-${input.pageEnd})`;
-  }
-
-  if (input.pageStart !== undefined) {
-    return `${titleWithEdition} (p. ${input.pageStart})`;
-  }
-
-  return titleWithEdition;
-}
-
-function formatEditionLabel(edition: string) {
-  const trimmedEdition = edition.trim();
-
-  if (!/^\d+$/.test(trimmedEdition)) {
-    return trimmedEdition;
-  }
-
-  const numericEdition = Number(trimmedEdition);
-  const lastTwoDigits = numericEdition % 100;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-    return `${numericEdition}th edition`;
-  }
-
-  switch (numericEdition % 10) {
-    case 1:
-      return `${numericEdition}st edition`;
-    case 2:
-      return `${numericEdition}nd edition`;
-    case 3:
-      return `${numericEdition}rd edition`;
-    default:
-      return `${numericEdition}th edition`;
-  }
-}
 
 export function DdxPanel({
   steps,
@@ -286,68 +236,11 @@ export function DdxPanel({
                 </div>
               )}
 
-              <div className="space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Matched Evidence
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {matchedClinicalPresentations.map((match) => (
-                    <div
-                      key={`cp-${match.key}`}
-                      className="space-y-1 rounded-md border border-border bg-muted/30 px-2.5 py-2"
-                    >
-                      <span className="block text-xs">
-                        Presentation: {formatDdxName(match.name)}
-                      </span>
-                      {match.sources.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {match.sources.map((source) => (
-                            <span
-                              key={`${match.key}-${source.sourceKey}`}
-                              className="rounded-full bg-background px-2 py-1 text-[11px] text-muted-foreground"
-                            >
-                              Source:{" "}
-                              {formatSourceLabel({
-                                sourceTitle: source.sourceTitle,
-                                edition: source.edition,
-                                pageStart: source.pageStart,
-                                pageEnd: source.pageEnd,
-                              })}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {matchedCategories.map((match) => (
-                    <span
-                      key={`cat-${match.clinicalPresentationKey}-${match.categoryKey}`}
-                      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs"
-                      style={{
-                        background: "var(--kg-category-bg)",
-                        border: "1px solid var(--kg-category-border)",
-                        color: "var(--foreground)",
-                      }}
-                    >
-                      Category: {formatDdxName(match.categoryName)}
-                    </span>
-                  ))}
-                  {matchedFeatures.map((match) => (
-                    <span
-                      key={`feature-${match.clinicalPresentationKey}-${match.featureKey}`}
-                      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs"
-                      style={{
-                        background: "var(--kg-feature-bg)",
-                        border: "1px solid var(--kg-feature-border)",
-                        color: "var(--foreground)",
-                      }}
-                    >
-                      Feature: {formatDdxName(match.featureName)}
-                      {match.featureType ? ` (${formatDdxName(match.featureType)})` : ""}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <MatchedEvidence
+                matchedClinicalPresentations={matchedClinicalPresentations}
+                matchedCategories={matchedCategories}
+                matchedFeatures={matchedFeatures}
+              />
 
               <div className="space-y-2">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
