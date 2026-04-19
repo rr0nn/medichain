@@ -132,6 +132,38 @@ describe("useConversationSession", () => {
     expect(createConversationMock).not.toHaveBeenCalled();
   });
 
+  it("restores the draft input if conversation creation fails", async () => {
+    createConversationMock.mockRejectedValue(new Error("create failed"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const { result } = renderHook(() => useConversationSession("gemini"));
+
+    act(() => {
+      result.current.setInput("Draft message");
+    });
+
+    await act(async () => {
+      await result.current.actions.submitMessage();
+    });
+
+    expect(result.current.input).toBe("Draft message");
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("clears the transcript when a selected conversation loads no messages", async () => {
+    currentSearchParams = new URLSearchParams("conversationId=conv-empty");
+    getConversationMessagesMock.mockResolvedValue([]);
+
+    renderHook(() => useConversationSession("gemini"));
+
+    await waitFor(() => {
+      expect(getConversationMessagesMock).toHaveBeenCalledWith("conv-empty");
+      expect(setMessagesMock).toHaveBeenCalledWith([]);
+    });
+  });
+
   it("updates the URL for selection and reset actions", () => {
     currentSearchParams = new URLSearchParams("conversationId=old&foo=bar");
 
