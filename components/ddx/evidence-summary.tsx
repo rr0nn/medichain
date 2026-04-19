@@ -26,7 +26,7 @@ function EvidenceSection({
   children: ReactNode;
 }) {
   return (
-    <div className="space-y-2 rounded-xl border border-border/70 bg-muted/20 p-3">
+    <div className="space-y-2 rounded-xl border border-[color:var(--glass-border)] bg-background/45 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {title}
       </p>
@@ -55,7 +55,7 @@ export function EvidenceSummary({
 
   return (
     <details className="group space-y-2">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5 text-left [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 px-3 py-2.5 text-left shadow-[inset_0_1px_0_var(--glass-highlight)] [&::-webkit-details-marker]:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <ChevronRight
             size={14}
@@ -84,7 +84,7 @@ export function EvidenceSummary({
             ? matchedClinicalPresentations.map((match) => (
               <div
                 key={`cp-${match.key}`}
-                className="w-full min-w-0 rounded-lg border border-border bg-background/80 px-3 py-2.5"
+                className="w-full min-w-0 rounded-lg border border-[color:var(--glass-border)] bg-background/60 px-3 py-2.5 shadow-[inset_0_1px_0_var(--glass-highlight)]"
               >
                 <p className="text-xs font-medium text-foreground">
                   {formatDdxName(match.name)}

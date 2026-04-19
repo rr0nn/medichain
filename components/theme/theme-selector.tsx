@@ -49,7 +49,7 @@ export function ThemeSelector() {
           type="button"
           variant="outline"
           size="sm"
-          className="h-auto w-[180px] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/80 py-2 shadow-[inset_0_1px_0_var(--glass-highlight)]"
+          className="h-auto w-[180px] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/55 py-2 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm hover:bg-background/70"
         >
           <div className="min-w-0 text-left">
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -67,7 +67,7 @@ export function ThemeSelector() {
         className="gap-0 overflow-hidden border-none p-0 outline outline-border sm:max-w-xs"
         showCloseButton={false}
       >
-        <div className="flex items-center justify-between border-b border-border/70 px-3 py-2.5">
+        <div className="flex items-center justify-between border-b border-[color:var(--glass-border)] bg-background/55 px-3 py-2.5 backdrop-blur-sm">
           <DialogTitle className="text-sm font-medium">Select theme</DialogTitle>
           <DialogClose className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
             <XIcon className="size-4" />

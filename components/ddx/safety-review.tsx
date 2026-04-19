@@ -32,7 +32,7 @@ export function SafetyReview({
 
   return (
     <details className="group space-y-2">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/20 px-3 py-2.5 text-left [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 px-3 py-2.5 text-left shadow-[inset_0_1px_0_var(--glass-highlight)] [&::-webkit-details-marker]:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <ChevronRight
             size={14}
@@ -58,7 +58,7 @@ export function SafetyReview({
         </span>
       </summary>
 
-      <div className="space-y-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+      <div className="space-y-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
         <div className="flex flex-wrap gap-2 text-xs">
           <span
             className={
@@ -85,7 +85,7 @@ export function SafetyReview({
           ) : null}
         </div>
         {hasInternalDetails ? (
-          <div className="space-y-3 rounded-md border border-border/70 bg-background/70 p-3">
+          <div className="space-y-3 rounded-md border border-[color:var(--glass-border)] bg-background/60 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
             <div className="flex flex-wrap gap-2 text-xs">
               {criticAssessment.topDifferentialScore !== null ? (
                 <span className="rounded-full bg-muted px-2.5 py-1">

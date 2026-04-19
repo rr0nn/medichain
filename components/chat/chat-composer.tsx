@@ -42,14 +42,14 @@ export function ChatComposer({
         event.preventDefault();
         onSubmit();
       }}
-      className="shrink-0 border-t border-[color:var(--glass-border)] p-3"
+      className="shrink-0 border-t border-[color:var(--glass-border)]/80 bg-background/30 p-3 backdrop-blur-sm"
     >
       {!activeConversationId && (
-        <p className="mb-2 text-center text-xs text-muted-foreground">
+        <p className="mb-2 rounded-xl border border-[color:var(--glass-border)] bg-background/35 px-3 py-2 text-center text-xs text-muted-foreground shadow-[inset_0_1px_0_var(--glass-highlight)]">
           Start a new consultation from the sidebar to begin.
         </p>
       )}
-      <div className="flex items-center gap-2 rounded-3xl border border-[color:var(--glass-border)] bg-background/80 px-3 py-3 shadow-[inset_0_1px_0_var(--glass-highlight)] transition-shadow focus-within:ring-1 focus-within:ring-ring">
+      <div className="flex items-center gap-2 rounded-3xl border border-[color:var(--glass-border)] bg-background/65 px-3 py-3 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm transition-shadow focus-within:ring-1 focus-within:ring-ring">
         <textarea
           ref={textareaRef}
           className="flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"

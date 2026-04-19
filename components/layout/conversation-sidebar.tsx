@@ -81,7 +81,7 @@ export function ConversationSidebar({
 
   return (
     <aside className={cn(
-      "glass flex min-h-0 shrink-0 flex-col rounded-[28px] transition-all duration-200",
+      "glass flex min-h-0 shrink-0 flex-col rounded-[28px] border border-[color:var(--glass-border)] shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-md transition-all duration-200",
       collapsed ? "w-12" : "w-60"
     )}>
       <div className="flex items-center justify-between px-2 py-3 border-b border-[color:var(--glass-border)] shrink-0">
@@ -155,8 +155,8 @@ export function ConversationSidebar({
                   onClick={() => onSelect(conv.id)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSelect(conv.id); }}
                   className={cn(
-                    "group w-full flex items-start gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted/60 cursor-pointer select-none",
-                    activeId === conv.id && "bg-muted text-foreground font-medium"
+                    "group flex w-full cursor-pointer select-none items-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-background/50",
+                    activeId === conv.id && "bg-background/70 text-foreground font-medium shadow-[inset_0_1px_0_var(--glass-highlight)]"
                   )}
                 >
                   <MessageSquareIcon className="size-3.5 mt-0.5 shrink-0 text-muted-foreground" />

@@ -92,7 +92,7 @@ export default function Chat() {
           onModelChange={setModelProvider}
           isLoading={isLoading}
         />
-        <div className="glass flex flex-col flex-1 min-h-0 rounded-[30px] overflow-hidden">
+        <div className="glass flex min-h-0 flex-1 flex-col overflow-hidden rounded-[30px] border border-[color:var(--glass-border)] shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-md">
           <Conversation className="flex-1 min-h-0 bg-transparent">
             <ChatMessageList
               messages={messages}

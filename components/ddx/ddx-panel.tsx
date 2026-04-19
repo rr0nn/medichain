@@ -155,23 +155,25 @@ export function DdxPanel({
         </span>
       </header>
 
-      <div className="glass flex-1 overflow-y-auto min-h-0 rounded-[30px] p-4 space-y-3">
+      <div className="glass flex-1 min-h-0 space-y-3 overflow-y-auto rounded-[30px] border border-[color:var(--glass-border)] p-4 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-md">
         <section className="space-y-2">
-          <div className="px-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Analysis Workflow
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Shows progress through presentation matching, evidence matching, diagnosis ranking, and safety review.
-            </p>
+          <div className="rounded-[22px] border border-[color:var(--glass-border)] bg-background/55 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm">
+            <div className="space-y-1 px-1 pb-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Analysis Workflow
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Shows progress through presentation matching, evidence matching, diagnosis ranking, and safety review.
+              </p>
+            </div>
+            <WorkflowCanvas
+              steps={steps}
+              matchedClinicalPresentationCount={matchedClinicalPresentations.length}
+              criticAssessment={criticAssessment}
+            />
           </div>
-          <WorkflowCanvas
-            steps={steps}
-            matchedClinicalPresentationCount={matchedClinicalPresentations.length}
-            criticAssessment={criticAssessment}
-          />
         </section>
-        <div className="bg-background/80 border border-[color:var(--glass-border)] rounded-[22px] shadow-[inset_0_1px_0_var(--glass-highlight)]">
+        <div className="rounded-[22px] border border-[color:var(--glass-border)] bg-background/65 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm">
 
           {differentials.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
@@ -204,7 +206,7 @@ export function DdxPanel({
                   return (
                     <details
                       key={d.diagnosisKey}
-                      className="group rounded-[15px] border border-border bg-popover"
+                      className="group rounded-[15px] border border-[color:var(--glass-border)] bg-background/55 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm"
                     >
                       <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
                         <ChevronRight
@@ -241,7 +243,7 @@ export function DdxPanel({
                           <EvidenceSubgraph diagnosis={evidencePath} diagnosisName={d.diagnosisName} />
                         </div>
 
-                        <details className="group/evidence-details rounded-md border border-border/70 bg-muted/20">
+                        <details className="group/evidence-details rounded-md border border-[color:var(--glass-border)] bg-background/45 shadow-[inset_0_1px_0_var(--glass-highlight)]">
                           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-left [&::-webkit-details-marker]:hidden">
                             <div className="flex min-w-0 items-center gap-2">
                               <ChevronRight
@@ -268,7 +270,7 @@ export function DdxPanel({
                               return (
                                 <div
                                   key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
-                                  className="space-y-3 rounded-xl border border-border/70 bg-background/80 p-3"
+                                  className="space-y-3 rounded-xl border border-[color:var(--glass-border)] bg-background/60 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]"
                                 >
                                   <div className="flex flex-wrap items-start justify-between gap-2">
                                     <div className="min-w-0">
@@ -315,7 +317,7 @@ export function DdxPanel({
                                   </div>
 
                                   <div className="grid gap-3 lg:grid-cols-2">
-                                    <div className="space-y-3 rounded-lg border border-border/70 bg-muted/20 p-3">
+                                    <div className="space-y-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 p-3">
                                       <div>
                                         <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                                           Presentation
