@@ -79,14 +79,14 @@ export default function Chat() {
   }, [input, isLoading, sendMessage]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="grid h-screen grid-cols-[15rem_minmax(0,1.08fr)_minmax(0,0.92fr)] gap-3 overflow-hidden p-3">
       <ConversationSidebar
         activeId={activeConversationId}
         onSelect={handleSelectConversation}
         onNew={handleNewConversation}
       />
 
-      <div className="flex flex-col w-1/2 min-h-0 p-3 gap-3">
+      <div className="flex min-h-0 flex-col gap-3">
         <ChatHeader
           modelProvider={modelProvider}
           onModelChange={setModelProvider}
@@ -113,7 +113,7 @@ export default function Chat() {
         </div>
       </div>
 
-      <div className="flex flex-col w-[45%] min-h-0 shrink-0">
+      <div className="flex min-h-0 flex-col">
         <DdxPanel
           steps={steps}
           differentials={ddxResult.differentials}
