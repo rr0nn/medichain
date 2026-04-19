@@ -35,6 +35,8 @@ type DifferentialListProps = {
   matchedFeatures: FeatureMatch[];
 };
 
+const DIAGNOSIS_LABEL_MAX_LENGTH = 56;
+
 function formatEvidenceHeadingLabel(name: string) {
   const words = name.trim().split(/\s+/);
 
@@ -43,6 +45,14 @@ function formatEvidenceHeadingLabel(name: string) {
   }
 
   return `${words.slice(0, 3).join(" ")}...`;
+}
+
+function truncateDiagnosisLabel(name: string) {
+  if (name.length <= DIAGNOSIS_LABEL_MAX_LENGTH) {
+    return name;
+  }
+
+  return `${name.slice(0, DIAGNOSIS_LABEL_MAX_LENGTH).trimEnd()}...`;
 }
 
 function EvidenceMetaList({
@@ -92,18 +102,18 @@ export function DifferentialList({
     const categoryMatch =
       path.evidenceType === "category"
         ? matchedCategories.find(
-            (match) =>
-              match.clinicalPresentationKey === path.clinicalPresentationKey &&
-              match.categoryKey === path.categoryKey
-          )
+          (match) =>
+            match.clinicalPresentationKey === path.clinicalPresentationKey &&
+            match.categoryKey === path.categoryKey
+        )
         : undefined;
     const featureMatch =
       path.evidenceType === "feature"
         ? matchedFeatures.find(
-            (match) =>
-              match.clinicalPresentationKey === path.clinicalPresentationKey &&
-              match.featureKey === path.featureKey
-          )
+          (match) =>
+            match.clinicalPresentationKey === path.clinicalPresentationKey &&
+            match.featureKey === path.featureKey
+        )
         : undefined;
 
     return {
@@ -143,6 +153,8 @@ export function DifferentialList({
   return (
     <div className="space-y-1">
       {differentials.map((d, i) => {
+        const diagnosisLabel = formatDdxName(d.diagnosisName);
+        const diagnosisDisplayLabel = truncateDiagnosisLabel(diagnosisLabel);
         const evidencePath = d.evidence.map((path) => {
           const pathDetails = getPathDetails(path);
           return {
@@ -165,8 +177,11 @@ export function DifferentialList({
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Differential {i + 1}
                   </p>
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {formatDdxName(d.diagnosisName)}
+                  <p
+                    className="truncate text-sm font-medium text-foreground"
+                    title={diagnosisLabel}
+                  >
+                    {diagnosisDisplayLabel}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {d.evidence.length} supporting path
@@ -227,7 +242,7 @@ export function DifferentialList({
                             </p>
                             <p
                               className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-foreground"
-                              title={`${pathDetails.clinicalPresentationName} -> ${pathDetails.evidenceName} -> ${formatDdxName(d.diagnosisName)}`}
+                              title={`${pathDetails.clinicalPresentationName} -> ${pathDetails.evidenceName} -> ${diagnosisLabel}`}
                             >
                               <span className="shrink-0">
                                 {pathDetails.clinicalPresentationName}
@@ -241,8 +256,11 @@ export function DifferentialList({
                               <span className="shrink-0 text-muted-foreground">
                                 {"->"}
                               </span>
-                              <span className="shrink-0">
-                                {formatDdxName(d.diagnosisName)}
+                              <span
+                                className="min-w-0 truncate"
+                                title={diagnosisLabel}
+                              >
+                                {diagnosisDisplayLabel}
                               </span>
                             </p>
                           </div>
@@ -354,10 +372,13 @@ export function DifferentialList({
                           </div>
                         </div>
 
-                        <p className="text-xs leading-relaxed text-muted-foreground">
+                        <p className="break-words text-xs leading-relaxed text-muted-foreground">
                           Supporting path for{" "}
-                          <span className="font-medium text-foreground">
-                            {formatDdxName(d.diagnosisName)}
+                          <span
+                            className="font-medium text-foreground"
+                            title={diagnosisLabel}
+                          >
+                            {diagnosisLabel}
                           </span>
                           .
                         </p>
