@@ -8,7 +8,7 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 - `ai-elements/`: shared chat primitives installed from Vercel AI Elements, used to render messages and conversation containers
 - `ddx/`: differential diagnosis feature components, including the panel, evidence graph, evidence summary, safety review, and workflow canvas
 - `layout/`: application shell components such as the background layer and conversation sidebar
-- `theme/`: theme and model selection components, plus the theme provider
+- `theme/`: theme switching components and the theme provider
 
 ## Key Components
 
@@ -17,6 +17,7 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 - `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
 - `layout/conversation-sidebar.tsx`: conversation list and session switching UI
 - `theme/theme-selector.tsx` and `theme/theme-provider.tsx`: theme switching support
+- `ai-elements/model-selector.tsx`: adapted AI Elements model selector used in the chat header
 - `ai-elements/`: shared chat layout and message presentation
 
 ## Conventions

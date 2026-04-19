@@ -16,15 +16,26 @@ import {
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import {
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorLogo,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from "@/components/ai-elements/model-selector";
+import {
   Message,
   MessageContent,
   MessageResponse,
 } from "@/components/ai-elements/message";
 import { Button } from "@/components/ui/button";
-import { ArrowUpIcon } from "lucide-react";
+import { ArrowUpIcon, CheckIcon, ChevronDownIcon } from "lucide-react";
 import { DdxPanel } from "@/components/ddx/ddx-panel";
 import { ThemeSelector } from "@/components/theme/theme-selector";
-import { ModelSelector } from "@/components/theme/model-selector";
 import { ConversationSidebar } from "@/components/layout/conversation-sidebar";
 import type { ModelProvider } from "@/server/ai/core/models";
 import type { WorkflowStepState } from "@/components/ddx/workflow-canvas";
@@ -49,10 +60,21 @@ const initialSteps: WorkflowStepState = {
   safety_review: "idle",
 };
 
+const MODEL_OPTIONS: Array<{
+  value: ModelProvider;
+  label: string;
+  provider: "google" | "anthropic";
+  group: "Google" | "Anthropic";
+}> = [
+  { value: "gemini", label: "Gemini 2.5 Flash", provider: "google", group: "Google" },
+  { value: "claude", label: "Claude Sonnet 4.5", provider: "anthropic", group: "Anthropic" },
+];
+
 export default function Chat() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [modelProvider, setModelProvider] = useState<ModelProvider>("gemini");
+  const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
   const modelProviderRef = useRef<ModelProvider>(modelProvider);
   modelProviderRef.current = modelProvider;
 
@@ -179,6 +201,11 @@ export default function Chat() {
     setInput("");
   };
 
+  const selectedModel =
+    MODEL_OPTIONS.find((option) => option.value === modelProvider) ?? MODEL_OPTIONS[0];
+
+  const modelGroups = [...new Set(MODEL_OPTIONS.map((option) => option.group))];
+
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
@@ -193,7 +220,59 @@ export default function Chat() {
         <header className="flex items-center justify-between px-4 h-16 shrink-0">
           <span className="bg-primary text-xl font-bold text-primary-foreground p-2 px-4 rounded-3xl shadow-[0_4px_16px_rgba(27,125,126,0.25)]">MediChain</span>
           <div className="flex items-center gap-4">
-            <ModelSelector value={modelProvider} onChange={setModelProvider} disabled={isLoading} />
+            <ModelSelector
+              open={isModelSelectorOpen}
+              onOpenChange={setIsModelSelectorOpen}
+            >
+              <ModelSelectorTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoading}
+                  className="w-[220px] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/80 shadow-[inset_0_1px_0_var(--glass-highlight)]"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <ModelSelectorLogo provider={selectedModel.provider} />
+                    <ModelSelectorName>{selectedModel.label}</ModelSelectorName>
+                  </div>
+                  <ChevronDownIcon className="shrink-0 text-muted-foreground" />
+                </Button>
+              </ModelSelectorTrigger>
+              <ModelSelectorContent
+                title="Select model"
+                className="sm:max-w-sm"
+              >
+                <ModelSelectorInput placeholder="Search models..." />
+                <ModelSelectorList>
+                  <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
+                  {modelGroups.map((group) => (
+                    <ModelSelectorGroup heading={group} key={group}>
+                      {MODEL_OPTIONS
+                        .filter((option) => option.group === group)
+                        .map((option) => (
+                          <ModelSelectorItem
+                            key={option.value}
+                            onSelect={() => {
+                              setModelProvider(option.value);
+                              setIsModelSelectorOpen(false);
+                            }}
+                            value={option.label}
+                          >
+                            <ModelSelectorLogo provider={option.provider} />
+                            <ModelSelectorName>{option.label}</ModelSelectorName>
+                            {modelProvider === option.value ? (
+                              <CheckIcon className="ml-auto size-4" />
+                            ) : (
+                              <div className="ml-auto size-4" />
+                            )}
+                          </ModelSelectorItem>
+                        ))}
+                    </ModelSelectorGroup>
+                  ))}
+                </ModelSelectorList>
+              </ModelSelectorContent>
+            </ModelSelector>
             <ThemeSelector />
           </div>
         </header>
