@@ -299,7 +299,8 @@ export function WorkflowCanvas({
         nodesConnectable={false}
         elementsSelectable={false}
         zoomOnScroll={false}
-        panOnDrag={false}
+        panOnScroll={false}
+        panOnDrag
         proOptions={{ hideAttribution: true }}
         colorMode={resolvedTheme === "dark" ? "dark" : "light"}
       >

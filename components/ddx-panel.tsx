@@ -22,6 +22,8 @@ import type {
 } from "@/server/ai/workflows/safety-workflow/types";
 import { ChevronRight } from "lucide-react";
 
+import { formatDdxName } from "@/lib/format-ddx-name";
+
 import { DdxKG } from "./ddx-kg";
 
 type Props = {
@@ -129,12 +131,14 @@ export function DdxPanel({
 
     return {
       clinicalPresentationName:
-        presentationMatch?.name ?? path.clinicalPresentationKey,
+        formatDdxName(presentationMatch?.name ?? path.clinicalPresentationKey),
       clinicalPresentationMatchedText: presentationMatch?.matchedText ?? [],
       evidenceName:
-        path.evidenceType === "category"
-          ? categoryMatch?.categoryName ?? path.categoryKey ?? "Unknown category"
-          : featureMatch?.featureName ?? path.featureKey ?? "Unknown feature",
+        formatDdxName(
+          path.evidenceType === "category"
+            ? categoryMatch?.categoryName ?? path.categoryKey ?? "Unknown category"
+            : featureMatch?.featureName ?? path.featureKey ?? "Unknown feature",
+        ),
       evidenceMatchedText:
         path.evidenceType === "category"
           ? categoryMatch?.matchedText ?? []
@@ -293,7 +297,7 @@ export function DdxPanel({
                       className="space-y-1 rounded-md border border-border bg-muted/30 px-2.5 py-2"
                     >
                       <span className="block text-xs">
-                        Presentation: {match.name}
+                        Presentation: {formatDdxName(match.name)}
                       </span>
                       {match.sources.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
@@ -325,7 +329,7 @@ export function DdxPanel({
                         color: "var(--foreground)",
                       }}
                     >
-                      Category: {match.categoryName}
+                      Category: {formatDdxName(match.categoryName)}
                     </span>
                   ))}
                   {matchedFeatures.map((match) => (
@@ -338,8 +342,8 @@ export function DdxPanel({
                         color: "var(--foreground)",
                       }}
                     >
-                      Feature: {match.featureName}
-                      {match.featureType ? ` (${match.featureType})` : ""}
+                      Feature: {formatDdxName(match.featureName)}
+                      {match.featureType ? ` (${formatDdxName(match.featureType)})` : ""}
                     </span>
                   ))}
                 </div>
@@ -371,7 +375,7 @@ export function DdxPanel({
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="flex items-center gap-2 truncate text-sm font-medium">
-                            {d.diagnosisName} <ChevronRight size={16} />
+                            {formatDdxName(d.diagnosisName)} <ChevronRight size={16} />
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {d.evidence.length} supporting path
@@ -427,7 +431,7 @@ export function DdxPanel({
                                 {" -> "}
                                 {pathDetails.evidenceName}
                                 {" -> "}
-                                {d.diagnosisName}
+                                {formatDdxName(d.diagnosisName)}
                               </p>
                             </div>
                           );

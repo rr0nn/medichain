@@ -12,12 +12,16 @@ import {
   MarkerType,
   Position,
   ReactFlow,
+  useNodesInitialized,
+  useReactFlow,
   type Edge,
   type Node,
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+
+import { formatDdxName } from "@/lib/format-ddx-name";
 
 type DiagnosisEvidencePath = {
   clinicalPresentationName: string;
@@ -74,6 +78,8 @@ const TIER_LABEL: Record<Tier, string> = {
   diagnosis: "Diagnosis",
 };
 
+const FIT_VIEW_OPTIONS = { padding: 0.16, minZoom: 0.55, maxZoom: 1 };
+
 function laneY(index: number, count: number, center: number, gap: number) {
   const totalHeight = (count - 1) * gap;
   return center - totalHeight / 2 + index * gap;
@@ -126,6 +132,28 @@ function DdxKGNode({ data }: NodeProps & { data: DdxKGNodeData }) {
 
 const nodeTypes = { ddx: DdxKGNode };
 
+function AutoFitView({ graphKey }: { graphKey: string }) {
+  const nodesInitialized = useNodesInitialized();
+  const { fitView } = useReactFlow();
+  const lastGraphKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!nodesInitialized || lastGraphKeyRef.current === graphKey) {
+      return;
+    }
+
+    lastGraphKeyRef.current = graphKey;
+
+    const frame = requestAnimationFrame(() => {
+      void fitView(FIT_VIEW_OPTIONS);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [fitView, graphKey, nodesInitialized]);
+
+  return null;
+}
+
 export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
   const presentations = useMemo(
     () => Array.from(new Set(diagnosis.map((path) => path.clinicalPresentationName))),
@@ -172,7 +200,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
           PRESENTATION_GAP_Y,
         ),
       },
-      data: { label: name, tier: "presentation" },
+      data: { label: formatDdxName(name), tier: "presentation" },
     }));
 
     const categoryNodes: Node<DdxKGNodeData>[] = categoryEvidence.map((evidence, index) => ({
@@ -188,7 +216,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
         ),
       },
       data: {
-        label: evidence.name,
+        label: formatDdxName(evidence.name),
         tier: "category",
       },
     }));
@@ -206,9 +234,11 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
         ),
       },
       data: {
-        label: evidence.name,
+        label: formatDdxName(evidence.name),
         tier: "feature",
-        detail: evidence.featureType ? `Type: ${evidence.featureType}` : undefined,
+        detail: evidence.featureType
+          ? `Type: ${formatDdxName(evidence.featureType)}`
+          : undefined,
       },
     }));
 
@@ -220,7 +250,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
         y: CANVAS_PADDING_Y + PRESENTATION_CENTER_Y,
       },
       data: {
-        label: diagnosisName,
+        label: formatDdxName(diagnosisName),
         tier: "diagnosis",
         emphasized: true,
       },
@@ -261,6 +291,14 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
     ] satisfies Edge[];
   }, [diagnosis, diagnosisName]);
 
+  const graphKey = useMemo(
+    () =>
+      `${diagnosisName}::${nodes.map((node) => node.id).join("|")}::${edges
+        .map((edge) => edge.id)
+        .join("|")}`,
+    [diagnosisName, edges, nodes],
+  );
+
   if (diagnosis.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
@@ -275,14 +313,13 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.16, minZoom: 0.55, maxZoom: 1 }}
         proOptions={{ hideAttribution: true }}
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
         zoomOnScroll={false}
-        panOnDrag={false}
+        panOnScroll={false}
+        panOnDrag
       >
         <Background
           variant={BackgroundVariant.Dots}
@@ -290,6 +327,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
           size={1}
           color="var(--kg-bg-dot)"
         />
+        <AutoFitView graphKey={graphKey} />
       </ReactFlow>
     </div>
   );
