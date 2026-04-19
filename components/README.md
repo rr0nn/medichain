@@ -6,21 +6,24 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 
 - `ui/`: shared UI primitives installed from shadcn/ui, such as buttons, tooltips, and separators
 - `ai-elements/`: shared chat primitives installed from Vercel AI Elements, used to render messages and conversation containers
-- root-level feature components: higher-level MediChain UI such as the differential panel, workflow canvas, theme selector, and conversation sidebar
+- `ddx/`: differential diagnosis feature components, including the panel, evidence graph, evidence summary, safety review, and workflow canvas
+- `layout/`: application shell components such as the background layer and conversation sidebar
+- `theme/`: theme and model selection components, plus the theme provider
 
 ## Key Components
 
-- `ddx-panel.tsx`: renders workflow state, safety review, grounding audit, and ranked differentials
-- `ddx-kg.tsx`: visualizes diagnosis evidence paths from the knowledge graph
-- `workflow-canvas.tsx`: displays stage-by-stage workflow progress
-- `conversation-sidebar.tsx`: conversation list and session switching UI
-- `theme-selector.tsx` and `theme-provider.tsx`: theme switching support
+- `ddx/ddx-panel.tsx`: renders workflow state, evidence summary, safety review, and ranked differentials
+- `ddx/ddx-kg.tsx`: visualizes diagnosis evidence paths from the knowledge graph
+- `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
+- `layout/conversation-sidebar.tsx`: conversation list and session switching UI
+- `theme/theme-selector.tsx` and `theme/theme-provider.tsx`: theme switching support
 - `ai-elements/`: shared chat layout and message presentation
 
 ## Conventions
 
 - `ui/` is the default location for external primitive installs from shadcn/ui.
 - `ai-elements/` is the default location for external chat UI primitives from Vercel AI Elements.
+- Organize app-specific components by feature or app concern before adding new top-level files.
 - Treat both folders as shared primitive layers and edit them carefully when syncing or adapting upstream code.
 - Keep domain-heavy data shaping out of components when it can live in `server/` or `lib/`.
 - Co-locate component tests next to the component when the test is tightly coupled to its rendered behavior.
@@ -29,7 +32,7 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 
 Current component coverage includes:
 
-- `ddx-panel.test.tsx`
+- `ddx/ddx-panel.test.tsx`
 - integration tests under [`../tests/integration`](../tests/integration)
 
 ## Related Documentation

@@ -22,12 +22,12 @@ import {
 } from "@/components/ai-elements/message";
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
-import { DdxPanel } from "@/components/ddx-panel";
-import { ThemeSelector } from "@/components/theme-selector";
-import { ModelSelector } from "@/components/model-selector";
-import { ConversationSidebar } from "@/components/conversation-sidebar";
+import { DdxPanel } from "@/components/ddx/ddx-panel";
+import { ThemeSelector } from "@/components/theme/theme-selector";
+import { ModelSelector } from "@/components/theme/model-selector";
+import { ConversationSidebar } from "@/components/layout/conversation-sidebar";
 import type { ModelProvider } from "@/server/ai/core/models";
-import type { WorkflowStepState } from "@/components/workflow-canvas";
+import type { WorkflowStepState } from "@/components/ddx/workflow-canvas";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,

@@ -6,7 +6,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeAll } from "vitest";
 
-vi.mock("@/components/workflow-canvas", () => ({
+vi.mock("@/components/ddx/workflow-canvas", () => ({
   WorkflowCanvas: () => <div>workflow-canvas</div>,
 }));
 

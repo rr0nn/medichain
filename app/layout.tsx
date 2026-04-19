@@ -9,8 +9,8 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import "./theme.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/theme-provider";
-import { BackgroundLayer } from "@/components/background-layer";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { BackgroundLayer } from "@/components/layout/background-layer";
 
 export const metadata: Metadata = {
   title: "MediChain",

@@ -6,7 +6,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeAll } from "vitest";
 
-vi.mock("@/components/workflow-canvas", () => ({
+vi.mock("@/components/ddx/workflow-canvas", () => ({
   WorkflowCanvas: ({
     matchedClinicalPresentationCount,
   }: {
@@ -14,7 +14,7 @@ vi.mock("@/components/workflow-canvas", () => ({
   }) => <div>workflow-canvas:{matchedClinicalPresentationCount}</div>,
 }));
 
-import { DdxPanel } from "@/components/ddx-panel";
+import { DdxPanel } from "@/components/ddx/ddx-panel";
 beforeAll(() => {
   global.ResizeObserver = class {
     observe() { }

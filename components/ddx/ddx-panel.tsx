@@ -8,7 +8,7 @@
 import {
   WorkflowCanvas,
   type WorkflowStepState,
-} from "@/components/workflow-canvas";
+} from "@/components/ddx/workflow-canvas";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
