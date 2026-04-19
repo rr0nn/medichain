@@ -12,16 +12,14 @@ import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMemo, useState, useSyncExternalStore } from "react";
 
-type ThemeOption = "system" | "light" | "dark" | "medichain";
+type ThemeOption = "light" | "dark";
 
 const THEME_OPTIONS: Array<{
   value: ThemeOption;
   label: string;
 }> = [
-  { value: "system", label: "System" },
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
-  { value: "medichain", label: "Medichain" },
 ];
 
 function subscribe() {
@@ -33,10 +31,7 @@ export function ThemeSelector() {
   const [open, setOpen] = useState(false);
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
 
-  const value: ThemeOption =
-    theme === "light" || theme === "dark" || theme === "medichain"
-      ? theme
-      : "system";
+  const value: ThemeOption = theme === "dark" ? "dark" : "light";
   const selectedTheme = useMemo(
     () => THEME_OPTIONS.find((option) => option.value === value) ?? THEME_OPTIONS[0],
     [value],
@@ -56,7 +51,7 @@ export function ThemeSelector() {
               Theme
             </p>
             <span className="block truncate text-sm text-foreground">
-              {mounted ? selectedTheme.label : "System"}
+              {mounted ? selectedTheme.label : "Light"}
             </span>
           </div>
           <ChevronDownIcon className="shrink-0 text-muted-foreground" />

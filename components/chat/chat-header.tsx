@@ -56,7 +56,7 @@ export function ChatHeader({
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between px-4">
-      <span className="rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground shadow-[0_4px_16px_rgba(27,125,126,0.25)]">
+      <span className="rounded-3xl bg-primary p-2 px-4 text-xl font-bold text-primary-foreground shadow-[var(--shadow-brand)]">
         MediChain
       </span>
       <div className="flex items-center gap-3">

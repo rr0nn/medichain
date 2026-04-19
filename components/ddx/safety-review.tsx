@@ -29,6 +29,10 @@ export function SafetyReview({
 
   const hasInternalDetails =
     criticAssessment.reasons.length > 0 || groundingAssessment !== undefined;
+  const warningBadgeClass =
+    "rounded-full border border-[color:var(--status-warning-border)] bg-[color:var(--status-warning-bg)] px-2.5 py-1 text-[11px] text-[color:var(--status-warning-fg)]";
+  const successBadgeClass =
+    "rounded-full border border-[color:var(--status-success-border)] bg-[color:var(--status-success-bg)] px-2.5 py-1 text-[11px] text-[color:var(--status-success-fg)]";
 
   return (
     <details className="group space-y-2">
@@ -50,8 +54,8 @@ export function SafetyReview({
         <span
           className={
             criticAssessment.shouldReturnToInterview
-              ? "shrink-0 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] text-amber-700 dark:text-amber-300"
-              : "shrink-0 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-700 dark:text-emerald-300"
+              ? `shrink-0 ${warningBadgeClass}`
+              : `shrink-0 ${successBadgeClass}`
           }
         >
           {primaryStatus}
@@ -63,8 +67,8 @@ export function SafetyReview({
           <span
             className={
               criticAssessment.shouldReturnToInterview
-                ? "rounded-full bg-amber-500/10 px-2.5 py-1 text-amber-700 dark:text-amber-300"
-                : "rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"
+                ? warningBadgeClass
+                : successBadgeClass
             }
           >
             {primaryStatus}
@@ -72,8 +76,8 @@ export function SafetyReview({
           <span
             className={
               criticAssessment.isConfident
-                ? "rounded-full bg-emerald-500/10 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"
-                : "rounded-full bg-amber-500/10 px-2.5 py-1 text-amber-700 dark:text-amber-300"
+                ? successBadgeClass
+                : warningBadgeClass
             }
           >
             Confidence: {criticAssessment.confidenceLabel}

@@ -54,7 +54,7 @@ export function ChatMessageList({
             <MessageContent
               className={
                 message.role === "user"
-                  ? "!bg-primary !text-primary-foreground self-end mb-2 rounded-2xl rounded-br-md px-3 py-2 shadow-[0_2px_8px_rgba(27,125,126,0.15)]"
+                  ? "!bg-primary !text-primary-foreground self-end mb-2 rounded-2xl rounded-br-md px-3 py-2 shadow-[var(--shadow-brand)]"
                   : "self-start mb-2 rounded-2xl rounded-bl-md border border-[color:var(--glass-border)] bg-background/45 px-3 py-2 text-card-foreground shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm"
               }
             >

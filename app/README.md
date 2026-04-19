@@ -13,8 +13,7 @@ This folder contains the Next.js application entry points: the main page, global
 
 - `layout.tsx`: root layout shared by all routes
 - `page.tsx`: main chat and differential diagnosis page
-- `globals.css`: global styles and Tailwind layer setup
-- `theme.css`: theme tokens and shared visual variables
+- `globals.css`: global styles, Tailwind layer setup, and shared theme tokens
 - `api/`: internal application API routes for conversations, messages, and chat streaming
 
 ## Design Rules

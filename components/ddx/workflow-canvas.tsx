@@ -39,14 +39,16 @@ function WorkflowNode({ data }: NodeProps & { data: WorkflowNodeData }) {
       className={cn(
         "w-36 rounded-lg border bg-background px-3 py-2.5 text-left shadow-sm transition-colors",
         status === "idle" && "border-border",
-        status === "running" && "border-blue-500/60 bg-blue-500/5",
-        status === "complete" && "border-green-500/60 bg-green-500/5",
+        status === "running" &&
+          "border-[color:var(--status-running-border)] bg-[color:var(--status-running-bg)]",
+        status === "complete" &&
+          "border-[color:var(--status-success-border)] bg-[color:var(--status-success-bg)]",
         tone === "success" &&
         status === "complete" &&
-        "border-emerald-500/60 bg-emerald-500/5",
+        "border-[color:var(--status-success-border)] bg-[color:var(--status-success-bg)]",
         tone === "warning" &&
         status === "complete" &&
-        "border-amber-500/60 bg-amber-500/5",
+        "border-[color:var(--status-warning-border)] bg-[color:var(--status-warning-bg)]",
         status === "error" && "border-destructive/60 bg-destructive/5",
       )}
     >
@@ -78,12 +80,12 @@ function WorkflowNode({ data }: NodeProps & { data: WorkflowNodeData }) {
 function StatusDot({ status }: { status: StepStatus }) {
   if (status === "running") {
     return (
-      <Loader2Icon className="mt-0.5 size-3 shrink-0 animate-spin text-blue-500" />
+      <Loader2Icon className="mt-0.5 size-3 shrink-0 animate-spin text-[color:var(--status-running-fg)]" />
     );
   }
 
   if (status === "complete") {
-    return <CheckIcon className="mt-0.5 size-3 shrink-0 text-green-500" />;
+    return <CheckIcon className="mt-0.5 size-3 shrink-0 text-[color:var(--status-success-fg)]" />;
   }
 
   return (
