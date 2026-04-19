@@ -25,6 +25,15 @@ export function ChatComposer({
   onSubmit,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const canSubmit = Boolean(input.trim()) && !isLoading && Boolean(activeConversationId);
+
+  const handleSubmit = () => {
+    if (!canSubmit) {
+      return;
+    }
+
+    onSubmit();
+  };
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -40,7 +49,7 @@ export function ChatComposer({
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        onSubmit();
+        handleSubmit();
       }}
       className="shrink-0 border-t border-[color:var(--glass-border)]/80 bg-background/30 p-3 backdrop-blur-sm"
     >
@@ -62,9 +71,17 @@ export function ChatComposer({
           }
           onChange={(event) => onInputChange(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+            if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+              return;
+            }
+
+            if (event.metaKey || event.ctrlKey) {
+              return;
+            }
+
+            if (!event.shiftKey && !event.ctrlKey && !event.altKey) {
               event.preventDefault();
-              onSubmit();
+              handleSubmit();
             }
           }}
           disabled={isLoading || !activeConversationId}
@@ -72,14 +89,11 @@ export function ChatComposer({
         <Button
           size="icon-sm"
           type="submit"
-          disabled={!input.trim() || isLoading || !activeConversationId}
+          disabled={!canSubmit}
         >
           <ArrowUpIcon />
         </Button>
       </div>
-      <p className="mt-1.5 mr-3 text-right text-[11px] text-muted-foreground">
-        ⌘↵ to send
-      </p>
     </form>
   );
 }
