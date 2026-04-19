@@ -2,7 +2,7 @@
 
 /**
  * @fileoverview Renders the chat header with branding, model selection, and theme controls.
- * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
+ * @contributors Johnson Zhang, Aryan Wadhawan
  */
 
 import {
@@ -30,9 +30,9 @@ const MODEL_OPTIONS: Array<{
   provider: "google" | "anthropic";
   group: "Google" | "Anthropic";
 }> = [
-  { value: "gemini", label: "Gemini 2.5 Flash", provider: "google", group: "Google" },
-  { value: "claude", label: "Claude Sonnet 4.5", provider: "anthropic", group: "Anthropic" },
-];
+    { value: "gemini", label: "Gemini 2.5 Flash", provider: "google", group: "Google" },
+    { value: "claude", label: "Claude Sonnet 4.5", provider: "anthropic", group: "Anthropic" },
+  ];
 
 type ChatHeaderProps = {
   modelProvider: ModelProvider;
@@ -70,11 +70,18 @@ export function ChatHeader({
               variant="outline"
               size="sm"
               disabled={isLoading}
-              className="w-[220px] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/80 shadow-[inset_0_1px_0_var(--glass-highlight)]"
+              className="h-auto w-[220px] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/80 py-2 shadow-[inset_0_1px_0_var(--glass-highlight)]"
             >
-              <div className="flex min-w-0 items-center gap-2">
-                <ModelSelectorLogo provider={selectedModel.provider} />
-                <ModelSelectorName>{selectedModel.label}</ModelSelectorName>
+              <div className="min-w-0 text-left">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Model
+                </p>
+                <div className="flex min-w-0 items-center gap-2">
+                  <ModelSelectorLogo provider={selectedModel.provider} />
+                  <ModelSelectorName className="text-sm text-foreground">
+                    {selectedModel.label}
+                  </ModelSelectorName>
+                </div>
               </div>
               <ChevronDownIcon className="shrink-0 text-muted-foreground" />
             </Button>

@@ -5,10 +5,24 @@
  * @contributors Johnson Zhang
  */
 
-import { useSyncExternalStore } from "react";
+import { Button } from "@/components/ui/button";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
-type ThemeOption = "system" | "medichain";
+type ThemeOption = "system" | "light" | "dark" | "medichain";
+
+const THEME_OPTIONS: Array<{
+  value: ThemeOption;
+  label: string;
+}> = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "medichain", label: "Medichain" },
+];
 
 function subscribe() {
   return () => {};
@@ -16,22 +30,74 @@ function subscribe() {
 
 export function ThemeSelector() {
   const { theme, setTheme } = useTheme();
+  const [open, setOpen] = useState(false);
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
 
-  const value: ThemeOption = theme === "medichain" ? "medichain" : "system";
+  const value: ThemeOption =
+    theme === "light" || theme === "dark" || theme === "medichain"
+      ? theme
+      : "system";
+  const selectedTheme = useMemo(
+    () => THEME_OPTIONS.find((option) => option.value === value) ?? THEME_OPTIONS[0],
+    [value],
+  );
 
   return (
-    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-      <span>Theme</span>
-      <select
-        className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none ring-offset-background transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
-        value={mounted ? value : "system"}
-        onChange={(e) => setTheme(e.target.value)}
-        aria-label="Select theme"
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-auto w-[180px] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/80 py-2 shadow-[inset_0_1px_0_var(--glass-highlight)]"
+        >
+          <div className="min-w-0 text-left">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Theme
+            </p>
+            <span className="block truncate text-sm text-foreground">
+              {mounted ? selectedTheme.label : "System"}
+            </span>
+          </div>
+          <ChevronDownIcon className="shrink-0 text-muted-foreground" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent
+        aria-describedby={undefined}
+        className="gap-0 overflow-hidden border-none p-0 outline outline-border sm:max-w-xs"
+        showCloseButton={false}
       >
-        <option value="system">System</option>
-        <option value="medichain">Medichain</option>
-      </select>
-    </label>
+        <div className="flex items-center justify-between border-b border-border/70 px-3 py-2.5">
+          <DialogTitle className="text-sm font-medium">Select theme</DialogTitle>
+          <DialogClose className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <XIcon className="size-4" />
+            <span className="sr-only">Close</span>
+          </DialogClose>
+        </div>
+        <Command>
+          <CommandList>
+            <CommandGroup>
+              {THEME_OPTIONS.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  value={option.label}
+                  onSelect={() => {
+                    setTheme(option.value);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="flex-1 truncate">{option.label}</span>
+                  {value === option.value ? (
+                    <CheckIcon className="ml-auto size-4" />
+                  ) : (
+                    <div className="ml-auto size-4" />
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </DialogContent>
+    </Dialog>
   );
 }
