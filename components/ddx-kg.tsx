@@ -10,6 +10,7 @@ import {
   Background,
   BackgroundVariant,
   MarkerType,
+  Position,
   type Edge,
   type Node,
 } from "@xyflow/react";
@@ -102,8 +103,8 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
     position: { x: rowX(i, presentations.length), y: 0 },
     data: { label: name },
     style: nodeStyle("presentation"),
-    sourcePosition: "bottom" as const,
-    targetPosition: "top" as const,
+    sourcePosition: Position.Bottom,
+    targetPosition: Position.Top,
   }));
 
   const evidenceNodes: Node[] = evidence.map((e, i) => ({
@@ -116,8 +117,8 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
           : e.name,
     },
     style: nodeStyle(e.type),
-    sourcePosition: "bottom" as const,
-    targetPosition: "top" as const,
+    sourcePosition: Position.Bottom,
+    targetPosition: Position.Top,
   }));
 
   const diagnosisNode: Node = {
@@ -126,7 +127,7 @@ export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
     data: { label: diagnosisName },
     style: nodeStyle("diagnosis", true),
     type: "output",
-    targetPosition: "top" as const,
+    targetPosition: Position.Top,
   };
 
   const edgeStyle = {
