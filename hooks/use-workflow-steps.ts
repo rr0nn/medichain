@@ -1,5 +1,5 @@
 /**
- * @fileoverview Derives workflow step state from assistant step events in the chat transcript.
+ * @fileoverview Derives workflow step state from the transcript.
  * @contributors Johnson Zhang, Aryan Wadhawan
  */
 

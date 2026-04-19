@@ -39,6 +39,7 @@ export function ThemeSelector() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
+      {/* Theme Trigger - Opens the theme selection menu from the header. */}
       <DialogTrigger asChild>
         <Button
           type="button"
@@ -57,11 +58,14 @@ export function ThemeSelector() {
           <ChevronDownIcon className="shrink-0 text-muted-foreground" />
         </Button>
       </DialogTrigger>
+
+      {/* Theme Dialog - Lists the available appearance modes. */}
       <DialogContent
         aria-describedby={undefined}
         className="gap-0 overflow-hidden border-none p-0 outline outline-border sm:max-w-xs"
         showCloseButton={false}
       >
+        {/* Dialog Header - Labels the menu and provides a close action. */}
         <div className="flex items-center justify-between border-b border-[color:var(--glass-border)] bg-background/55 px-3 py-2.5 backdrop-blur-sm">
           <DialogTitle className="text-sm font-medium">Select theme</DialogTitle>
           <DialogClose className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
@@ -69,6 +73,8 @@ export function ThemeSelector() {
             <span className="sr-only">Close</span>
           </DialogClose>
         </div>
+
+        {/* Theme Options - Lets users choose between light and dark mode. */}
         <Command>
           <CommandList>
             <CommandGroup>

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @fileoverview Shows the consultation list and controls for switching or starting sessions.
+ * @fileoverview Renders the consultation sidebar.
  * @contributors Aryan Wadhawan
  */
 
@@ -54,6 +54,7 @@ export function ConversationSidebar({
       "glass flex min-h-0 shrink-0 flex-col rounded-[28px] border border-[color:var(--glass-border)] shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-md transition-all duration-200",
       collapsed ? "w-12" : "w-60"
     )}>
+      {/* Sidebar Header - Shows the title and main sidebar actions. */}
       <div className="flex items-center justify-between px-2 py-3 border-b border-[color:var(--glass-border)] shrink-0">
         {!collapsed && (
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">
@@ -86,6 +87,7 @@ export function ConversationSidebar({
       </div>
 
       {collapsed && (
+        /* Collapsed Actions - Keeps the new chat button visible in compact mode. */
         <div className="flex flex-col items-center gap-2 pt-2">
           <Button
             size="icon-sm"
@@ -104,6 +106,7 @@ export function ConversationSidebar({
         ) : conversations.length === 0 ? (
           <ConversationSidebarEmptyState onNew={onNew} />
         ) : (
+          /* Conversation List - Displays each saved consultation entry. */
           <ul className="flex flex-col gap-0.5 p-2">
             {conversations.map((conversation) => (
               <ConversationSidebarItem

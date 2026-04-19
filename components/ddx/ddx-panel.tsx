@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @fileoverview Displays workflow progress, safety review output, and ranked differentials.
+ * @fileoverview Renders the differential diagnosis panel.
  * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
  */
 
@@ -69,6 +69,7 @@ export function DdxPanel({
           </div>
         </header>
 
+        {/* Workflow Flowchart - Shows where the reasoning pipeline is up to. */}
         <section className="space-y-2">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -84,6 +85,8 @@ export function DdxPanel({
             criticAssessment={criticAssessment}
           />
         </section>
+
+        {/* Safety Review - Summarizes confidence and grounding checks. */}
         <section>
           <SafetyReview
             criticAssessment={criticAssessment}
@@ -91,6 +94,7 @@ export function DdxPanel({
           />
         </section>
 
+        {/* Differential List - Shows the ranked diagnosis suggestions. */}
         <section className="mt-2 border-t border-[color:var(--glass-border)]/70 pt-5 space-y-2">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -105,6 +109,7 @@ export function DdxPanel({
           />
         </section>
 
+        {/* Evidence Summary - Shows matched presentations, categories, and features. */}
         <section className="mt-2 border-t border-[color:var(--glass-border)]/70 pt-5">
           <EvidenceSummary
             matchedClinicalPresentations={matchedClinicalPresentations}

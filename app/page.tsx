@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @fileoverview Powers the main consultation screen, including chat, workflow state, and differential results.
+ * @fileoverview Renders the main consultation screen layout.
  * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Jason Yang, John Kollannur, Aryan Wadhawan
  */
 
@@ -39,6 +39,7 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen gap-3 overflow-hidden p-3">
+      {/* Conversation Sidebar - Shows saved consultations and new chat controls. */}
       <ConversationSidebar
         activeId={activeConversationId}
         onSelect={actions.selectConversation}
@@ -52,6 +53,7 @@ export default function Chat() {
           onModelChange={setModelProvider}
           isLoading={isLoading}
         />
+        {/* Chat Workspace - Holds the conversation transcript and input composer. */}
         <div className="glass flex min-h-0 flex-1 flex-col overflow-hidden rounded-[30px] border border-[color:var(--glass-border)] shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-md">
           <Conversation className="flex-1 min-h-0 bg-transparent">
             <ChatMessageList
@@ -74,6 +76,7 @@ export default function Chat() {
         </div>
       </div>
 
+      {/* Differential Panel - Shows workflow status, ranked diagnoses, and evidence. */}
       <div className="flex min-h-0 min-w-0 flex-[1] flex-col">
         <DdxPanel
           steps={steps}

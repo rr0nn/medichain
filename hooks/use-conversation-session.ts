@@ -1,5 +1,5 @@
 /**
- * @fileoverview Manages URL-synced conversation lifecycle state for the consultation page.
+ * @fileoverview Manages consultation session state for the page.
  * @contributors Johnson Zhang
  */
 
@@ -118,6 +118,7 @@ export function useConversationSession(
 
     void (async () => {
       try {
+        // First Message Sync - Reload after sending so the new conversation shows immediately.
         await sendMessage({ text: pendingInitialMessage });
 
         if (!cancelled) {

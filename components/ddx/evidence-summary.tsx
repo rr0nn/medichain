@@ -26,6 +26,7 @@ function EvidenceSection({
   children: ReactNode;
 }) {
   return (
+    /* Evidence Group - Displays one evidence category within the summary grid. */
     <div className="space-y-2 rounded-xl border border-[color:var(--glass-border)] bg-background/45 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
       <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
         {title}
@@ -55,6 +56,7 @@ export function EvidenceSummary({
 
   return (
     <details className="group space-y-2">
+      {/* Evidence Summary Header - Shows the total matched evidence count. */}
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 px-3 py-2.5 text-left shadow-[inset_0_1px_0_var(--glass-highlight)] [&::-webkit-details-marker]:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <ChevronRight
@@ -75,6 +77,7 @@ export function EvidenceSummary({
         </span>
       </summary>
 
+      {/* Evidence Grid - Splits matched evidence into presentations, categories, and features. */}
       <div className="grid gap-3 lg:grid-cols-3">
         <EvidenceSection
           title="Presentations"

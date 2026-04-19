@@ -36,6 +36,7 @@ export function SafetyReview({
 
   return (
     <details className="group space-y-2">
+      {/* Safety Summary - Shows the current review status at a glance. */}
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 px-3 py-2.5 text-left shadow-[inset_0_1px_0_var(--glass-highlight)] [&::-webkit-details-marker]:hidden">
         <div className="flex min-w-0 items-center gap-2">
           <ChevronRight
@@ -62,7 +63,9 @@ export function SafetyReview({
         </span>
       </summary>
 
+      {/* Safety Details - Expands into confidence, grounding, and review notes. */}
       <div className="space-y-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
+        {/* Status Badges - Summarizes review outcome and grounding state. */}
         <div className="flex flex-wrap gap-2 text-xs">
           <span
             className={
@@ -89,6 +92,7 @@ export function SafetyReview({
           ) : null}
         </div>
         {hasInternalDetails ? (
+          /* Review Metadata - Shows scores, counts, and supporting notes. */
           <div className="space-y-3 rounded-md border border-[color:var(--glass-border)] bg-background/60 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
             <div className="flex flex-wrap gap-2 text-xs">
               {criticAssessment.topDifferentialScore !== null ? (
@@ -127,6 +131,7 @@ export function SafetyReview({
             </div>
 
             {criticAssessment.reasons.length > 0 ? (
+              /* Review Notes - Lists the critic reasons behind the current status. */
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">
                   Review notes
@@ -140,6 +145,7 @@ export function SafetyReview({
             ) : null}
 
             {groundingAssessment?.reasons.length ? (
+              /* Audit Notes - Lists grounding-specific observations. */
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">
                   Audit notes

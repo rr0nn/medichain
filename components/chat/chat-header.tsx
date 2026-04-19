@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @fileoverview Renders the chat header with branding, model selection, and theme controls.
+ * @fileoverview Renders the chat header controls.
  * @contributors Johnson Zhang, Aryan Wadhawan
  */
 
@@ -47,6 +47,7 @@ export function ChatHeader({
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between px-4">
+      {/* Brand Block - Shows the product identity for the chat workspace. */}
       <div className="inline-flex items-center gap-3 rounded-[22px] border border-[color:var(--glass-border)] bg-[color:var(--glass-bg-strong)] px-3 py-2 shadow-[inset_0_1px_0_var(--glass-highlight),var(--glass-shadow)] backdrop-blur-md">
         {/* Simple placeholder brand mark for the prototype header. */}
         <span className="inline-flex size-8 items-center justify-center rounded-2xl bg-primary/12 text-primary shadow-[inset_0_1px_0_var(--glass-highlight)]">
@@ -61,11 +62,14 @@ export function ChatHeader({
           </p>
         </div>
       </div>
+
+      {/* Header Controls - Groups model selection and theme controls. */}
       <div className="flex items-center gap-3">
         <ModelSelector
           open={isModelSelectorOpen}
           onOpenChange={setIsModelSelectorOpen}
         >
+          {/* Model Picker - Lets users switch the active model for this consultation. */}
           <ModelSelectorTrigger asChild>
             <Button
               type="button"
@@ -88,6 +92,8 @@ export function ChatHeader({
               <ChevronDownIcon className="shrink-0 text-muted-foreground" />
             </Button>
           </ModelSelectorTrigger>
+
+          {/* Model Menu - Organizes available models by provider. */}
           <ModelSelectorContent title="Select model" className="sm:max-w-sm">
             <ModelSelectorInput placeholder="Search models..." />
             <ModelSelectorList>

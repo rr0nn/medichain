@@ -27,6 +27,7 @@ export function ConversationSidebarItem({
 }: ConversationSidebarItemProps) {
   return (
     <li>
+      {/* Conversation Row - Selects a saved consultation from the sidebar. */}
       <div
         role="button"
         tabIndex={0}
@@ -55,6 +56,8 @@ export function ConversationSidebarItem({
             )}
           </p>
         </div>
+
+        {/* Delete Action - Appears on hover to remove the consultation. */}
         <button
           onClick={(event) => onDelete(event, conversation.id)}
           className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"

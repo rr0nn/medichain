@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @fileoverview Renders the consultation message list, empty state, and assistant loading state.
+ * @fileoverview Renders the consultation message list.
  * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
  */
 
@@ -52,6 +52,7 @@ export function ChatMessageList({
   return (
     <ConversationContent className="gap-6 px-5 py-5">
       {loadingMessages ? (
+        /* Loading State - Uses skeleton bubbles while a conversation is loading. */
         <div className="flex flex-col gap-3 p-4">
           {[1, 2, 3].map((index) => (
             <div
@@ -66,6 +67,7 @@ export function ChatMessageList({
           title={emptyStateTitle}
           description={emptyStateDescription}
         >
+          {/* Empty State - Helps users start with example intake prompts. */}
           <div className="flex w-full max-w-lg flex-col gap-4 text-left">
             <div className="flex items-start gap-3">
               <div className="rounded-2xl border border-[color:var(--glass-border)] bg-background/55 p-2 text-primary shadow-[inset_0_1px_0_var(--glass-highlight)]">
@@ -102,6 +104,7 @@ export function ChatMessageList({
             <MessageContent
               className={message.role === "user" ? userBubbleClass : assistantBubbleClass}
             >
+              {/* Message Bubbles - Shows user-visible transcript content only. */}
               {message.parts.map((part, index) => {
                 if (part.type === "text") {
                   return <MessageResponse key={index}>{part.text}</MessageResponse>;
@@ -112,6 +115,7 @@ export function ChatMessageList({
                   getToolName(part) === "runDifferentialDiagnosis" &&
                   (part.state === "input-streaming" || part.state === "input-available")
                 ) {
+                  // DDx Status Cue - Keeps the chat lightweight while the rich result appears on the right.
                   return (
                     <p
                       key={index}
@@ -130,6 +134,7 @@ export function ChatMessageList({
       )}
 
       {status === "submitted" && (
+        /* Assistant Loading - Shows a pending response indicator in the transcript. */
         <Message from="assistant">
           <MessageContent className={assistantBubbleClass}>
             <div className="flex gap-1 py-1">

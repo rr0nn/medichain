@@ -343,6 +343,7 @@ function EvidenceSubgraphNode({
   const { bg, border } = TIER_STYLE[data.tier];
 
   return (
+    /* Graph Node - Shows one presentation, evidence, or diagnosis node. */
     <div
       title={data.title ?? data.label}
       style={{
@@ -391,6 +392,7 @@ function AutoViewport({
   const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
+    // Auto Fit - Keeps the evidence graph framed inside the available canvas size.
     if (!viewportInitialized) {
       return;
     }
@@ -458,6 +460,8 @@ export function EvidenceSubgraph({
   diagnosisName,
 }: EvidenceSubgraphProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Graph Layout - Builds the positioned nodes and edges for the current diagnosis.
   const layout = useMemo(
     () => buildGraphLayout(diagnosis, diagnosisName),
     [diagnosis, diagnosisName],
@@ -465,6 +469,7 @@ export function EvidenceSubgraph({
 
   if (diagnosis.length === 0) {
     return (
+      /* Empty Graph State - Shows when there are no evidence paths to draw. */
       <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
         No evidence paths to visualize.
       </div>
@@ -472,6 +477,7 @@ export function EvidenceSubgraph({
   }
 
   return (
+    /* Evidence Graph - Visualizes how matched evidence supports the selected diagnosis. */
     <div className="h-96 w-full rounded-[22px] border border-[color:var(--glass-border)] bg-background/80 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
       <div
         ref={canvasRef}
@@ -492,12 +498,15 @@ export function EvidenceSubgraph({
           maxZoom={FIT_MAX_ZOOM}
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         >
+          {/* Graph Background - Adds a subtle dot grid for spatial context. */}
           <Background
             variant={BackgroundVariant.Dots}
             gap={20}
             size={1}
             color="var(--kg-bg-dot)"
           />
+
+          {/* Auto Viewport - Re-centers the graph when the layout or canvas size changes. */}
           <AutoViewport
             bounds={layout.bounds}
             containerRef={canvasRef}

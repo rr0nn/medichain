@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * @fileoverview Renders the chat composer used to submit new consultation messages.
+ * @fileoverview Renders the chat composer.
  * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
  */
 
@@ -61,7 +61,9 @@ export function ChatComposer({
       }}
       className="shrink-0 border-t border-[color:var(--glass-border)]/80 bg-background/30 p-3 backdrop-blur-sm"
     >
+      {/* Composer Shell - Keeps the intake form visually separated from the transcript. */}
       <div className="rounded-[26px] border border-[color:var(--glass-border)] bg-background/65 px-3 py-3 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm transition-[border-color,box-shadow,background-color] focus-within:border-[color:color-mix(in_oklch,var(--ring)_48%,var(--glass-border))] focus-within:bg-background/75 focus-within:shadow-[inset_0_1px_0_var(--glass-highlight),0_0_0_1px_var(--ring),var(--shadow-brand)]">
+        {/* Composer Header - Labels the input and shows keyboard guidance. */}
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
           <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
             Patient Intake
@@ -70,6 +72,8 @@ export function ChatComposer({
             Enter to send · Shift+Enter for a new line
           </p>
         </div>
+
+        {/* Composer Input Row - Combines the textarea with the send action. */}
         <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
@@ -98,6 +102,8 @@ export function ChatComposer({
             }}
             disabled={isLoading}
           />
+
+          {/* Send Button - Submits the current intake note when input is valid. */}
           <Button
             size="icon-sm"
             type="submit"

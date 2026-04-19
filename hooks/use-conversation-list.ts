@@ -1,5 +1,5 @@
 /**
- * @fileoverview Loads and manages the sidebar conversation list state.
+ * @fileoverview Manages conversation list state for the sidebar.
  * @contributors Johnson Zhang
  */
 
@@ -41,6 +41,7 @@ export function useConversationList({
   const [collapsed, setCollapsed] = useState(false);
 
   const fetchConversations = useCallback(async () => {
+    // Conversation Fetch - Refreshes the sidebar list from the API.
     setLoading(true);
 
     try {
@@ -56,6 +57,7 @@ export function useConversationList({
   }, [fetchConversations, refreshToken]);
 
   const handleDeleteConversation = useCallback(async (id: string) => {
+    // Delete Flow - Removes the conversation and redirects if the active one disappears.
     await deleteConversation(id);
 
     setConversations((previousConversations) => {
@@ -81,6 +83,7 @@ export function useConversationList({
     loading,
     actions: {
       deleteConversation: handleDeleteConversation,
+      // Collapse Toggle - Switches the sidebar between compact and expanded layouts.
       toggleCollapsed: () => setCollapsed((value) => !value),
     },
   };

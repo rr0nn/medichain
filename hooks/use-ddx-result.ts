@@ -1,5 +1,5 @@
 /**
- * @fileoverview Extracts the latest differential diagnosis tool result from assistant messages.
+ * @fileoverview Extracts the latest differential diagnosis result from the transcript.
  * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
  */
 

@@ -7,6 +7,7 @@
 
 export function ConversationSidebarLoadingState() {
   return (
+    /* Sidebar Loading State - Uses simple placeholders while the list is loading. */
     <div className="flex flex-col gap-2 p-3">
       {[1, 2, 3].map((index) => (
         <div

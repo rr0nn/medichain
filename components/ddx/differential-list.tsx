@@ -65,6 +65,7 @@ function EvidenceMetaList({
   emptyLabel: string;
 }) {
   return (
+    /* Evidence Meta - Displays short supporting text chips for one path section. */
     <div className="space-y-1.5">
       <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
@@ -137,6 +138,7 @@ export function DifferentialList({
 
   if (differentials.length === 0) {
     return (
+      /* Empty Differential State - Prompts the user to add more intake detail. */
       <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-[color:var(--glass-border)] bg-background/45 p-8 text-center shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm">
         <p className="text-sm font-medium">
           No differential diagnoses available yet
@@ -167,6 +169,7 @@ export function DifferentialList({
 
         return (
           <details key={d.diagnosisKey} className="group space-y-2">
+            {/* Differential Card - Summarizes one ranked diagnosis result. */}
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 px-3 py-2.5 text-left shadow-[inset_0_1px_0_var(--glass-highlight)] [&::-webkit-details-marker]:hidden">
               <div className="flex min-w-0 items-center gap-2">
                 <ChevronRight
@@ -194,7 +197,9 @@ export function DifferentialList({
               </span>
             </summary>
 
+            {/* Differential Details - Expands into graph view and per-path evidence. */}
             <div className="space-y-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 px-3 py-3 shadow-[inset_0_1px_0_var(--glass-highlight)]">
+              {/* Evidence Subgraph - Visualizes how the evidence connects to the diagnosis. */}
               <div className="space-y-2">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Evidence Subgraph
@@ -205,6 +210,7 @@ export function DifferentialList({
                 />
               </div>
 
+              {/* Evidence Details - Breaks the diagnosis support into individual paths. */}
               <details className="group/evidence-details rounded-md border border-[color:var(--glass-border)] bg-background/45 shadow-[inset_0_1px_0_var(--glass-highlight)]">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-left [&::-webkit-details-marker]:hidden">
                   <div className="flex min-w-0 items-center gap-2">
@@ -235,6 +241,7 @@ export function DifferentialList({
                         key={`${d.diagnosisKey}-${path.evidenceType}-${path.clinicalPresentationKey}-${path.categoryKey ?? path.featureKey}-${pathIndex}`}
                         className="space-y-3 rounded-xl border border-[color:var(--glass-border)] bg-background/60 p-3 shadow-[inset_0_1px_0_var(--glass-highlight)]"
                       >
+                        {/* Supporting Path - Shows one presentation-to-diagnosis evidence chain. */}
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -284,6 +291,7 @@ export function DifferentialList({
                           </span>
                         </div>
 
+                        {/* Path Breakdown - Splits presentation evidence from category/feature evidence. */}
                         <div className="grid gap-3 lg:grid-cols-2">
                           <div className="space-y-3 rounded-lg border border-[color:var(--glass-border)] bg-background/45 p-3">
                             <div>

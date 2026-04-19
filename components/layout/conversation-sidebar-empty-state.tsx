@@ -17,6 +17,7 @@ export function ConversationSidebarEmptyState({
   onNew,
 }: ConversationSidebarEmptyStateProps) {
   return (
+    /* Empty Sidebar State - Guides users to start their first consultation. */
     <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground">
       <MessageSquareIcon className="size-8 opacity-40" />
       <p className="text-xs">No consultations yet</p>
