@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Renders the chat header with branding, model selection, and theme controls.
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
+ */
+
 import {
   ModelSelector,
   ModelSelectorContent,

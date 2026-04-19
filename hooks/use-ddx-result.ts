@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Extracts the latest differential diagnosis tool result from assistant messages.
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
+ */
+
 import { getToolName, isToolUIPart } from "ai";
 import type { UIMessage } from "ai";
 

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Renders the decorative background layer used across the app shell.
+ * @contributors Aryan Wadhawan
+ */
+
 export function BackgroundLayer() {
   return (
     <div

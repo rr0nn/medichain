@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Renders the consultation message list, empty state, and assistant loading state.
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
+ */
+
 import {
   ConversationContent,
   ConversationEmptyState,

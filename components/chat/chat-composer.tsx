@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * @fileoverview Renders the chat composer used to submit new consultation messages.
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
+ */
+
 import { Button } from "@/components/ui/button";
 import { ArrowUpIcon } from "lucide-react";
 import { useEffect, useRef } from "react";

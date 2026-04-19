@@ -2,6 +2,7 @@
 
 /**
  * @fileoverview Displays critic and grounding assessments for the DDx workflow.
+ * @contributors Johnson Zhang
  */
 
 import { ChevronRight } from "lucide-react";

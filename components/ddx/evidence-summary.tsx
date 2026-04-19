@@ -2,6 +2,7 @@
 
 /**
  * @fileoverview Displays matched clinical presentations, categories, and features.
+ * @contributors Johnson Zhang
  */
 
 import { ChevronRight } from "lucide-react";

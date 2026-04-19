@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Derives workflow step state from assistant step events in the chat transcript.
+ * @contributors Johnson Zhang, Aryan Wadhawan
+ */
+
 import { useMemo } from "react";
 import type { UIMessage } from "ai";
 
