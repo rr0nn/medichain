@@ -19,20 +19,11 @@ import {
 } from "@/components/ai-elements/model-selector";
 import { ThemeSelector } from "@/components/theme/theme-selector";
 import { Button } from "@/components/ui/button";
+import { MODEL_OPTIONS } from "@/lib/chat/constants";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { ModelProvider } from "@/server/ai/core/models";
-
-const MODEL_OPTIONS: Array<{
-  value: ModelProvider;
-  label: string;
-  provider: "google" | "anthropic";
-  group: "Google" | "Anthropic";
-}> = [
-    { value: "gemini", label: "Gemini 2.5 Flash", provider: "google", group: "Google" },
-    { value: "claude", label: "Claude Sonnet 4.5", provider: "anthropic", group: "Anthropic" },
-  ];
 
 type ChatHeaderProps = {
   modelProvider: ModelProvider;

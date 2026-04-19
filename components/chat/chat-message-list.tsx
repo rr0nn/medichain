@@ -14,6 +14,7 @@ import {
   MessageContent,
   MessageResponse,
 } from "@/components/ai-elements/message";
+import { STARTER_PROMPTS } from "@/lib/chat/constants";
 import { getToolName, isToolUIPart } from "ai";
 import type { UIMessage } from "ai";
 import { ClipboardListIcon, StethoscopeIcon } from "lucide-react";
@@ -26,12 +27,6 @@ type ChatMessageListProps = {
   status: string;
   onPromptSelect?: (value: string) => void;
 };
-
-const STARTER_PROMPTS = [
-  "52-year-old with crushing central chest pain radiating to the left arm for 2 hours.",
-  "Child with fever, cough, increased work of breathing, and reduced oral intake.",
-  "Progressive right lower quadrant pain with nausea, anorexia, and guarding.",
-];
 
 export function ChatMessageList({
   messages,

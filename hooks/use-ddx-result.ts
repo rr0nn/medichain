@@ -3,9 +3,9 @@
  * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
  */
 
-import { getToolName, isToolUIPart } from "ai";
 import type { UIMessage } from "ai";
 
+import { getLatestToolOutput } from "@/lib/chat/transcript";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
@@ -36,40 +36,25 @@ const EMPTY_RESULT: DdxResult = {
 };
 
 export function useDdxResult(messages: UIMessage[]): DdxResult {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const message = messages[i];
-    if (message.role !== "assistant") {
-      continue;
-    }
+  const output = getLatestToolOutput<{
+    differentials?: DifferentialDiagnosis[];
+    matchedClinicalPresentations?: ClinicalPresentationMatch[];
+    matchedCategories?: CategoryMatch[];
+    matchedFeatures?: FeatureMatch[];
+    criticAssessment?: CriticAssessment;
+    groundingAssessment?: GroundingAssessment;
+  }>(messages, "runDifferentialDiagnosis");
 
-    for (const part of message.parts) {
-      if (
-        isToolUIPart(part) &&
-        getToolName(part) === "runDifferentialDiagnosis" &&
-        part.state === "output-available"
-      ) {
-        const output = part.output as
-          | {
-              differentials?: DifferentialDiagnosis[];
-              matchedClinicalPresentations?: ClinicalPresentationMatch[];
-              matchedCategories?: CategoryMatch[];
-              matchedFeatures?: FeatureMatch[];
-              criticAssessment?: CriticAssessment;
-              groundingAssessment?: GroundingAssessment;
-            }
-          | undefined;
-
-        return {
-          differentials: output?.differentials ?? [],
-          matchedClinicalPresentations:
-            output?.matchedClinicalPresentations ?? [],
-          matchedCategories: output?.matchedCategories ?? [],
-          matchedFeatures: output?.matchedFeatures ?? [],
-          criticAssessment: output?.criticAssessment,
-          groundingAssessment: output?.groundingAssessment,
-        };
-      }
-    }
+  if (output) {
+    return {
+      differentials: output.differentials ?? [],
+      matchedClinicalPresentations:
+        output.matchedClinicalPresentations ?? [],
+      matchedCategories: output.matchedCategories ?? [],
+      matchedFeatures: output.matchedFeatures ?? [],
+      criticAssessment: output.criticAssessment,
+      groundingAssessment: output.groundingAssessment,
+    };
   }
 
   return EMPTY_RESULT;
