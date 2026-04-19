@@ -22,7 +22,7 @@ export interface ConversationSummary {
 interface ConversationSidebarProps {
   activeId: string | null;
   onSelect: (id: string) => void;
-  onNew: (id: string) => void;
+  onNew: () => void;
   refreshToken?: number;
 }
 
@@ -34,7 +34,6 @@ export function ConversationSidebar({
 }: ConversationSidebarProps) {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const fetchConversations = useCallback(async () => {
@@ -53,20 +52,6 @@ export function ConversationSidebar({
     void fetchConversations();
   }, [fetchConversations, refreshToken]);
 
-  const handleNew = async () => {
-    setCreating(true);
-    try {
-      const res = await fetch("/api/conversations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
-      if (res.ok) {
-        const conv = await res.json() as ConversationSummary;
-        setConversations((prev) => [conv, ...prev]);
-        onNew(conv.id);
-      }
-    } finally {
-      setCreating(false);
-    }
-  };
-
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     await fetch(`/api/conversations/${id}`, { method: "DELETE" });
@@ -76,7 +61,7 @@ export function ConversationSidebar({
       if (remaining.length > 0) {
         onSelect(remaining[0].id);
       } else {
-        onNew("");
+        onNew();
       }
     }
   };
@@ -97,8 +82,7 @@ export function ConversationSidebar({
             <Button
               size="icon-sm"
               variant="ghost"
-              onClick={handleNew}
-              disabled={creating}
+              onClick={onNew}
               title="New consultation"
             >
               <PlusIcon className="size-4" />
@@ -123,8 +107,7 @@ export function ConversationSidebar({
           <Button
             size="icon-sm"
             variant="ghost"
-            onClick={handleNew}
-            disabled={creating}
+            onClick={onNew}
             title="New consultation"
           >
             <PlusIcon className="size-4" />
@@ -143,7 +126,7 @@ export function ConversationSidebar({
           <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-muted-foreground">
             <MessageSquareIcon className="size-8 opacity-40" />
             <p className="text-xs">No consultations yet</p>
-            <Button size="sm" variant="outline" onClick={handleNew} disabled={creating}>
+            <Button size="sm" variant="outline" onClick={onNew}>
               Start one
             </Button>
           </div>

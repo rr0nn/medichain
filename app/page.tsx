@@ -8,6 +8,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import type { UIMessage } from "ai";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState, useCallback, useEffect } from "react";
 import {
   Conversation,
@@ -23,11 +24,13 @@ import { useDdxResult } from "@/hooks/use-ddx-result";
 import { useWorkflowSteps } from "@/hooks/use-workflow-steps";
 
 export default function Chat() {
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [modelProvider, setModelProvider] = useState<ModelProvider>("gemini");
   const [conversationListVersion, setConversationListVersion] = useState(0);
   const [pendingInitialMessage, setPendingInitialMessage] = useState<string | null>(null);
+  const activeConversationId = searchParams.get("conversationId");
   const modelProviderRef = useRef<ModelProvider>(modelProvider);
   modelProviderRef.current = modelProvider;
 
@@ -55,24 +58,32 @@ export default function Chat() {
       if (res.ok) {
         const msgs = await res.json() as UIMessage[];
         setMessages(msgs);
+      } else {
+        setMessages([]);
       }
     } finally {
       setLoadingMessages(false);
     }
   }, [setMessages]);
 
-  const handleSelectConversation = useCallback((id: string) => {
-    setActiveConversationId(id);
-    void loadConversation(id);
-  }, [loadConversation]);
-
-  const handleNewConversation = useCallback((id: string) => {
-    setActiveConversationId(id || null);
-    setMessages([]);
-  }, [setMessages]);
-
   const steps = useWorkflowSteps(messages, status);
   const ddxResult = useDdxResult(messages);
+
+  useEffect(() => {
+    if (!activeConversationId) {
+      setMessages([]);
+      setLoadingMessages(false);
+      return;
+    }
+
+    if (pendingInitialMessage) {
+      setMessages([]);
+      setLoadingMessages(false);
+      return;
+    }
+
+    void loadConversation(activeConversationId);
+  }, [activeConversationId, loadConversation, pendingInitialMessage, setMessages]);
 
   useEffect(() => {
     if (!activeConversationId || !pendingInitialMessage) {
@@ -99,6 +110,36 @@ export default function Chat() {
     return conversation.id;
   }, []);
 
+  const setConversationInUrl = useCallback((id: string | null, replace = false) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (id) {
+      params.set("conversationId", id);
+    } else {
+      params.delete("conversationId");
+    }
+
+    const query = params.toString();
+    const href = query ? `/?${query}` : "/";
+
+    if (replace) {
+      router.replace(href);
+      return;
+    }
+
+    router.push(href);
+  }, [router, searchParams]);
+
+  const handleSelectConversation = useCallback((id: string) => {
+    setConversationInUrl(id);
+  }, [setConversationInUrl]);
+
+  const handleNewConversation = useCallback(() => {
+    setPendingInitialMessage(null);
+    setInput("");
+    setConversationInUrl(null);
+  }, [setConversationInUrl]);
+
   const handleSubmit = useCallback(async () => {
     const nextMessage = input.trim();
     if (!nextMessage || isLoading) return;
@@ -111,7 +152,7 @@ export default function Chat() {
       try {
         const conversationId = await createConversation(title);
         setPendingInitialMessage(nextMessage);
-        setActiveConversationId(conversationId);
+        setConversationInUrl(conversationId, true);
       } catch (error) {
         console.error("[chat] Failed to create conversation:", error);
         setInput(nextMessage);
@@ -120,7 +161,7 @@ export default function Chat() {
     }
 
     sendMessage({ text: nextMessage });
-  }, [activeConversationId, createConversation, input, isLoading, sendMessage]);
+  }, [activeConversationId, createConversation, input, isLoading, sendMessage, setConversationInUrl]);
 
   return (
     <div className="flex h-screen gap-3 overflow-hidden p-3">
