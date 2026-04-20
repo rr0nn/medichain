@@ -112,6 +112,23 @@ describe("runSafetyWorkflow", () => {
     ).not.toHaveBeenCalled();
   });
 
+  it("passes the selected diagnosis model provider to the ddx workflow", async () => {
+    mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
+      matchedClinicalPresentations: [],
+      matchedCategories: [],
+      matchedFeatures: [],
+      differentials: [],
+    });
+
+    await runSafetyWorkflow("fever and rigors", undefined, "openai");
+
+    expect(mocks.mockRunDifferentialDiagnosisWorkflow).toHaveBeenCalledWith(
+      "fever and rigors",
+      undefined,
+      "openai",
+    );
+  });
+
   it("routes to needs_more_information when the top differential score is too low", async () => {
     mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
       matchedClinicalPresentations: [

@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   mockGenerateText: vi.fn(),
-  mockGetDefaultChatModel: vi.fn(),
+  mockGetChatModel: vi.fn(),
 }));
 
 vi.mock("ai", () => ({
@@ -15,7 +15,7 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("@/server/ai/core/models", () => ({
-  getDefaultChatModel: mocks.mockGetDefaultChatModel,
+  getChatModel: mocks.mockGetChatModel,
 }));
 
 import { composePatientResponse } from "./patient-response";
@@ -26,7 +26,7 @@ describe("composePatientResponse", () => {
   });
 
   it("builds a patient-facing prompt from the grounded safety result", async () => {
-    mocks.mockGetDefaultChatModel.mockReturnValue({ id: "fake-chat-model" });
+    mocks.mockGetChatModel.mockReturnValue({ id: "fake-chat-model" });
     mocks.mockGenerateText.mockResolvedValue({
       text: "This pattern may fit a few possibilities, including appendicitis.",
     });
@@ -62,11 +62,12 @@ describe("composePatientResponse", () => {
         topDiagnosisHasFeatureEvidence: true,
       },
       candidateFeatures: [],
-    });
+    }, "gpt-5-mini");
 
     expect(text).toBe(
       "This pattern may fit a few possibilities, including appendicitis.",
     );
+    expect(mocks.mockGetChatModel).toHaveBeenCalledWith("gpt-5-mini");
     expect(mocks.mockGenerateText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: { id: "fake-chat-model" },

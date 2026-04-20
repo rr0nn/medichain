@@ -6,7 +6,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
+import { getDiagnosisModel } from "@/server/ai/core/models";
 import type { CategoryRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const categoryMatchSchema = z.object({
@@ -15,7 +15,8 @@ const categoryMatchSchema = z.object({
       key: z.string(),
       // Model-reported match strength on a 0..1 scale. Only ranking signal, not a calibrated probability.
       score: z.number().min(0).max(1),
-      matchedText: z.array(z.string()).default([]),
+      // Keep this required because OpenAI strict structured outputs reject optional/default fields.
+      matchedText: z.array(z.string()),
     })
   ),
 });
@@ -23,10 +24,11 @@ const categoryMatchSchema = z.object({
 export async function matchCategories(
   patientDescription: string,
   clinicalPresentation: { key: string; name: string },
-  categories: CategoryRecord[]
+  categories: CategoryRecord[],
+  diagnosisModelId?: string,
 ) {
   const { output } = await generateText({
-    model: getDefaultDiagnosisModel(),
+    model: getDiagnosisModel(diagnosisModelId),
     prompt: `
 You are matching patient wording to category nodes within one clinical presentation.
 

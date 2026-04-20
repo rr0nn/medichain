@@ -52,10 +52,12 @@ function mergeSafetyAssessments(input: {
 export async function runSafetyWorkflow(
   patientDescription: string,
   onStep?: OnStep,
+  diagnosisModelId?: string,
 ): Promise<SafetyWorkflowResult> {
   const ddxResult = await runDifferentialDiagnosisWorkflow(
     patientDescription,
     onStep,
+    diagnosisModelId,
   );
 
   onStep?.({ type: "step", step: "safety_review", status: "running" });

@@ -5,7 +5,7 @@
 
 import { generateText } from "ai";
 
-import { getDefaultChatModel } from "@/server/ai/core/models";
+import { getChatModel } from "@/server/ai/core/models";
 import type { SafetyWorkflowResult } from "@/server/ai/workflows/safety-workflow/types";
 
 /**
@@ -16,6 +16,7 @@ import type { SafetyWorkflowResult } from "@/server/ai/workflows/safety-workflow
 export async function composePatientResponse(
   patientDescription: string,
   result: SafetyWorkflowResult,
+  chatModelId?: string,
 ): Promise<string> {
   const topDifferentials = result.differentials.slice(0, 3).map((differential) => ({
     diagnosisName: differential.diagnosisName,
@@ -24,7 +25,7 @@ export async function composePatientResponse(
   }));
 
   const { text } = await generateText({
-    model: getDefaultChatModel(),
+    model: getChatModel(chatModelId),
     prompt: `
 You are writing a patient-facing summary for a clinical differential diagnosis support tool.
 

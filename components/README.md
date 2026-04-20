@@ -20,7 +20,7 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 - `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
 - `layout/conversation-sidebar.tsx`: conversation list and session switching UI
 - `theme/theme-selector.tsx` and `theme/theme-provider.tsx`: theme switching support
-- `ai-elements/model-selector.tsx`: adapted AI Elements model selector used in the chat header
+- `ai-elements/model-selector.tsx`: adapted AI Elements model selector used for the chat and diagnosis selectors in the chat header
 - `ai-elements/`: shared chat layout and message presentation
 
 ## Related Hooks

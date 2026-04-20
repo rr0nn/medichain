@@ -7,13 +7,10 @@ import Image from "next/image";
 import { Command as CommandPrimitive } from "cmdk";
 import {
   Command,
-  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandList,
-  CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
 import {
   Dialog,
@@ -23,6 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
+import type { ModelProviderId } from "@/lib/chat/model-catalog";
 import { cn } from "@/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
 import { SearchIcon, XIcon } from "lucide-react";
@@ -63,12 +61,6 @@ export const ModelSelectorContent = ({
       {children}
     </Command>
   </DialogContent>
-);
-
-export type ModelSelectorDialogProps = ComponentProps<typeof CommandDialog>;
-
-export const ModelSelectorDialog = (props: ModelSelectorDialogProps) => (
-  <CommandDialog {...props} />
 );
 
 export type ModelSelectorInputProps = ComponentProps<typeof CommandPrimitive.Input>;
@@ -124,83 +116,11 @@ export const ModelSelectorItem = (props: ModelSelectorItemProps) => (
   <CommandItem {...props} />
 );
 
-export type ModelSelectorShortcutProps = ComponentProps<typeof CommandShortcut>;
-
-export const ModelSelectorShortcut = (props: ModelSelectorShortcutProps) => (
-  <CommandShortcut {...props} />
-);
-
-export type ModelSelectorSeparatorProps = ComponentProps<
-  typeof CommandSeparator
->;
-
-export const ModelSelectorSeparator = (props: ModelSelectorSeparatorProps) => (
-  <CommandSeparator {...props} />
-);
-
 export type ModelSelectorLogoProps = Omit<
   ComponentProps<typeof Image>,
   "src" | "alt" | "width" | "height"
 > & {
-  provider:
-  | "moonshotai-cn"
-  | "lucidquery"
-  | "moonshotai"
-  | "zai-coding-plan"
-  | "alibaba"
-  | "xai"
-  | "vultr"
-  | "nvidia"
-  | "upstage"
-  | "groq"
-  | "github-copilot"
-  | "mistral"
-  | "vercel"
-  | "nebius"
-  | "deepseek"
-  | "alibaba-cn"
-  | "google-vertex-anthropic"
-  | "venice"
-  | "chutes"
-  | "cortecs"
-  | "github-models"
-  | "togetherai"
-  | "azure"
-  | "baseten"
-  | "huggingface"
-  | "opencode"
-  | "fastrouter"
-  | "google"
-  | "google-vertex"
-  | "cloudflare-workers-ai"
-  | "inception"
-  | "wandb"
-  | "openai"
-  | "zhipuai-coding-plan"
-  | "perplexity"
-  | "openrouter"
-  | "zenmux"
-  | "v0"
-  | "iflowcn"
-  | "synthetic"
-  | "deepinfra"
-  | "zhipuai"
-  | "submodel"
-  | "zai"
-  | "inference"
-  | "requesty"
-  | "morph"
-  | "lmstudio"
-  | "anthropic"
-  | "aihubmix"
-  | "fireworks-ai"
-  | "modelscope"
-  | "llama"
-  | "scaleway"
-  | "amazon-bedrock"
-  | "cerebras"
-  // oxlint-disable-next-line typescript-eslint(ban-types) -- intentional pattern for autocomplete-friendly string union
-  | (string & {});
+  provider: ModelProviderId;
 };
 
 export const ModelSelectorLogo = ({
@@ -216,21 +136,6 @@ export const ModelSelectorLogo = ({
     unoptimized
     src={`https://models.dev/logos/${provider}.svg`}
     width={12}
-  />
-);
-
-export type ModelSelectorLogoGroupProps = ComponentProps<"div">;
-
-export const ModelSelectorLogoGroup = ({
-  className,
-  ...props
-}: ModelSelectorLogoGroupProps) => (
-  <div
-    className={cn(
-      "flex shrink-0 items-center -space-x-1 [&>img]:rounded-full [&>img]:bg-background [&>img]:p-px [&>img]:ring-1 dark:[&>img]:bg-foreground",
-      className
-    )}
-    {...props}
   />
 );
 

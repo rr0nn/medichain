@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
     mockGenerateText: vi.fn(),
-    mockGetDefaultDiagnosisModel: vi.fn(),
+    mockGetDiagnosisModel: vi.fn(),
     mockOutputObject: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ vi.mock("ai", () => ({
 }));
 
 vi.mock("@/server/ai/core/models", () => ({
-    getDefaultDiagnosisModel: mocks.mockGetDefaultDiagnosisModel,
+    getDiagnosisModel: mocks.mockGetDiagnosisModel,
 }));
 
 import { matchClinicalPresentations } from "./agent";
@@ -46,7 +46,7 @@ describe("matchClinicalPresentations", () => {
             { key: "cp-cough", name: "Cough" },
         ];
 
-        mocks.mockGetDefaultDiagnosisModel.mockReturnValue(fakeModel);
+        mocks.mockGetDiagnosisModel.mockReturnValue(fakeModel);
         mocks.mockOutputObject.mockReturnValue(fakeOutputSchema);
         mocks.mockGenerateText.mockResolvedValue(fakeResponse);
 
@@ -55,7 +55,7 @@ describe("matchClinicalPresentations", () => {
             candidates as never
         );
 
-        expect(mocks.mockGetDefaultDiagnosisModel).toHaveBeenCalledTimes(1);
+        expect(mocks.mockGetDiagnosisModel).toHaveBeenCalledTimes(1);
         expect(mocks.mockOutputObject).toHaveBeenCalledTimes(1);
         expect(mocks.mockGenerateText).toHaveBeenCalledTimes(1);
 

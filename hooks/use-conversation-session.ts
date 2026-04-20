@@ -13,12 +13,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { getChatErrorToastMessage } from "@/lib/chat/error-payload";
-import type { ProviderFallbackNotice } from "@/lib/chat/provider-fallback";
+import type { SelectedModelIds } from "@/lib/chat/model-catalog";
 import {
   createConversation,
   getConversationMessages,
 } from "@/lib/conversations";
-import type { ModelProvider } from "@/server/ai/core/models";
 
 type UseConversationSessionResult = {
   activeConversationId: string | null;
@@ -37,7 +36,7 @@ type UseConversationSessionResult = {
 };
 
 export function useConversationSession(
-  modelProvider: ModelProvider,
+  selectedModelIds: SelectedModelIds,
 ): UseConversationSessionResult {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -48,18 +47,11 @@ export function useConversationSession(
   >(null);
   const [input, setInput] = useState("");
   const activeConversationId = searchParams.get("conversationId");
-  const modelProviderRef = useRef<ModelProvider>(modelProvider);
-  modelProviderRef.current = modelProvider;
+  const selectedModelIdsRef = useRef<SelectedModelIds>(selectedModelIds);
+  selectedModelIdsRef.current = selectedModelIds;
 
   const { messages, sendMessage, setMessages, status } = useChat({
     id: activeConversationId ?? undefined,
-    onData: (part) => {
-      if (part.type !== "data-provider-fallback") {
-        return;
-      }
-
-      toast.info((part.data as ProviderFallbackNotice).message);
-    },
     onError: (error) => {
       toast.error(getChatErrorToastMessage(error));
     },
@@ -68,8 +60,9 @@ export function useConversationSession(
         api: `/api/conversations/${id}/chat`,
         body: {
           ...body,
+          chatModelId: selectedModelIdsRef.current.chat,
+          diagnosisModelId: selectedModelIdsRef.current.diagnosis,
           messages,
-          modelProvider: modelProviderRef.current,
         },
       }),
     }),

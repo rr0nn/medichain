@@ -6,7 +6,9 @@
 export const CHAT_ERROR_PREFIX = "MEDICHAIN_CHAT_ERROR:";
 
 export type ChatErrorCode =
+  | "CHAT_MODEL_UNAVAILABLE"
   | "CHAT_UNAVAILABLE"
+  | "DIAGNOSIS_MODEL_UNAVAILABLE"
   | "LLM_RATE_LIMITED"
   | "LLM_UNAVAILABLE";
 
@@ -16,7 +18,9 @@ export type ChatErrorPayload = {
 };
 
 const CHAT_ERROR_MESSAGES: Record<ChatErrorCode, string> = {
+  CHAT_MODEL_UNAVAILABLE: "The selected chat model is unavailable",
   CHAT_UNAVAILABLE: "The diagnostic service is currently unavailable",
+  DIAGNOSIS_MODEL_UNAVAILABLE: "The selected diagnosis model is unavailable",
   LLM_RATE_LIMITED: "AI usage limit reached. Please try again later",
   LLM_UNAVAILABLE: "The AI service is currently unavailable",
 };

@@ -6,7 +6,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
+import { getDiagnosisModel } from "@/server/ai/core/models";
 import type { ClinicalPresentationRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const clinicalPresentationMatchSchema = z.object({
@@ -15,17 +15,19 @@ const clinicalPresentationMatchSchema = z.object({
       key: z.string(),
       // Model-reported match strength on a 0..1 scale. This is a ranking signal, not a calibrated probability.
       score: z.number().min(0).max(1),
-      matchedText: z.array(z.string()).default([]),
+      // Keep this required because OpenAI strict structured outputs reject optional/default fields.
+      matchedText: z.array(z.string()),
     })
   ),
 });
 
 export async function matchClinicalPresentations(
   patientDescription: string,
-  candidates: ClinicalPresentationRecord[]
+  candidates: ClinicalPresentationRecord[],
+  diagnosisModelId?: string,
 ) {
   const { output } = await generateText({
-    model: getDefaultDiagnosisModel(),
+    model: getDiagnosisModel(diagnosisModelId),
     prompt: `
 You are matching patient wording to graph nodes.
 

@@ -8,6 +8,7 @@ This folder contains the Next.js route handlers used by the MediChain frontend. 
 - Chat orchestration is delegated to `server/ai/`.
 - Responses are JSON unless otherwise noted.
 - The chat route streams assistant output rather than returning a single JSON payload.
+- The model catalog route returns the backend-driven selector metadata used by the frontend.
 
 ## Routes
 
@@ -81,6 +82,16 @@ Response:
 
 - array of persisted `UIMessage` objects ordered by creation time
 
+### `GET /api/models`
+
+Returns the backend-driven model catalog used by the chat and diagnosis selectors.
+
+Response:
+
+- selector metadata for `chat` and `diagnosis`
+- model ids, labels, provider logos, group labels, and availability flags
+- default model ids for each selector
+
 ### `POST /api/conversations/:id/chat`
 
 Accepts a chat request for an existing conversation and streams the interview agent response.
@@ -89,6 +100,7 @@ Request body:
 
 - `ChatRequest`
 - includes the current message history used by the interview workflow
+- can include separate `chatModelId` and `diagnosisModelId` values for the chat and diagnosis selectors
 
 Behavior:
 
@@ -98,7 +110,7 @@ Behavior:
 - persists the assistant response after streaming finishes
 - updates the conversation title from the first user message when applicable
 - serializes chat-stream failures into stable client-facing error payloads for toast handling
-- can emit transient provider-fallback data events when the requested model is unavailable and a default provider is used
+- rejects unavailable chat-model and diagnosis-model selections with typed model-unavailable errors
 
 Response:
 
