@@ -41,6 +41,13 @@ At a high level, the server-side diagnosis path is:
 - Chat-stream failures should be serialized into stable client-facing error payloads before they leave the server boundary.
 - Tool-level Neo4j workflow failures are currently handled inside the conversation flow rather than surfaced as separate stream-error toasts.
 
+## Model Selection Split
+
+- The UI model selector changes the interview agent's chat model.
+- That selected chat model can affect outer interview orchestration, such as whether the agent asks for clarification or decides to call the diagnosis tool.
+- Once the diagnosis tool is invoked, the internal presentation/category/feature matcher agents remain pinned to the default diagnosis model.
+- This keeps the inner diagnosis pipeline stable even when the user switches chat providers, and it avoids spending extra tokens on narrow semantic matching tasks that work well with simpler, cheaper models.
+
 ## Related Documentation
 
 - [`../README.md`](../README.md)

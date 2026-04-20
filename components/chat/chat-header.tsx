@@ -69,7 +69,7 @@ export function ChatHeader({
           open={isModelSelectorOpen}
           onOpenChange={setIsModelSelectorOpen}
         >
-          {/* Model Picker - Lets users switch the active model for this consultation. */}
+          {/* Model Picker - Lets users switch the active chat model for this consultation. */}
           <ModelSelectorTrigger asChild>
             <Button
               type="button"
@@ -80,7 +80,7 @@ export function ChatHeader({
             >
               <div className="min-w-0 text-left">
                 <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Model
+                  Chat Model
                 </p>
                 <div className="flex min-w-0 items-center gap-2">
                   <ModelSelectorLogo provider={selectedModel.provider} />
@@ -93,8 +93,8 @@ export function ChatHeader({
             </Button>
           </ModelSelectorTrigger>
 
-          {/* Model Menu - Organizes available models by provider. */}
-          <ModelSelectorContent title="Select model" className="sm:max-w-sm">
+          {/* Model Menu - Organizes available chat models by provider. */}
+          <ModelSelectorContent title="Select chat model" className="sm:max-w-sm">
             <ModelSelectorInput placeholder="Search models..." />
             <ModelSelectorList>
               <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
