@@ -29,6 +29,8 @@ export type ModelCatalog = {
 
 export type SelectedModelIds = Record<ModelSelectorKey, string>;
 
+export const MODEL_SELECTION_STORAGE_KEY = "medichain:selected-model-ids";
+
 export function getDefaultSelectedModelIds(
   catalog: ModelCatalog,
 ): SelectedModelIds {
@@ -63,6 +65,34 @@ export function normalizeSelectedModelIds(
       defaults.diagnosis,
     ),
   };
+}
+
+export function parseStoredSelectedModelIds(
+  value: string | null,
+): SelectedModelIds | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsedValue = JSON.parse(value);
+
+    if (
+      typeof parsedValue !== "object" ||
+      parsedValue === null ||
+      typeof parsedValue.chat !== "string" ||
+      typeof parsedValue.diagnosis !== "string"
+    ) {
+      return null;
+    }
+
+    return {
+      chat: parsedValue.chat,
+      diagnosis: parsedValue.diagnosis,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function getNormalizedSelectedModelId(

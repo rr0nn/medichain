@@ -10,7 +10,9 @@ import { toast } from "sonner";
 
 import {
   getDefaultSelectedModelIds,
+  MODEL_SELECTION_STORAGE_KEY,
   normalizeSelectedModelIds,
+  parseStoredSelectedModelIds,
   type ModelCatalog,
   type ModelSelectorKey,
   type SelectedModelIds,
@@ -44,12 +46,16 @@ export function useModelCatalog(): UseModelCatalogResult {
         }
 
         setCatalog(nextCatalog);
+        const storedSelections = parseStoredSelectedModelIds(
+          window.localStorage.getItem(MODEL_SELECTION_STORAGE_KEY),
+        );
         setSelectedModelIds((currentSelections) =>
           normalizeSelectedModelIds(
             nextCatalog,
-            currentSelections.chat && currentSelections.diagnosis
-              ? currentSelections
-              : getDefaultSelectedModelIds(nextCatalog),
+            storedSelections ??
+              (currentSelections.chat && currentSelections.diagnosis
+                ? currentSelections
+                : getDefaultSelectedModelIds(nextCatalog)),
           ),
         );
       } catch (error) {
@@ -69,6 +75,17 @@ export function useModelCatalog(): UseModelCatalogResult {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!catalog || !selectedModelIds.chat || !selectedModelIds.diagnosis) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      MODEL_SELECTION_STORAGE_KEY,
+      JSON.stringify(selectedModelIds),
+    );
+  }, [catalog, selectedModelIds]);
 
   const setSelectedModel = useCallback(
     (selectorKey: ModelSelectorKey, modelId: string) => {
