@@ -6,6 +6,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import type { ConversationSummary } from "@/lib/conversations";
 import {
@@ -47,6 +48,10 @@ export function useConversationList({
     try {
       const data = await listConversations();
       setConversations(data);
+    } catch (error) {
+      console.error("[sidebar] Failed to load conversations:", error);
+      setConversations([]);
+      toast.error("Failed to load conversations");
     } finally {
       setLoading(false);
     }
@@ -58,23 +63,28 @@ export function useConversationList({
 
   const handleDeleteConversation = useCallback(async (id: string) => {
     // Delete Flow - Removes the conversation and redirects if the active one disappears.
-    await deleteConversation(id);
+    try {
+      await deleteConversation(id);
 
-    setConversations((previousConversations) => {
-      const remainingConversations = previousConversations.filter(
-        (conversation) => conversation.id !== id,
-      );
+      setConversations((previousConversations) => {
+        const remainingConversations = previousConversations.filter(
+          (conversation) => conversation.id !== id,
+        );
 
-      if (activeId === id) {
-        if (remainingConversations.length > 0) {
-          onSelect(remainingConversations[0].id);
-        } else {
-          onNew();
+        if (activeId === id) {
+          if (remainingConversations.length > 0) {
+            onSelect(remainingConversations[0].id);
+          } else {
+            onNew();
+          }
         }
-      }
 
-      return remainingConversations;
-    });
+        return remainingConversations;
+      });
+    } catch (error) {
+      console.error("[sidebar] Failed to delete conversation:", error);
+      toast.error("Failed to delete conversation");
+    }
   }, [activeId, onNew, onSelect]);
 
   return {

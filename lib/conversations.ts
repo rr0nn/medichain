@@ -57,10 +57,5 @@ export async function deleteConversation(id: string): Promise<void> {
 
 export async function getConversationMessages(id: string): Promise<UIMessage[]> {
   const response = await fetch(`/api/conversations/${id}/messages`);
-
-  if (!response.ok) {
-    return [];
-  }
-
-  return response.json() as Promise<UIMessage[]>;
+  return readJson<UIMessage[]>(response, "Failed to load conversation history");
 }

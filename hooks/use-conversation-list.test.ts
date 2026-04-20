@@ -5,10 +5,17 @@ import { useConversationList } from "./use-conversation-list";
 
 const listConversationsMock = vi.fn();
 const deleteConversationMock = vi.fn();
+const toastErrorMock = vi.fn();
 
 vi.mock("@/lib/conversations", () => ({
   listConversations: (...args: unknown[]) => listConversationsMock(...args),
   deleteConversation: (...args: unknown[]) => deleteConversationMock(...args),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    error: (...args: unknown[]) => toastErrorMock(...args),
+  },
 }));
 
 const conversationA = {
@@ -31,6 +38,7 @@ describe("useConversationList", () => {
   beforeEach(() => {
     listConversationsMock.mockReset();
     deleteConversationMock.mockReset();
+    toastErrorMock.mockReset();
   });
 
   it("loads the conversation list", async () => {
@@ -80,6 +88,26 @@ describe("useConversationList", () => {
       expect(listConversationsMock).toHaveBeenCalledTimes(2);
       expect(result.current.conversations).toEqual([conversationA, conversationB]);
     });
+  });
+
+  it("shows a toast and clears the list if loading conversations fails", async () => {
+    listConversationsMock.mockRejectedValue(new Error("load failed"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const { result } = renderHook(() => useConversationList({
+      activeId: null,
+      onNew: vi.fn(),
+      onSelect: vi.fn(),
+      refreshToken: 0,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.conversations).toEqual([]);
+      expect(toastErrorMock).toHaveBeenCalledWith("Failed to load conversations");
+    });
+
+    consoleErrorSpy.mockRestore();
   });
 
   it("deletes an active conversation and selects the next remaining one", async () => {
@@ -133,5 +161,35 @@ describe("useConversationList", () => {
     expect(result.current.conversations).toEqual([]);
     expect(onNew).toHaveBeenCalledTimes(1);
     expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("shows a toast and keeps the list unchanged if deletion fails", async () => {
+    listConversationsMock.mockResolvedValue([conversationA, conversationB]);
+    deleteConversationMock.mockRejectedValue(new Error("delete failed"));
+    const onSelect = vi.fn();
+    const onNew = vi.fn();
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const { result } = renderHook(() => useConversationList({
+      activeId: "conv-a",
+      onNew,
+      onSelect,
+      refreshToken: 0,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.conversations).toEqual([conversationA, conversationB]);
+    });
+
+    await act(async () => {
+      await result.current.actions.deleteConversation("conv-a");
+    });
+
+    expect(result.current.conversations).toEqual([conversationA, conversationB]);
+    expect(onNew).not.toHaveBeenCalled();
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(toastErrorMock).toHaveBeenCalledWith("Failed to delete conversation");
+
+    consoleErrorSpy.mockRestore();
   });
 });

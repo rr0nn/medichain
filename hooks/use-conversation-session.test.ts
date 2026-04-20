@@ -9,10 +9,15 @@ const sendMessageMock = vi.fn();
 const setMessagesMock = vi.fn();
 const createConversationMock = vi.fn();
 const getConversationMessagesMock = vi.fn();
+const toastErrorMock = vi.fn();
 
 let currentSearchParams = new URLSearchParams();
 let chatState: {
-  messages: Array<{ id: string; role: "user" | "assistant"; parts: Array<{ type: "text"; text: string }> }>;
+  messages: Array<{
+    id: string;
+    role: "user" | "assistant";
+    parts: Array<{ type: "text"; text: string }>;
+  }>;
   status: string;
 };
 
@@ -35,7 +40,14 @@ vi.mock("@ai-sdk/react", () => ({
 
 vi.mock("@/lib/conversations", () => ({
   createConversation: (...args: unknown[]) => createConversationMock(...args),
-  getConversationMessages: (...args: unknown[]) => getConversationMessagesMock(...args),
+  getConversationMessages: (...args: unknown[]) =>
+    getConversationMessagesMock(...args),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    error: (...args: unknown[]) => toastErrorMock(...args),
+  },
 }));
 
 describe("useConversationSession", () => {
@@ -51,6 +63,7 @@ describe("useConversationSession", () => {
     setMessagesMock.mockReset();
     createConversationMock.mockReset();
     getConversationMessagesMock.mockReset();
+    toastErrorMock.mockReset();
   });
 
   it("loads messages for the active conversation id from the URL", async () => {
@@ -64,7 +77,11 @@ describe("useConversationSession", () => {
     await waitFor(() => {
       expect(getConversationMessagesMock).toHaveBeenCalledWith("conv-1");
       expect(setMessagesMock).toHaveBeenCalledWith([
-        { id: "m1", role: "assistant", parts: [{ type: "text", text: "hello" }] },
+        {
+          id: "m1",
+          role: "assistant",
+          parts: [{ type: "text", text: "hello" }],
+        },
       ]);
     });
   });
@@ -72,7 +89,11 @@ describe("useConversationSession", () => {
   it("creates a conversation, updates the URL, then sends the pending first message", async () => {
     createConversationMock.mockResolvedValue({ id: "conv-new" });
     getConversationMessagesMock.mockResolvedValue([
-      { id: "m1", role: "user", parts: [{ type: "text", text: "Initial patient summary" }] },
+      {
+        id: "m1",
+        role: "user",
+        parts: [{ type: "text", text: "Initial patient summary" }],
+      },
     ]);
 
     replaceMock.mockImplementation((href: string) => {
@@ -80,7 +101,9 @@ describe("useConversationSession", () => {
       currentSearchParams = new URLSearchParams(query);
     });
 
-    const { result, rerender } = renderHook(() => useConversationSession("gemini"));
+    const { result, rerender } = renderHook(() =>
+      useConversationSession("gemini"),
+    );
 
     act(() => {
       result.current.setInput("Initial patient summary");
@@ -107,7 +130,11 @@ describe("useConversationSession", () => {
     await waitFor(() => {
       expect(getConversationMessagesMock).toHaveBeenCalledWith("conv-new");
       expect(setMessagesMock).toHaveBeenCalledWith([
-        { id: "m1", role: "user", parts: [{ type: "text", text: "Initial patient summary" }] },
+        {
+          id: "m1",
+          role: "user",
+          parts: [{ type: "text", text: "Initial patient summary" }],
+        },
       ]);
     });
   });
@@ -134,7 +161,9 @@ describe("useConversationSession", () => {
 
   it("restores the draft input if conversation creation fails", async () => {
     createConversationMock.mockRejectedValue(new Error("create failed"));
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
 
     const { result } = renderHook(() => useConversationSession("gemini"));
 
@@ -148,6 +177,56 @@ describe("useConversationSession", () => {
 
     expect(result.current.input).toBe("Draft message");
     expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "Failed to create conversation",
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("shows a toast and clears stale messages if loading a conversation fails", async () => {
+    currentSearchParams = new URLSearchParams("conversationId=conv-err");
+    getConversationMessagesMock.mockRejectedValue(new Error("load failed"));
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderHook(() => useConversationSession("gemini"));
+
+    await waitFor(() => {
+      expect(getConversationMessagesMock).toHaveBeenCalledWith("conv-err");
+      expect(setMessagesMock).toHaveBeenCalledWith([]);
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        "Failed to load conversation history",
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("restores the input and shows a toast if sending a message fails", async () => {
+    currentSearchParams = new URLSearchParams("conversationId=conv-2");
+    getConversationMessagesMock.mockResolvedValue([]);
+    sendMessageMock.mockRejectedValue(new Error("send failed"));
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    const { result } = renderHook(() => useConversationSession("gemini"));
+
+    act(() => {
+      result.current.setInput("Follow-up details");
+    });
+
+    await act(async () => {
+      await result.current.actions.submitMessage();
+    });
+
+    expect(sendMessageMock).toHaveBeenCalledWith({
+      text: "Follow-up details",
+    });
+    expect(result.current.input).toBe("Follow-up details");
+    expect(toastErrorMock).toHaveBeenCalledWith("Failed to send message");
 
     consoleErrorSpy.mockRestore();
   });
