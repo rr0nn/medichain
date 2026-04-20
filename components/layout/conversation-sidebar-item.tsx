@@ -15,6 +15,7 @@ import type { ConversationSummary } from "@/lib/conversations";
 type ConversationSidebarItemProps = {
   active: boolean;
   conversation: ConversationSummary;
+  disabled?: boolean;
   onDelete: (event: React.MouseEvent<HTMLButtonElement>, id: string) => void;
   onSelect: (id: string) => void;
 };
@@ -22,23 +23,34 @@ type ConversationSidebarItemProps = {
 export function ConversationSidebarItem({
   active,
   conversation,
+  disabled = false,
   onDelete,
   onSelect,
 }: ConversationSidebarItemProps) {
+  const handleSelect = () => {
+    if (disabled) {
+      return;
+    }
+
+    onSelect(conversation.id);
+  };
+
   return (
     <li>
       {/* Conversation Row - Selects a saved consultation from the sidebar. */}
       <div
         role="button"
-        tabIndex={0}
-        onClick={() => onSelect(conversation.id)}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
+        onClick={handleSelect}
         onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
+          if ((event.key === "Enter" || event.key === " ") && !disabled) {
             onSelect(conversation.id);
           }
         }}
         className={cn(
-          "group flex w-full cursor-pointer select-none items-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-background/50",
+          "group flex w-full select-none items-start gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors",
+          disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-background/50",
           active &&
             "bg-background/70 font-medium text-foreground shadow-[inset_0_1px_0_var(--glass-highlight)]",
         )}
@@ -60,7 +72,14 @@ export function ConversationSidebarItem({
         {/* Delete Action - Appears on hover to remove the consultation. */}
         <button
           onClick={(event) => onDelete(event, conversation.id)}
-          className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+          aria-disabled={disabled}
+          disabled={disabled}
+          className={cn(
+            "shrink-0 rounded p-0.5 transition-opacity",
+            disabled
+              ? "cursor-not-allowed opacity-30"
+              : "opacity-0 group-hover:opacity-100 hover:text-destructive",
+          )}
           title="Delete consultation"
         >
           <Trash2Icon className="size-3" />

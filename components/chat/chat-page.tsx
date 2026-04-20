@@ -47,6 +47,7 @@ export function ChatPage() {
       <div className="flex min-h-0 shrink-0">
         <ConversationSidebar
           activeId={activeConversationId}
+          disableSelection={isLoading}
           onSelect={actions.selectConversation}
           onNew={actions.startNewConversation}
           refreshToken={conversationListVersion}

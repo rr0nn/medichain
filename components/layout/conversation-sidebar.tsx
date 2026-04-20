@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 interface ConversationSidebarProps {
   activeId: string | null;
+  disableSelection?: boolean;
   onSelect: (id: string) => void;
   onNew: () => void;
   refreshToken?: number;
@@ -25,6 +26,7 @@ interface ConversationSidebarProps {
 
 export function ConversationSidebar({
   activeId,
+  disableSelection = false,
   onSelect,
   onNew,
   refreshToken = 0,
@@ -67,6 +69,7 @@ export function ConversationSidebar({
               size="icon-sm"
               variant="ghost"
               onClick={onNew}
+              disabled={disableSelection}
               title="New consultation"
             >
               <PlusIcon className="size-4" />
@@ -93,6 +96,7 @@ export function ConversationSidebar({
             size="icon-sm"
             variant="ghost"
             onClick={onNew}
+            disabled={disableSelection}
             title="New consultation"
           >
             <PlusIcon className="size-4" />
@@ -104,7 +108,10 @@ export function ConversationSidebar({
         {loading ? (
           <ConversationSidebarLoadingState />
         ) : conversations.length === 0 ? (
-          <ConversationSidebarEmptyState onNew={onNew} />
+          <ConversationSidebarEmptyState
+            disabled={disableSelection}
+            onNew={onNew}
+          />
         ) : (
           /* Conversation List - Displays each saved consultation entry. */
           <ul className="flex flex-col gap-0.5 p-2">
@@ -113,6 +120,7 @@ export function ConversationSidebar({
                 key={conversation.id}
                 active={activeId === conversation.id}
                 conversation={conversation}
+                disabled={disableSelection}
                 onDelete={handleDelete}
                 onSelect={onSelect}
               />
