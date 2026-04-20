@@ -60,6 +60,7 @@ export function ChatPage() {
           catalog={catalog}
           isLoading={isLoading || loadingModelCatalog}
           onModelChange={setSelectedModel}
+          onStartNewConversation={actions.startNewConversation}
           selectedModelIds={selectedModelIds}
         />
         <Conversation className="min-h-0 flex-1 bg-transparent">
