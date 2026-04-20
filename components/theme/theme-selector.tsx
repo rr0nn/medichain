@@ -45,7 +45,7 @@ export function ThemeSelector() {
           type="button"
           variant="outline"
           size="sm"
-          className="h-auto w-full min-w-0 basis-[11rem] justify-between rounded-xl border-[color:var(--glass-border)] bg-background/55 py-2 sm:max-w-[180px] shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm hover:bg-background/70"
+          className="h-auto w-auto justify-between rounded-xl border-[color:var(--glass-border)] bg-background/55 py-2 pl-3 pr-2 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm hover:bg-background/70"
         >
           <div className="min-w-0 text-left">
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
