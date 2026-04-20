@@ -36,6 +36,7 @@ Rules:
 - Only choose from the category keys provided.
 - Do not invent keys.
 - Return an empty array if the match is weak.
+- Always include matchedText as an array for every match. Use [] if there is no exact supporting phrase.
 - Use anatomical clues from the patient description.
 - Match only categories relevant to the given clinical presentation.
 - Treat score as relative match strength for ranking, not as a probability.

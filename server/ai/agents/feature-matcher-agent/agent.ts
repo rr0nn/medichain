@@ -50,6 +50,7 @@ Rules:
 - Only choose from the feature keys provided.
 - Do not invent keys.
 - Return an empty array if the match is weak.
+- Always include matchedText as an array for every match. Use [] if there is no exact supporting phrase.
 - Prefer concrete symptoms, signs, and descriptors stated or strongly implied by the patient description.
 - Match only features relevant to the given clinical presentation.
 - Use feature type to interpret the role of each feature in the history.

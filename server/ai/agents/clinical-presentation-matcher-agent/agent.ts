@@ -36,6 +36,7 @@ Rules:
 - Do not invent keys.
 - Match the presenting complaint, not the final diagnosis.
 - Return an empty array if the match is weak.
+- Always include matchedText as an array for every match. Use [] if there is no exact supporting phrase.
 - Prefer broad symptom/presentation matching.
 - Treat score as relative match strength for ranking, not as a probability.
 
