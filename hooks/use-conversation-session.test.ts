@@ -11,6 +11,7 @@ import { useConversationSession } from "./use-conversation-session";
 const pushMock = vi.fn();
 const replaceMock = vi.fn();
 const sendMessageMock = vi.fn();
+const stopMock = vi.fn();
 const setMessagesMock = vi.fn();
 const createConversationMock = vi.fn();
 const getConversationMessagesMock = vi.fn();
@@ -61,6 +62,7 @@ describe("useConversationSession", () => {
     pushMock.mockReset();
     replaceMock.mockReset();
     sendMessageMock.mockReset();
+    stopMock.mockReset();
     setMessagesMock.mockReset();
     createConversationMock.mockReset();
     getConversationMessagesMock.mockReset();
@@ -71,6 +73,7 @@ describe("useConversationSession", () => {
       sendMessage: sendMessageMock,
       setMessages: setMessagesMock,
       status: chatState.status,
+      stop: stopMock,
     }));
   });
 
@@ -244,6 +247,18 @@ describe("useConversationSession", () => {
     expect(toastErrorMock).toHaveBeenCalledWith("Failed to send message");
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it("stops an in-flight response when requested", async () => {
+    chatState.status = "streaming";
+
+    const { result } = renderSession();
+
+    await act(async () => {
+      await result.current.actions.stopGenerating();
+    });
+
+    expect(stopMock).toHaveBeenCalledTimes(1);
   });
 
   it("clears the transcript when a selected conversation loads no messages", async () => {

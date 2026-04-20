@@ -94,7 +94,10 @@ describe("runInterviewAgent", () => {
 
     await runInterviewAgent(input as never, writer as never);
 
-    expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(input.messages);
+    expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(
+      input.messages,
+      { ignoreIncompleteToolCalls: true },
+    );
     expect(mocks.mockResolveModelSelection).toHaveBeenNthCalledWith(
       1,
       "chat",
@@ -171,6 +174,38 @@ describe("runInterviewAgent", () => {
       ].join("\n"),
       expect.any(Function),
       "gemini-2.5-flash",
+    );
+  });
+
+  it("ignores incomplete tool calls when rebuilding model messages", async () => {
+    const fakeStreamResult = { toUIMessageStream: vi.fn() };
+
+    mocks.mockConvertToModelMessages.mockResolvedValue([]);
+    mocks.mockStreamText.mockReturnValue(fakeStreamResult);
+
+    await runInterviewAgent(
+      {
+        messages: [
+          {
+            id: "1",
+            role: "assistant",
+            parts: [
+              {
+                type: "tool-runDifferentialDiagnosis",
+                state: "input-available",
+                input: { patientDescription: "abdominal pain" },
+                toolCallId: "tool-1",
+              },
+            ],
+          },
+        ],
+      } as never,
+      { merge: vi.fn(), write: vi.fn() } as never,
+    );
+
+    expect(mocks.mockConvertToModelMessages).toHaveBeenCalledWith(
+      expect.any(Array),
+      { ignoreIncompleteToolCalls: true },
     );
   });
 

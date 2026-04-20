@@ -31,6 +31,7 @@ type UseConversationSessionResult = {
   actions: {
     selectConversation: (id: string) => void;
     startNewConversation: () => void;
+    stopGenerating: () => Promise<void>;
     submitMessage: () => Promise<void>;
   };
 };
@@ -50,7 +51,7 @@ export function useConversationSession(
   const selectedModelIdsRef = useRef<SelectedModelIds>(selectedModelIds);
   selectedModelIdsRef.current = selectedModelIds;
 
-  const { messages, sendMessage, setMessages, status } = useChat({
+  const { messages, sendMessage, setMessages, status, stop } = useChat({
     id: activeConversationId ?? undefined,
     onError: (error) => {
       toast.error(getChatErrorToastMessage(error));
@@ -225,6 +226,14 @@ export function useConversationSession(
     setConversationInUrl,
   ]);
 
+  const stopGenerating = useCallback(async () => {
+    if (!isLoading) {
+      return;
+    }
+
+    await stop();
+  }, [isLoading, stop]);
+
   return {
     activeConversationId,
     conversationListVersion,
@@ -237,6 +246,7 @@ export function useConversationSession(
     actions: {
       selectConversation,
       startNewConversation,
+      stopGenerating,
       submitMessage,
     },
   };

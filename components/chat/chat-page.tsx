@@ -78,6 +78,7 @@ export function ChatPage() {
           input={input}
           isLoading={isLoading}
           onInputChange={setInput}
+          onStop={() => void actions.stopGenerating()}
           onSubmit={() => void actions.submitMessage()}
         />
       </section>

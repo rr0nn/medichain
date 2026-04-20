@@ -87,7 +87,12 @@ export async function runInterviewAgent(
   { messages, chatModelId, diagnosisModelId }: ChatRequest,
   writer: UIMessageStreamWriter
 ) {
-  const modelMessages = await convertToModelMessages(messages);
+  const modelMessages = await convertToModelMessages(messages, {
+    // If a stream was manually stopped, the last assistant message can contain
+    // an incomplete tool call. Ignore those transient parts so the next user
+    // message can continue the consultation cleanly.
+    ignoreIncompleteToolCalls: true,
+  });
   const chatSelection = resolveModelSelection("chat", chatModelId);
   const diagnosisSelection = resolveModelSelection(
     "diagnosis",
