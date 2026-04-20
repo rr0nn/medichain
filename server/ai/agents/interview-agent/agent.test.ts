@@ -173,6 +173,42 @@ describe("runInterviewAgent", () => {
         );
     });
 
+    it("emits a fallback notice when OpenAI is requested without availability", async () => {
+        const convertedMessages = [
+            { role: "user", content: [{ type: "text", text: "Abdominal pain" }] },
+        ];
+        const fakeModel = { id: "fake-chat-model" };
+        const fakeStreamResult = { toUIMessageStream: vi.fn() };
+        const writer = {
+            write: vi.fn(),
+            merge: vi.fn(),
+        };
+
+        mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
+        mocks.mockResolveProvider.mockReturnValue("gemini");
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
+        mocks.mockStreamText.mockReturnValue(fakeStreamResult);
+
+        await runInterviewAgent(
+            {
+                messages: [{ id: "1", role: "user", content: "Abdominal pain" }],
+                modelProvider: "openai",
+            } as never,
+            writer as never
+        );
+
+        expect(writer.write).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: "data-provider-fallback",
+                data: expect.objectContaining({
+                    requestedProvider: "openai",
+                    resolvedProvider: "gemini",
+                    message: "openai is unavailable, using default gemini instead",
+                }),
+            }),
+        );
+    });
+
     it("composes a patient-facing response when the safety workflow is ready for review", async () => {
         const convertedMessages = [
             { role: "user", content: [{ type: "text", text: "Abdominal pain" }] },

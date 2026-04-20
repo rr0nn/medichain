@@ -55,6 +55,8 @@ function isLlmUnavailableError(error: unknown): boolean {
     message.includes("anthropic") ||
     message.includes("claude") ||
     message.includes("gemini") ||
+    message.includes("openai") ||
+    message.includes("gpt-5") ||
     message.includes("google generative ai") ||
     message.includes("google ai") ||
     message.includes("api key")

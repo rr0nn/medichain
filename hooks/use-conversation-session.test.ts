@@ -330,4 +330,25 @@ describe("useConversationSession", () => {
       "claude is unavailable, using default gemini instead",
     );
   });
+
+  it("shows an info toast when the requested OpenAI model falls back to Gemini", () => {
+    renderHook(() => useConversationSession("openai"));
+
+    const options = useChatMock.mock.calls[0][0] as {
+      onData?: (part: { type: string; data: ProviderFallbackNotice }) => void;
+    };
+
+    options.onData?.({
+      type: "data-provider-fallback",
+      data: {
+        requestedProvider: "openai",
+        resolvedProvider: "gemini",
+        message: "openai is unavailable, using default gemini instead",
+      },
+    });
+
+    expect(toastInfoMock).toHaveBeenCalledWith(
+      "openai is unavailable, using default gemini instead",
+    );
+  });
 });

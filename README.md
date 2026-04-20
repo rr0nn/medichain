@@ -49,6 +49,7 @@ Before running the project, make sure you have:
 - access to a Neo4j database seeded with the project graph
 - a Google Generative AI API key
 - optionally, an Anthropic API key if you want to use Claude models
+- optionally, an OpenAI API key if you want to use OpenAI models
 
 If pnpm is not installed locally:
 
@@ -77,12 +78,14 @@ Required variables:
 Optional variables:
 
 - `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
 
 Variable roles:
 
 - `DATABASE_URL`: PostgreSQL connection string for conversation and message persistence
 - `GOOGLE_GENERATIVE_AI_API_KEY`: API key used by the default Gemini-backed server-side AI agents and workflows
 - `ANTHROPIC_API_KEY`: optional API key required to use Claude models from the model selector
+- `OPENAI_API_KEY`: optional API key required to use OpenAI models from the model selector
 - `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`: Neo4j connection settings for the diagnosis knowledge graph
 
 Optional Aura metadata:
@@ -202,3 +205,4 @@ public/                 Static assets
 - API routes should stay thin and delegate work into `server/`.
 - The chat UI uses toast notifications for conversation persistence failures, provider fallback notices, and classified LLM stream failures such as provider unavailability or rate limits.
 - If `ANTHROPIC_API_KEY` is not set, Claude selections fall back to the default Gemini provider.
+- If `OPENAI_API_KEY` is not set, OpenAI selections fall back to the default Gemini provider.

@@ -14,8 +14,8 @@ export const STARTER_PROMPTS = [
 export const MODEL_OPTIONS: Array<{
   value: ModelProvider;
   label: string;
-  provider: "google" | "anthropic";
-  group: "Google" | "Anthropic";
+  provider: "anthropic" | "google" | "openai";
+  group: "Anthropic" | "Google" | "OpenAI";
 }> = [
   {
     value: "gemini",
@@ -28,5 +28,11 @@ export const MODEL_OPTIONS: Array<{
     label: "Claude Sonnet 4.5",
     provider: "anthropic",
     group: "Anthropic",
+  },
+  {
+    value: "openai",
+    label: "GPT-5 mini",
+    provider: "openai",
+    group: "OpenAI",
   },
 ];

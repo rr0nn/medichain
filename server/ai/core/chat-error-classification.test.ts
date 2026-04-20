@@ -38,6 +38,17 @@ describe("serializeChatStreamError", () => {
     });
   });
 
+  it("classifies OpenAI-flavored failures into the LLM unavailable payload", () => {
+    const serialized = serializeChatStreamError(
+      new Error("OpenAI API key is invalid"),
+    );
+
+    expect(parseChatErrorMessage(serialized)).toEqual({
+      code: "LLM_UNAVAILABLE",
+      message: "The AI service is currently unavailable",
+    });
+  });
+
   it("falls back to a generic chat payload for unknown failures", () => {
     const serialized = serializeChatStreamError(new Error("Unexpected failure"));
 
