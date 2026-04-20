@@ -35,18 +35,21 @@ function WorkflowNode({ data }: NodeProps & { data: WorkflowNodeData }) {
   const { label, description, status, tone = "default" } = data;
 
   return (
+    /* Workflow Node - Shows one stage in the DDx reasoning pipeline. */
     <div
       className={cn(
         "w-36 rounded-lg border bg-background px-3 py-2.5 text-left shadow-sm transition-colors",
         status === "idle" && "border-border",
-        status === "running" && "border-blue-500/60 bg-blue-500/5",
-        status === "complete" && "border-green-500/60 bg-green-500/5",
+        status === "running" &&
+          "border-[color:var(--status-running-border)] bg-[color:var(--status-running-bg)]",
+        status === "complete" &&
+          "border-[color:var(--status-success-border)] bg-[color:var(--status-success-bg)]",
         tone === "success" &&
         status === "complete" &&
-        "border-emerald-500/60 bg-emerald-500/5",
+        "border-[color:var(--status-success-border)] bg-[color:var(--status-success-bg)]",
         tone === "warning" &&
         status === "complete" &&
-        "border-amber-500/60 bg-amber-500/5",
+        "border-[color:var(--status-warning-border)] bg-[color:var(--status-warning-bg)]",
         status === "error" && "border-destructive/60 bg-destructive/5",
       )}
     >
@@ -76,14 +79,15 @@ function WorkflowNode({ data }: NodeProps & { data: WorkflowNodeData }) {
 }
 
 function StatusDot({ status }: { status: StepStatus }) {
+  // Node Status - Switches between idle, running, and complete states.
   if (status === "running") {
     return (
-      <Loader2Icon className="mt-0.5 size-3 shrink-0 animate-spin text-blue-500" />
+      <Loader2Icon className="mt-0.5 size-3 shrink-0 animate-spin text-[color:var(--status-running-fg)]" />
     );
   }
 
   if (status === "complete") {
-    return <CheckIcon className="mt-0.5 size-3 shrink-0 text-green-500" />;
+    return <CheckIcon className="mt-0.5 size-3 shrink-0 text-[color:var(--status-success-fg)]" />;
   }
 
   return (
@@ -120,6 +124,7 @@ export function WorkflowCanvas({
   const readyForReview =
     criticAssessment !== undefined && !criticAssessment.shouldReturnToInterview;
 
+  // Workflow Nodes - Define the major stages and outcomes shown in the flowchart.
   const nodes = useMemo(
     () => [
       {
@@ -215,6 +220,7 @@ export function WorkflowCanvas({
     [needsMoreInformation, noGraphMatch, readyForReview, steps],
   );
 
+  // Workflow Edges - Connect the stages and animate the active path.
   const edges = useMemo(
     () => [
       {
@@ -284,10 +290,12 @@ export function WorkflowCanvas({
   );
 
   if (!mounted) {
+    // Loading Canvas - Reserves space until theme-aware flow rendering is ready.
     return <div className="h-80 w-full rounded-[22px] border border-[color:var(--glass-border)] bg-background/60" />;
   }
 
   return (
+    /* Workflow Canvas - Displays the full DDx pipeline as an interactive flow diagram. */
     <div className="h-80 w-full p-2 rounded-[22px] border border-[color:var(--glass-border)] bg-background/80 shadow-[inset_0_1px_0_var(--glass-highlight)]">
       <ReactFlow
         nodes={nodes}
@@ -299,10 +307,12 @@ export function WorkflowCanvas({
         nodesConnectable={false}
         elementsSelectable={false}
         zoomOnScroll={false}
-        panOnDrag={false}
+        panOnScroll={false}
+        panOnDrag
         proOptions={{ hideAttribution: true }}
         colorMode={resolvedTheme === "dark" ? "dark" : "light"}
       >
+        {/* Background Grid - Adds light visual structure behind the flowchart. */}
         <Background gap={20} size={1} />
       </ReactFlow>
     </div>

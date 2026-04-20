@@ -6,7 +6,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeAll } from "vitest";
 
-vi.mock("@/components/workflow-canvas", () => ({
+vi.mock("@/components/ddx/workflow-canvas", () => ({
   WorkflowCanvas: () => <div>workflow-canvas</div>,
 }));
 
@@ -94,19 +94,16 @@ describe("DdxPanel", () => {
       />
     );
 
+    expect(screen.getAllByText("Right lower quadrant tenderness")[0]).toBeInTheDocument();
     expect(
-      screen.getByText("Feature: Right lower quadrant tenderness (site)")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
+      screen.getAllByText(
         "Source: Pocketbook of Differential Diagnosis, 5th edition (pp. 123-126)"
-      )
+      )[0]
     ).toBeInTheDocument();
-    expect(screen.getByText("Evidence support score")).toBeInTheDocument();
+    expect(screen.getByText(/Evidence support score/)).toBeInTheDocument();
     expect(screen.getByText("Safety Review")).toBeInTheDocument();
-    expect(screen.getByText("Needs more information")).toBeInTheDocument();
+    expect(screen.getAllByText("Needs more information")[0]).toBeInTheDocument();
     expect(screen.getByText("Confidence: medium")).toBeInTheDocument();
-    expect(screen.getByText("Grounding Audit")).toBeInTheDocument();
     expect(screen.getByText("Graph grounded")).toBeInTheDocument();
     expect(screen.getByText("Grounded diagnoses: 1")).toBeInTheDocument();
     expect(screen.getByText("Removed as ungrounded: 1")).toBeInTheDocument();
@@ -120,13 +117,9 @@ describe("DdxPanel", () => {
     const summary = screen.getAllByText("Appendicitis").find(element => element.closest("summary"))!;
     summary.closest("details")?.setAttribute("open", "");
 
-    expect(screen.getByText("Feature Evidence Path")).toBeInTheDocument();
+    expect(screen.getByText("Evidence Details")).toBeInTheDocument();
     expect(
-      screen.getByText(/Abdominal pain -> Right lower quadrant tenderness -> Appendicitis/)
+      screen.getAllByText("right lower quadrant tenderness")[0]
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Feature evidence: right lower quadrant tenderness/)
-    ).toBeInTheDocument();
-    expect(screen.getByText("Feature type: site")).toBeInTheDocument();
   });
 });

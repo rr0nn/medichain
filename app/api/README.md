@@ -97,6 +97,8 @@ Behavior:
 - streams the assistant response back to the client
 - persists the assistant response after streaming finishes
 - updates the conversation title from the first user message when applicable
+- serializes chat-stream failures into stable client-facing error payloads for toast handling
+- can emit transient provider-fallback data events when the requested model is unavailable and a default provider is used
 
 Response:
 

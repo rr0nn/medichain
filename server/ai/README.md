@@ -32,7 +32,21 @@ At a high level, the server-side diagnosis path is:
 - Prefer one folder per agent, tool, and workflow once a module becomes non-trivial.
 - Put reusable retrieval and integration logic under `tools/`.
 - Keep raw external-service access near the boundary it belongs to.
+- Classify provider and model-stream failures into stable payloads here so the client can show consistent toast messaging without parsing raw SDK errors.
 - Tests should sit next to the workflow or agent they validate when practical.
+
+## Error And Fallback Signaling
+
+- The interview agent can emit transient provider-fallback notices when a requested model provider is unavailable and the request is routed to the default provider instead.
+- Chat-stream failures should be serialized into stable client-facing error payloads before they leave the server boundary.
+- Tool-level Neo4j workflow failures are currently handled inside the conversation flow rather than surfaced as separate stream-error toasts.
+
+## Model Selection Split
+
+- The UI model selector changes the interview agent's chat model.
+- That selected chat model can affect outer interview orchestration, such as whether the agent asks for clarification or decides to call the diagnosis tool.
+- Once the diagnosis tool is invoked, the internal presentation/category/feature matcher agents remain pinned to the default diagnosis model.
+- This keeps the inner diagnosis pipeline stable even when the user switches chat providers, and it avoids spending extra tokens on narrow semantic matching tasks that work well with simpler, cheaper models.
 
 ## Related Documentation
 

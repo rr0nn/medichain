@@ -9,11 +9,12 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   return (
+    /* Theme Provider - Applies the selected app theme to the client UI. */
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
-      themes={["light", "dark", "medichain"]}
+      defaultTheme="light"
+      enableSystem={false}
+      themes={["light", "dark"]}
     >
       {children}
     </NextThemesProvider>
