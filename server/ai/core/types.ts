@@ -4,8 +4,10 @@
  */
 
 import type { UIMessage } from "ai";
+import type { ModelProvider } from "./models";
 
 export interface ChatRequest {
   id?: string;
   messages: UIMessage[];
+  modelProvider?: ModelProvider;
 }

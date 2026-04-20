@@ -81,10 +81,10 @@ export function ConversationSidebar({
 
   return (
     <aside className={cn(
-      "flex flex-col border-r border-border bg-background shrink-0 min-h-0 transition-all duration-200",
+      "glass flex flex-col shrink-0 min-h-0 transition-all duration-200 m-3 mr-0 rounded-[28px]",
       collapsed ? "w-12" : "w-60"
     )}>
-      <div className="flex items-center justify-between px-2 py-3 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-2 py-3 border-b border-[color:var(--glass-border)] shrink-0">
         {!collapsed && (
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pl-1">
             Consultations

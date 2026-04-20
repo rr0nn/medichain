@@ -10,6 +10,7 @@ import "./globals.css";
 import "./theme.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { BackgroundLayer } from "@/components/background-layer";
 
 export const metadata: Metadata = {
   title: "MediChain",
@@ -29,6 +30,7 @@ export default function RootLayout({
     >
       <body className="antialiased">
         <ThemeProvider>
+          <BackgroundLayer />
           <TooltipProvider>{children}</TooltipProvider>
         </ThemeProvider>
       </body>

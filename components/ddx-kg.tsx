@@ -2,10 +2,18 @@
 
 /**
  * @fileoverview Renders the knowledge-graph view that explains evidence behind ranked differentials.
- * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi
+ * @contributors Johnson Zhang, Aleisha Ly, Alyssa Ooi, Aryan Wadhawan
  */
 
-import { ReactFlow, Background, Controls, MarkerType } from '@xyflow/react';
+import {
+  ReactFlow,
+  Background,
+  BackgroundVariant,
+  MarkerType,
+  Position,
+  type Edge,
+  type Node,
+} from "@xyflow/react";
 
 type DiagnosisEvidencePath = {
   clinicalPresentationName: string;
@@ -19,206 +27,159 @@ type DdxKGProps = {
   diagnosisName: string;
 };
 
-const NODE_STYLES = {
+type Tier = "presentation" | "category" | "feature" | "diagnosis";
+
+const TIER_STYLE: Record<Tier, { bg: string; border: string }> = {
   presentation: {
-    background: '#ffd7d0',
-    border: '#fc9f8f',
+    bg: "var(--kg-presentation-bg)",
+    border: "var(--kg-presentation-border)",
   },
   category: {
-    background: '#fdffe3',
-    border: '#e3b008',
+    bg: "var(--kg-category-bg)",
+    border: "var(--kg-category-border)",
   },
   feature: {
-    background: '#dbeafe',
-    border: '#2563eb',
+    bg: "var(--kg-feature-bg)",
+    border: "var(--kg-feature-border)",
   },
   diagnosis: {
-    background: '#d0f2ff',
-    border: '#0ea5e9',
+    bg: "var(--kg-diagnosis-bg)",
+    border: "var(--kg-diagnosis-border)",
   },
-} as const;
+};
 
-const LEGEND_ITEMS = [
-  { label: "Presentation", colour: NODE_STYLES.presentation.background },
-  { label: "Category", colour: NODE_STYLES.category.background },
-  { label: "Feature", colour: NODE_STYLES.feature.background },
-  { label: "Diagnosis", colour: NODE_STYLES.diagnosis.background },
-];
+const NODE_WIDTH = 180;
+const NODE_GAP_X = 40;
+const ROW_GAP_Y = 130;
 
-type NodeProps = {
-  id: string,
-  index: number,
-  row: number,
-  item: string,
-  type: string,
-  background: string,
-  border: string,
+function nodeStyle(tier: Tier, emphasized = false) {
+  const { bg, border } = TIER_STYLE[tier];
+  return {
+    background: bg,
+    color: "var(--foreground)",
+    border: `1.5px solid ${border}`,
+    borderRadius: 14,
+    padding: emphasized ? "14px 16px" : "10px 12px",
+    fontSize: emphasized ? 14 : 12,
+    fontWeight: emphasized ? 600 : 500,
+    width: emphasized ? NODE_WIDTH + 40 : NODE_WIDTH,
+    textAlign: "center" as const,
+    whiteSpace: "pre-line" as const,
+    boxShadow: emphasized
+      ? `0 8px 24px color-mix(in oklch, ${border} 35%, transparent)`
+      : "0 1px 2px rgba(0,0,0,0.06)",
+  };
 }
 
-type EdgeProps = {
-  i: number,
-  from: string,
-  sourceNumber: number,
-  to: string,
-  targetNumber: number,
-  colour: string
+function rowX(i: number, count: number) {
+  const rowWidth = count * NODE_WIDTH + (count - 1) * NODE_GAP_X;
+  const start = -rowWidth / 2 + NODE_WIDTH / 2;
+  return start + i * (NODE_WIDTH + NODE_GAP_X);
 }
 
 export function DdxKG({ diagnosis, diagnosisName }: DdxKGProps) {
-  const grouped = {
-    presentations: Array.from(
-      new Set(diagnosis.map((path) => path.clinicalPresentationName)),
-    ),
-    evidence: Array.from(
-      new Map(
-        diagnosis.map((path) => [
-          `${path.evidenceType}:${path.evidenceName}`,
-          {
-            name: path.evidenceName,
-            type: path.evidenceType,
-            featureType: path.featureType,
-          },
-        ]),
-      ).values(),
-    ),
-  };
-
-  const makeNode = ({ id, index, row, item, type, background, border }: NodeProps) => {
-    return {
-      id,
-      position: { x: index * 200, y: row * 200 },
-      data: { label: item },
-      type: type,
-      style: {
-        background,
-        color: '#000000',
-        border: background === 'none' ? background : `${border} 2px solid`,
-        borderRadius: 15,
-        whiteSpace: 'pre-line',
-      },
-    }
-  };
-
-  const presentationNodes = grouped.presentations.map((item, index) =>
-    makeNode({
-      id: `n-0-${item}`,
-      index: index + 1.5,
-      row: 0,
-      item,
-      type: 'default',
-      background: NODE_STYLES.presentation.background,
-      border: NODE_STYLES.presentation.border,
-    }),
-  );
-
-  const evidenceNodes = grouped.evidence.map((item, index) => {
-    const style =
-      item.type === 'feature' ? NODE_STYLES.feature : NODE_STYLES.category;
-    const label =
-      item.type === 'feature' && item.featureType
-        ? `${item.name}\n(${item.featureType})`
-        : item.name;
-
-    return makeNode({
-      id: `n-1-${item.type}-${item.name}`,
-      index: index + 1.5,
-      row: 1,
-      item: label,
-      type: 'default',
-      background: style.background,
-      border: style.border,
-    });
-  });
-
-  const allNodes = [
-    ...presentationNodes,
-    ...evidenceNodes,
-    makeNode({
-      id: `n-2-${diagnosisName}`,
-      index: (grouped.evidence.length - 1) / 2 + 1.5,
-      row: 2,
-      item: diagnosisName,
-      type: 'output',
-      background: NODE_STYLES.diagnosis.background,
-      border: NODE_STYLES.diagnosis.border,
-    })
-  ];
-
-  const makeEdge = ({ i, from, sourceNumber, to, targetNumber, colour }: EdgeProps) => {
-    return {
-      id: `n-${i}-${to}`,
-      source: `n-${sourceNumber}-${from}`,
-      target: `n-${targetNumber}-${to}`,
-      type: 'step',
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 10,
-        height: 10,
-        color: colour,
-      },
-      style: {
-        stroke: colour,
-        strokeWidth: 2,
-      },
-    }
-  };
-
-  const edges = diagnosis.map((path, i) => {
-    return makeEdge({
-      i,
-      from: path.clinicalPresentationName,
-      sourceNumber: 0,
-      to: path.evidenceName,
-      targetNumber: 1,
-      colour: '#757575',
-    })
-  });
-
-  const finalEdge = diagnosis.map((path, i) => {
-    return makeEdge({
-      i,
-      from: path.evidenceName,
-      sourceNumber: 1,
-      to: diagnosisName,
-      targetNumber: 2,
-      colour: '#757575',
-    })
+  if (diagnosis.length === 0) {
+    return (
+      <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
+        No evidence paths to visualize.
+      </div>
+    );
   }
+
+  const presentations = Array.from(
+    new Set(diagnosis.map((p) => p.clinicalPresentationName)),
+  );
+  const evidence = Array.from(
+    new Map(
+      diagnosis.map((p) => [
+        `${p.evidenceType}:${p.evidenceName}`,
+        { name: p.evidenceName, type: p.evidenceType, featureType: p.featureType },
+      ]),
+    ).values(),
   );
 
-  const allEdges = [
-    ...edges.map((edge, index) => ({
-      ...edge,
-      source: `n-0-${diagnosis[index].clinicalPresentationName}`,
-      target: `n-1-${diagnosis[index].evidenceType}-${diagnosis[index].evidenceName}`,
+  const presentationNodes: Node[] = presentations.map((name, i) => ({
+    id: `pres-${name}`,
+    position: { x: rowX(i, presentations.length), y: 0 },
+    data: { label: name },
+    style: nodeStyle("presentation"),
+    sourcePosition: Position.Bottom,
+    targetPosition: Position.Top,
+  }));
+
+  const evidenceNodes: Node[] = evidence.map((e, i) => ({
+    id: `ev-${e.type}-${e.name}`,
+    position: { x: rowX(i, evidence.length), y: ROW_GAP_Y },
+    data: {
+      label:
+        e.type === "feature" && e.featureType
+          ? `${e.name}\n(${e.featureType})`
+          : e.name,
+    },
+    style: nodeStyle(e.type),
+    sourcePosition: Position.Bottom,
+    targetPosition: Position.Top,
+  }));
+
+  const diagnosisNode: Node = {
+    id: `dx-${diagnosisName}`,
+    position: { x: rowX(0, 1), y: ROW_GAP_Y * 2 },
+    data: { label: diagnosisName },
+    style: nodeStyle("diagnosis", true),
+    type: "output",
+    targetPosition: Position.Top,
+  };
+
+  const edgeStyle = {
+    stroke: "var(--kg-edge)",
+    strokeWidth: 1.75,
+  };
+  const marker = {
+    type: MarkerType.ArrowClosed,
+    width: 14,
+    height: 14,
+    color: "var(--kg-edge)",
+  };
+
+  const edges: Edge[] = [
+    ...diagnosis.map((p, i) => ({
+      id: `e-pres-ev-${i}`,
+      source: `pres-${p.clinicalPresentationName}`,
+      target: `ev-${p.evidenceType}-${p.evidenceName}`,
+      type: "smoothstep" as const,
+      style: edgeStyle,
+      markerEnd: marker,
     })),
-    ...finalEdge.map((edge, index) => ({
-      ...edge,
-      source: `n-1-${diagnosis[index].evidenceType}-${diagnosis[index].evidenceName}`,
-      target: `n-2-${diagnosisName}`,
+    ...diagnosis.map((p, i) => ({
+      id: `e-ev-dx-${i}`,
+      source: `ev-${p.evidenceType}-${p.evidenceName}`,
+      target: `dx-${diagnosisName}`,
+      type: "smoothstep" as const,
+      style: edgeStyle,
+      markerEnd: marker,
     })),
   ];
 
   return (
-    <div className="space-y-3">
-      <div className="inline-flex flex-wrap items-center gap-4 rounded-lg border border-input/30 bg-border/11 p-3">
-        {LEGEND_ITEMS.map((item) => (
-          <div key={item.label} className="flex items-center gap-2">
-            <div
-              className="h-4 w-4 rounded-sm"
-              style={{ backgroundColor: item.colour }}
-            />
-            <span className="text-xs text-muted-foreground">{item.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ height: '500px', width: '100%' }}>
-        <ReactFlow nodes={allNodes} edges={allEdges}>
-          <Background />
-          <Controls />
-        </ReactFlow>
-      </div>
+    <div className="h-[480px] w-full overflow-hidden rounded-xl border border-[color:var(--glass-border)] bg-background/40">
+      <ReactFlow
+        nodes={[...presentationNodes, ...evidenceNodes, diagnosisNode]}
+        edges={edges}
+        fitView
+        fitViewOptions={{ padding: 0.25 }}
+        proOptions={{ hideAttribution: true }}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        zoomOnScroll={false}
+        panOnScroll
+      >
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={18}
+          size={1.2}
+          color="var(--kg-bg-dot)"
+        />
+      </ReactFlow>
     </div>
   );
 }

@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [main, develop]
   pull_request:
 
 concurrency:
@@ -20,6 +21,7 @@ env:
   NEO4J_PASSWORD: password
   NEO4J_DATABASE: neo4j
   GOOGLE_GENERATIVE_AI_API_KEY: dummy
+  ANTHROPIC_API_KEY: dummy
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
@@ -87,42 +89,81 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Report production dependency vulnerabilities without blocking CI while
-      # existing upstream advisories are still being worked through.
+      # Block the pipeline on critical vulnerabilities only; high/moderate are reported
+      # via Dependabot and worked through out of band without gating every PR.
       - name: Audit dependencies
-        run: pnpm audit --prod --audit-level high || true
+        run: pnpm audit --prod --audit-level critical
 
   docker:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: quality
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: medichain
+          POSTGRES_USER: medichain
+          POSTGRES_PASSWORD: medichain
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U medichain -d medichain"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Apply Prisma migrations so the smoke test can exercise the real conversations API,
+      # not just static SSR — this catches schema drift and boot-time DB wiring issues.
+      - name: Apply database migrations
+        env:
+          DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
+        run: pnpm prisma migrate deploy
 
       # Docker build acts as a packaging smoke test: it verifies the production image can be
       # built from scratch, including dependency install, Prisma generation, and app bundling.
       - name: Build Docker image
         run: docker build --target runner --tag medichain:${{ github.sha }} .
 
-      # Start the built container and confirm the app can answer an HTTP request,
-      # which catches runtime startup issues that a plain image build would miss.
+      # Start the built container against the live postgres service (via --network host)
+      # and verify both the home route and a DB-backed API route answer, so the smoke
+      # test fails loudly if startup breaks or the DB wiring drifts.
       - name: Run Docker smoke test
         run: |
           docker run -d \
             --name medichain-smoke \
-            -p 3000:3000 \
-            -e DATABASE_URL=postgresql://medichain:medichain@db:5432/medichain \
-            -e NEO4J_URI=bolt://db:7687 \
+            --network host \
+            -e DATABASE_URL=postgresql://medichain:medichain@localhost:5432/medichain \
+            -e NEO4J_URI=bolt://localhost:7687 \
             -e NEO4J_USERNAME=neo4j \
             -e NEO4J_PASSWORD=password \
             -e NEO4J_DATABASE=neo4j \
             -e GOOGLE_GENERATIVE_AI_API_KEY=dummy \
+            -e ANTHROPIC_API_KEY=dummy \
             medichain:${{ github.sha }}
 
           for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null \
+              && curl --fail --silent http://127.0.0.1:3000/api/conversations > /dev/null; then
               exit 0
             fi
             sleep 2
