@@ -102,6 +102,11 @@ describe("POST /api/conversations/[id]/chat integration", () => {
     await executePromise;
 
     expect(mocks.mockCreateUIMessageStream).toHaveBeenCalledTimes(1);
+    expect(mocks.mockCreateUIMessageStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onError: expect.any(Function),
+      }),
+    );
     expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(body, writer);
     expect(mocks.mockCreateUIMessageStreamResponse).toHaveBeenCalledWith({
       stream,

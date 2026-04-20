@@ -1,6 +1,10 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  createChatErrorPayload,
+  serializeChatErrorPayload,
+} from "@/lib/chat/error-payload";
 import { useConversationSession } from "./use-conversation-session";
 
 const pushMock = vi.fn();
@@ -10,6 +14,8 @@ const setMessagesMock = vi.fn();
 const createConversationMock = vi.fn();
 const getConversationMessagesMock = vi.fn();
 const toastErrorMock = vi.fn();
+const toastInfoMock = vi.fn();
+const useChatMock = vi.fn();
 
 let currentSearchParams = new URLSearchParams();
 let chatState: {
@@ -30,12 +36,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@ai-sdk/react", () => ({
-  useChat: () => ({
-    messages: chatState.messages,
-    sendMessage: sendMessageMock,
-    setMessages: setMessagesMock,
-    status: chatState.status,
-  }),
+  useChat: (...args: unknown[]) => useChatMock(...args),
 }));
 
 vi.mock("@/lib/conversations", () => ({
@@ -47,6 +48,7 @@ vi.mock("@/lib/conversations", () => ({
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastErrorMock(...args),
+    info: (...args: unknown[]) => toastInfoMock(...args),
   },
 }));
 
@@ -64,6 +66,14 @@ describe("useConversationSession", () => {
     createConversationMock.mockReset();
     getConversationMessagesMock.mockReset();
     toastErrorMock.mockReset();
+    toastInfoMock.mockReset();
+    useChatMock.mockReset();
+    useChatMock.mockImplementation(() => ({
+      messages: chatState.messages,
+      sendMessage: sendMessageMock,
+      setMessages: setMessagesMock,
+      status: chatState.status,
+    }));
   });
 
   it("loads messages for the active conversation id from the URL", async () => {
@@ -261,5 +271,62 @@ describe("useConversationSession", () => {
 
     expect(pushMock).toHaveBeenCalledWith("/?foo=bar");
     expect(result.current.input).toBe("");
+  });
+
+  it("shows an LLM-specific toast for classified chat-stream errors", () => {
+    renderHook(() => useConversationSession("gemini"));
+
+    const options = useChatMock.mock.calls[0][0] as {
+      onError?: (error: Error) => void;
+    };
+
+    options.onError?.(
+      new Error(
+        serializeChatErrorPayload(createChatErrorPayload("LLM_UNAVAILABLE")),
+      ),
+    );
+
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "The AI service is currently unavailable",
+    );
+  });
+
+  it("shows a rate-limit toast for classified chat-stream errors", () => {
+    renderHook(() => useConversationSession("gemini"));
+
+    const options = useChatMock.mock.calls[0][0] as {
+      onError?: (error: Error) => void;
+    };
+
+    options.onError?.(
+      new Error(
+        serializeChatErrorPayload(createChatErrorPayload("LLM_RATE_LIMITED")),
+      ),
+    );
+
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "AI usage limit reached. Please try again later",
+    );
+  });
+
+  it("shows an info toast when the requested model falls back to Gemini", () => {
+    renderHook(() => useConversationSession("claude"));
+
+    const options = useChatMock.mock.calls[0][0] as {
+      onData?: (part: { type: string; data: { message: string } }) => void;
+    };
+
+    options.onData?.({
+      type: "data-provider-fallback",
+      data: {
+        requestedProvider: "claude",
+        resolvedProvider: "gemini",
+        message: "claude is unavailable, using default gemini instead",
+      },
+    });
+
+    expect(toastInfoMock).toHaveBeenCalledWith(
+      "claude is unavailable, using default gemini instead",
+    );
   });
 });

@@ -13,7 +13,9 @@ import {
 } from "ai";
 import { z } from "zod";
 
+import { getProviderFallbackNotice } from "@/lib/chat/provider-fallback";
 import type { ChatRequest } from "@/server/ai/core/types";
+import { serializeChatStreamError } from "@/server/ai/core/chat-error-classification";
 import { getChatModel, resolveProvider } from "@/server/ai/core/models";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
 import { composePatientResponse } from "./patient-response";
@@ -89,6 +91,14 @@ export async function runInterviewAgent(
   const modelMessages = await convertToModelMessages(messages);
   const provider = resolveProvider(modelProvider);
 
+  if (modelProvider && modelProvider !== provider) {
+    writer.write({
+      type: "data-provider-fallback",
+      data: getProviderFallbackNotice(modelProvider, provider),
+      transient: true,
+    } as never);
+  }
+
   const result = streamText({
     model: getChatModel(provider),
     system: SYSTEM_PROMPT,
@@ -150,5 +160,9 @@ export async function runInterviewAgent(
     stopWhen: stepCountIs(4),
   });
 
-  writer.merge(result.toUIMessageStream<UIMessage>());
+  writer.merge(
+    result.toUIMessageStream<UIMessage>({
+      onError: serializeChatStreamError,
+    }),
+  );
 }

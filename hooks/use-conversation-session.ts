@@ -12,6 +12,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { getChatErrorToastMessage } from "@/lib/chat/error-payload";
+import type { ProviderFallbackNotice } from "@/lib/chat/provider-fallback";
 import {
   createConversation,
   getConversationMessages,
@@ -51,6 +53,16 @@ export function useConversationSession(
 
   const { messages, sendMessage, setMessages, status } = useChat({
     id: activeConversationId ?? undefined,
+    onData: (part) => {
+      if (part.type !== "data-provider-fallback") {
+        return;
+      }
+
+      toast.info((part.data as ProviderFallbackNotice).message);
+    },
+    onError: (error) => {
+      toast.error(getChatErrorToastMessage(error));
+    },
     transport: new DefaultChatTransport({
       prepareSendMessagesRequest: ({ id, messages, body }) => ({
         api: `/api/conversations/${id}/chat`,

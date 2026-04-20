@@ -87,6 +87,11 @@ describe("runInterviewAgent", () => {
                 ),
             })
         );
+        expect(fakeStreamResult.toUIMessageStream).toHaveBeenCalledWith(
+            expect.objectContaining({
+                onError: expect.any(Function),
+            })
+        );
         expect(writer.merge).toHaveBeenCalledWith(fakeStreamResult.toUIMessageStream());
     });
 
@@ -129,6 +134,42 @@ describe("runInterviewAgent", () => {
                 "Patient summary: Lower abdominal pain with nausea",
             ].join("\n"),
             expect.any(Function)
+        );
+    });
+
+    it("emits a fallback notice when Claude is requested without availability", async () => {
+        const convertedMessages = [
+            { role: "user", content: [{ type: "text", text: "Abdominal pain" }] },
+        ];
+        const fakeModel = { id: "fake-chat-model" };
+        const fakeStreamResult = { toUIMessageStream: vi.fn() };
+        const writer = {
+            write: vi.fn(),
+            merge: vi.fn(),
+        };
+
+        mocks.mockConvertToModelMessages.mockResolvedValue(convertedMessages);
+        mocks.mockResolveProvider.mockReturnValue("gemini");
+        mocks.mockGetChatModel.mockReturnValue(fakeModel);
+        mocks.mockStreamText.mockReturnValue(fakeStreamResult);
+
+        await runInterviewAgent(
+            {
+                messages: [{ id: "1", role: "user", content: "Abdominal pain" }],
+                modelProvider: "claude",
+            } as never,
+            writer as never
+        );
+
+        expect(writer.write).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: "data-provider-fallback",
+                data: expect.objectContaining({
+                    requestedProvider: "claude",
+                    resolvedProvider: "gemini",
+                    message: "claude is unavailable, using default gemini instead",
+                }),
+            }),
         );
     });
 
