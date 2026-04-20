@@ -5,11 +5,16 @@ import {
   createChatErrorPayload,
   serializeChatErrorPayload,
 } from "@/lib/chat/error-payload";
+import { ConversationNotFoundError } from "@/lib/conversations";
 import type { SelectedModelIds } from "@/lib/chat/model-catalog";
 import { useConversationSession } from "./use-conversation-session";
 
 const pushMock = vi.fn();
 const replaceMock = vi.fn();
+const routerMock = {
+  push: pushMock,
+  replace: replaceMock,
+};
 const sendMessageMock = vi.fn();
 const stopMock = vi.fn();
 const setMessagesMock = vi.fn();
@@ -29,10 +34,7 @@ let chatState: {
 };
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: pushMock,
-    replace: replaceMock,
-  }),
+  useRouter: () => routerMock,
   useSearchParams: () => currentSearchParams,
 }));
 
@@ -40,11 +42,16 @@ vi.mock("@ai-sdk/react", () => ({
   useChat: (...args: unknown[]) => useChatMock(...args),
 }));
 
-vi.mock("@/lib/conversations", () => ({
-  createConversation: (...args: unknown[]) => createConversationMock(...args),
-  getConversationMessages: (...args: unknown[]) =>
-    getConversationMessagesMock(...args),
-}));
+vi.mock("@/lib/conversations", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/conversations")>();
+
+  return {
+    ...actual,
+    createConversation: (...args: unknown[]) => createConversationMock(...args),
+    getConversationMessages: (...args: unknown[]) =>
+      getConversationMessagesMock(...args),
+  };
+});
 
 vi.mock("sonner", () => ({
   toast: {
@@ -217,6 +224,27 @@ describe("useConversationSession", () => {
       expect(toastErrorMock).toHaveBeenCalledWith(
         "Failed to load conversation history",
       );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("clears an invalid conversation id from the URL when the consultation is missing", async () => {
+    currentSearchParams = new URLSearchParams("conversationId=missing");
+    getConversationMessagesMock.mockRejectedValue(
+      new ConversationNotFoundError(),
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderSession();
+
+    await waitFor(() => {
+      expect(getConversationMessagesMock).toHaveBeenCalledWith("missing");
+      expect(setMessagesMock).toHaveBeenCalledWith([]);
+      expect(replaceMock).toHaveBeenCalledWith("/");
+      expect(toastErrorMock).toHaveBeenCalledWith("Consultation not found");
     });
 
     consoleErrorSpy.mockRestore();

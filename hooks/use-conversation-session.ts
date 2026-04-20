@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { getChatErrorToastMessage } from "@/lib/chat/error-payload";
 import type { SelectedModelIds } from "@/lib/chat/model-catalog";
 import {
+  ConversationNotFoundError,
   createConversation,
   getConversationMessages,
 } from "@/lib/conversations";
@@ -104,12 +105,19 @@ export function useConversationSession(
       } catch (error) {
         console.error("[chat] Failed to load conversation messages:", error);
         setMessages([]);
+
+        if (error instanceof ConversationNotFoundError) {
+          setConversationInUrl(null, true);
+          toast.error("Consultation not found");
+          return;
+        }
+
         toast.error("Failed to load conversation history");
       } finally {
         setLoadingMessages(false);
       }
     },
-    [setMessages],
+    [setConversationInUrl, setMessages],
   );
 
   useEffect(() => {
