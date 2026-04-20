@@ -35,6 +35,7 @@ Within `server/ai/`, the diagnosis pipeline is organized as:
 - Neo4j
 - Vercel AI SDK
 - Google Generative AI
+- Sonner
 - Vitest
 
 ## Prerequisites
@@ -193,3 +194,4 @@ public/                 Static assets
 - Differentials are intended to be graph-grounded rather than free-form model output.
 - Safety review can route the conversation back for clarification when evidence is weak.
 - API routes should stay thin and delegate work into `server/`.
+- The chat UI uses toast notifications for conversation persistence failures, provider fallback notices, and classified LLM stream failures such as provider unavailability or rate limits.

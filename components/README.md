@@ -14,8 +14,7 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 ## Key Components
 
 - `chat/chat-header.tsx`, `chat/chat-message-list.tsx`, and `chat/chat-composer.tsx`: structure the left-side consultation experience
-- `hooks/use-conversation-session.ts`: owns URL-synced chat session lifecycle, message loading, and first-message conversation creation flow
-- `hooks/use-conversation-list.ts`: owns sidebar list loading, deletion, collapse state, and refresh behavior
+- `ui/toaster.tsx`: shared app toaster wrapper that keeps Sonner aligned with the current theme and global placement
 - `ddx/ddx-panel.tsx`: renders workflow state, evidence summary, safety review, and ranked differentials
 - `ddx/evidence-subgraph.tsx`: visualizes diagnosis evidence paths as a subgraph of the knowledge graph
 - `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
@@ -23,6 +22,11 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 - `theme/theme-selector.tsx` and `theme/theme-provider.tsx`: theme switching support
 - `ai-elements/model-selector.tsx`: adapted AI Elements model selector used in the chat header
 - `ai-elements/`: shared chat layout and message presentation
+
+## Related Hooks
+
+- `../hooks/use-conversation-session.ts`: owns URL-synced chat session lifecycle, message loading, first-message conversation creation flow, and chat-related toast handling
+- `../hooks/use-conversation-list.ts`: owns sidebar list loading, deletion, collapse state, refresh behavior, and sidebar toast handling
 
 ## Conventions
 
@@ -33,6 +37,7 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 - Keep domain-heavy data shaping out of components when it can live in `server/` or `lib/`.
 - Keep route sync, fetch orchestration, and conversation lifecycle logic in hooks or client helpers rather than in render components.
 - Keep `chat/` focused on the active consultation pane, and keep `conversation-*` naming for history/session list concerns.
+- Keep toast triggering in client hooks and feature orchestration layers rather than spreading `toast.*` calls across presentation components.
 - Co-locate component tests next to the component when the test is tightly coupled to its rendered behavior.
 
 ## Testing

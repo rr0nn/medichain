@@ -16,6 +16,12 @@ This folder contains the Next.js application entry points: the main page, global
 - `globals.css`: global styles, Tailwind layer setup, and shared theme tokens
 - `api/`: internal application API routes for conversations, messages, and chat streaming
 
+## Notification Behavior
+
+- `layout.tsx` mounts the shared Sonner toaster so client hooks can raise toast notifications anywhere in the app shell.
+- Conversation and chat hooks are responsible for deciding when persistence and streaming failures should be surfaced to the user.
+- API routes and server modules should shape streaming error payloads, not call UI notification code directly.
+
 ## Design Rules
 
 - Keep API route handlers thin.
