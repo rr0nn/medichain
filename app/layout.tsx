@@ -8,6 +8,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { BackgroundLayer } from "@/components/layout/background-layer";
 
@@ -31,6 +32,7 @@ export default function RootLayout({
         <ThemeProvider>
           <BackgroundLayer />
           <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
