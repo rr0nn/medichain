@@ -5,6 +5,7 @@ import {
   createChatErrorPayload,
   serializeChatErrorPayload,
 } from "@/lib/chat/error-payload";
+import type { ProviderFallbackNotice } from "@/lib/chat/provider-fallback";
 import { useConversationSession } from "./use-conversation-session";
 
 const pushMock = vi.fn();
@@ -313,7 +314,7 @@ describe("useConversationSession", () => {
     renderHook(() => useConversationSession("claude"));
 
     const options = useChatMock.mock.calls[0][0] as {
-      onData?: (part: { type: string; data: { message: string } }) => void;
+      onData?: (part: { type: string; data: ProviderFallbackNotice }) => void;
     };
 
     options.onData?.({
