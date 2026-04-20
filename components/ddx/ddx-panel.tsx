@@ -57,9 +57,7 @@ export function DdxPanel({
                   Differential Diagnosis Support
                 </h2>
                 <p className="max-w-xl text-sm text-muted-foreground">
-                  Transparent, knowledge graph-grounded review of likely
-                  diagnoses and supporting graph context for the current
-                  consultation.
+                  Knowledge graph-grounded review of likely diagnoses and supporting context.
                 </p>
               </div>
               <span className="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-primary">
@@ -69,25 +67,31 @@ export function DdxPanel({
           </div>
         </header>
 
-        {/* Workflow Flowchart - Shows where the reasoning pipeline is up to. */}
-        <section className="space-y-2">
+        {/* Workflow Status - Groups pipeline progress, matched evidence, and safety checks. */}
+        <section className="space-y-3">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Analysis Workflow
+              Workflow Status
             </p>
             <p className="text-xs text-muted-foreground">
-              Shows progress through presentation matching, evidence matching, diagnosis ranking, and safety review.
+              Shows workflow progress and matched evidence before diagnosis ranking.
             </p>
           </div>
+          {/* Workflow Canvas - Visualizes the current DDx pipeline stage and completion state. */}
           <WorkflowCanvas
             steps={steps}
             matchedClinicalPresentationCount={matchedClinicalPresentations.length}
             criticAssessment={criticAssessment}
           />
-        </section>
 
-        {/* Safety Review - Summarizes confidence and grounding checks. */}
-        <section>
+          {/* Evidence Summary - Shows matched presentations, categories, and features. */}
+          <EvidenceSummary
+            matchedClinicalPresentations={matchedClinicalPresentations}
+            matchedCategories={matchedCategories}
+            matchedFeatures={matchedFeatures}
+          />
+
+          {/* Safety Review - Summarizes confidence and grounding checks. */}
           <SafetyReview
             criticAssessment={criticAssessment}
             groundingAssessment={groundingAssessment}
@@ -95,7 +99,7 @@ export function DdxPanel({
         </section>
 
         {/* Differential List - Shows the ranked diagnosis suggestions. */}
-        <section className="mt-2 border-t border-[color:var(--glass-border)]/70 pt-5 space-y-2">
+        <section className="pt-5 space-y-2">
           <div className="space-y-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Differential List
@@ -103,15 +107,6 @@ export function DdxPanel({
           </div>
           <DifferentialList
             differentials={differentials}
-            matchedClinicalPresentations={matchedClinicalPresentations}
-            matchedCategories={matchedCategories}
-            matchedFeatures={matchedFeatures}
-          />
-        </section>
-
-        {/* Evidence Summary - Shows matched presentations, categories, and features. */}
-        <section className="mt-2 border-t border-[color:var(--glass-border)]/70 pt-5">
-          <EvidenceSummary
             matchedClinicalPresentations={matchedClinicalPresentations}
             matchedCategories={matchedCategories}
             matchedFeatures={matchedFeatures}
