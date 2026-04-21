@@ -13,10 +13,9 @@ import {
 } from "ai";
 import { z } from "zod";
 
-import { getProviderFallbackNotice } from "@/lib/chat/provider-fallback";
 import type { ChatRequest } from "@/server/ai/core/types";
 import { serializeChatStreamError } from "@/server/ai/core/chat-error-classification";
-import { getChatModel, resolveProvider } from "@/server/ai/core/models";
+import { resolveModelSelection } from "@/server/ai/core/models";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
 import { composePatientResponse } from "./patient-response";
 
@@ -85,22 +84,23 @@ General rules:
 - If the tool output is weak or sparse, say so plainly instead of overstating confidence.`;
 
 export async function runInterviewAgent(
-  { messages, modelProvider }: ChatRequest,
+  { messages, chatModelId, diagnosisModelId }: ChatRequest,
   writer: UIMessageStreamWriter
 ) {
-  const modelMessages = await convertToModelMessages(messages);
-  const provider = resolveProvider(modelProvider);
-
-  if (modelProvider && modelProvider !== provider) {
-    writer.write({
-      type: "data-provider-fallback",
-      data: getProviderFallbackNotice(modelProvider, provider),
-      transient: true,
-    } as never);
-  }
+  const modelMessages = await convertToModelMessages(messages, {
+    // If a stream was manually stopped, the last assistant message can contain
+    // an incomplete tool call. Ignore those transient parts so the next user
+    // message can continue the consultation cleanly.
+    ignoreIncompleteToolCalls: true,
+  });
+  const chatSelection = resolveModelSelection("chat", chatModelId);
+  const diagnosisSelection = resolveModelSelection(
+    "diagnosis",
+    diagnosisModelId,
+  );
 
   const result = streamText({
-    model: getChatModel(provider),
+    model: chatSelection.model,
     system: SYSTEM_PROMPT,
     messages: modelMessages,
     tools: {
@@ -136,15 +136,19 @@ export async function runInterviewAgent(
             newInformationFocus,
           });
 
-          const safetyResult = await runSafetyWorkflow(workflowPatientDescription, (event) =>
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            writer.write({ type: "data-step", data: event } as any),
+          const safetyResult = await runSafetyWorkflow(
+            workflowPatientDescription,
+            (event) =>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              writer.write({ type: "data-step", data: event } as any),
+            diagnosisSelection.modelId,
           );
 
           if (safetyResult.status === "ready_for_review") {
             const composedResponse = await composePatientResponse(
               patientDescription,
               safetyResult,
+              chatSelection.modelId,
             );
 
             return {

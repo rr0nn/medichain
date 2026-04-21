@@ -4,10 +4,10 @@
  */
 
 import type { UIMessage } from "ai";
-import type { ModelProvider } from "./models";
 
 export interface ChatRequest {
+  chatModelId?: string | null;
+  diagnosisModelId?: string | null;
   id?: string;
   messages: UIMessage[];
-  modelProvider?: ModelProvider;
 }

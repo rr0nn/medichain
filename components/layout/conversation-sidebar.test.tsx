@@ -102,4 +102,49 @@ describe("ConversationSidebar", () => {
     expect(deleteConversation).toHaveBeenCalledWith("conv-1");
     expect(toggleCollapsed).toHaveBeenCalledTimes(1);
   });
+
+  it("disables consultation switching while selection is blocked", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onNew = vi.fn();
+
+    useConversationListMock.mockReturnValue({
+      collapsed: false,
+      conversations: [
+        {
+          id: "conv-1",
+          title: "Appendicitis workup",
+          createdAt: "2026-04-20T00:00:00.000Z",
+          updatedAt: "2026-04-20T00:00:00.000Z",
+          _count: { messages: 2 },
+        },
+      ],
+      loading: false,
+      actions: {
+        deleteConversation: vi.fn(),
+        toggleCollapsed: vi.fn(),
+      },
+    });
+
+    render(
+      <ConversationSidebar
+        activeId={null}
+        disableSelection
+        onSelect={onSelect}
+        onNew={onNew}
+      />,
+    );
+
+    await user.click(screen.getByText("Appendicitis workup"));
+    await user.click(screen.getByTitle("New consultation"));
+
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(onNew).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /appendicitis workup/i })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(screen.getByTitle("Delete consultation")).toBeDisabled();
+    expect(screen.getByTitle("New consultation")).toBeDisabled();
+  });
 });

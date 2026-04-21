@@ -17,6 +17,13 @@ type CreateConversationInput = {
   title?: string;
 };
 
+export class ConversationNotFoundError extends Error {
+  constructor() {
+    super("Conversation not found");
+    this.name = "ConversationNotFoundError";
+  }
+}
+
 async function readJson<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
     throw new Error(fallbackMessage);
@@ -57,5 +64,10 @@ export async function deleteConversation(id: string): Promise<void> {
 
 export async function getConversationMessages(id: string): Promise<UIMessage[]> {
   const response = await fetch(`/api/conversations/${id}/messages`);
+
+  if (response.status === 404) {
+    throw new ConversationNotFoundError();
+  }
+
   return readJson<UIMessage[]>(response, "Failed to load conversation history");
 }

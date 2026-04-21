@@ -203,7 +203,9 @@ public/                 Static assets
 - Differentials are intended to be graph-grounded rather than free-form model output.
 - Safety review can route the conversation back for clarification when evidence is weak.
 - API routes should stay thin and delegate work into `server/`.
-- The chat UI uses toast notifications for conversation persistence failures, provider fallback notices, and classified LLM stream failures such as provider unavailability or rate limits.
-- The model selector controls the user-facing chat/interview model. That means it can change the outer interview behavior, such as when follow-up questions are asked or when the diagnosis tool is invoked, while the inner diagnosis matching pipeline stays on the default diagnosis model for consistency and token efficiency. The internal matching tasks are narrow semantic matching problems, so they do not need the more expensive chat model variants.
-- If `ANTHROPIC_API_KEY` is not set, Claude selections fall back to the default Gemini provider.
-- If `OPENAI_API_KEY` is not set, OpenAI selections fall back to the default Gemini provider.
+- The chat UI uses toast notifications for conversation persistence failures, unavailable model selections, and classified LLM stream failures such as provider unavailability or rate limits.
+- The frontend loads its model-selector options from a backend-driven model catalog rather than hardcoding the model list locally.
+- The UI now exposes separate selectors for the chat model and the diagnosis model. This lets users choose a stronger model for the outer chat orchestration task, while using a lighter and cheaper model for the inner diagnosis semantic-matching pipeline when appropriate.
+- The chat model changes the outer interview behavior, such as when follow-up questions are asked or when the diagnosis tool is invoked, while the diagnosis model changes the inner presentation/category/feature matching pipeline.
+- If `ANTHROPIC_API_KEY` is not set, Claude models remain visible but unavailable in the selector and requests using them will fail with an explicit model-unavailable error.
+- If `OPENAI_API_KEY` is not set, OpenAI models remain visible but unavailable in the selector and requests using them will fail with an explicit model-unavailable error.

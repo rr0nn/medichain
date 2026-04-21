@@ -64,6 +64,15 @@ function isLlmUnavailableError(error: unknown): boolean {
 }
 
 function classifyChatError(error: unknown): ChatErrorCode {
+  const modelSelectionErrorCode = getErrorCode(error);
+
+  if (
+    modelSelectionErrorCode === "CHAT_MODEL_UNAVAILABLE" ||
+    modelSelectionErrorCode === "DIAGNOSIS_MODEL_UNAVAILABLE"
+  ) {
+    return modelSelectionErrorCode;
+  }
+
   if (isLlmRateLimitedError(error)) {
     return "LLM_RATE_LIMITED";
   }

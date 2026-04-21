@@ -5,17 +5,22 @@ import {
   createChatErrorPayload,
   serializeChatErrorPayload,
 } from "@/lib/chat/error-payload";
-import type { ProviderFallbackNotice } from "@/lib/chat/provider-fallback";
+import { ConversationNotFoundError } from "@/lib/conversations";
+import type { SelectedModelIds } from "@/lib/chat/model-catalog";
 import { useConversationSession } from "./use-conversation-session";
 
 const pushMock = vi.fn();
 const replaceMock = vi.fn();
+const routerMock = {
+  push: pushMock,
+  replace: replaceMock,
+};
 const sendMessageMock = vi.fn();
+const stopMock = vi.fn();
 const setMessagesMock = vi.fn();
 const createConversationMock = vi.fn();
 const getConversationMessagesMock = vi.fn();
 const toastErrorMock = vi.fn();
-const toastInfoMock = vi.fn();
 const useChatMock = vi.fn();
 
 let currentSearchParams = new URLSearchParams();
@@ -29,10 +34,7 @@ let chatState: {
 };
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: pushMock,
-    replace: replaceMock,
-  }),
+  useRouter: () => routerMock,
   useSearchParams: () => currentSearchParams,
 }));
 
@@ -40,16 +42,20 @@ vi.mock("@ai-sdk/react", () => ({
   useChat: (...args: unknown[]) => useChatMock(...args),
 }));
 
-vi.mock("@/lib/conversations", () => ({
-  createConversation: (...args: unknown[]) => createConversationMock(...args),
-  getConversationMessages: (...args: unknown[]) =>
-    getConversationMessagesMock(...args),
-}));
+vi.mock("@/lib/conversations", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/conversations")>();
+
+  return {
+    ...actual,
+    createConversation: (...args: unknown[]) => createConversationMock(...args),
+    getConversationMessages: (...args: unknown[]) =>
+      getConversationMessagesMock(...args),
+  };
+});
 
 vi.mock("sonner", () => ({
   toast: {
     error: (...args: unknown[]) => toastErrorMock(...args),
-    info: (...args: unknown[]) => toastInfoMock(...args),
   },
 }));
 
@@ -63,19 +69,29 @@ describe("useConversationSession", () => {
     pushMock.mockReset();
     replaceMock.mockReset();
     sendMessageMock.mockReset();
+    stopMock.mockReset();
     setMessagesMock.mockReset();
     createConversationMock.mockReset();
     getConversationMessagesMock.mockReset();
     toastErrorMock.mockReset();
-    toastInfoMock.mockReset();
     useChatMock.mockReset();
     useChatMock.mockImplementation(() => ({
       messages: chatState.messages,
       sendMessage: sendMessageMock,
       setMessages: setMessagesMock,
       status: chatState.status,
+      stop: stopMock,
     }));
   });
+
+  function renderSession(
+    selectedModelIds: SelectedModelIds = {
+      chat: "gemini-2.5-flash",
+      diagnosis: "gemini-2.5-flash",
+    },
+  ) {
+    return renderHook(() => useConversationSession(selectedModelIds));
+  }
 
   it("loads messages for the active conversation id from the URL", async () => {
     currentSearchParams = new URLSearchParams("conversationId=conv-1");
@@ -83,7 +99,7 @@ describe("useConversationSession", () => {
       { id: "m1", role: "assistant", parts: [{ type: "text", text: "hello" }] },
     ]);
 
-    renderHook(() => useConversationSession("gemini"));
+    renderSession();
 
     await waitFor(() => {
       expect(getConversationMessagesMock).toHaveBeenCalledWith("conv-1");
@@ -112,9 +128,7 @@ describe("useConversationSession", () => {
       currentSearchParams = new URLSearchParams(query);
     });
 
-    const { result, rerender } = renderHook(() =>
-      useConversationSession("gemini"),
-    );
+    const { result, rerender } = renderSession();
 
     act(() => {
       result.current.setInput("Initial patient summary");
@@ -154,7 +168,7 @@ describe("useConversationSession", () => {
     currentSearchParams = new URLSearchParams("conversationId=conv-2");
     getConversationMessagesMock.mockResolvedValue([]);
 
-    const { result } = renderHook(() => useConversationSession("gemini"));
+    const { result } = renderSession();
 
     act(() => {
       result.current.setInput("Follow-up details");
@@ -176,7 +190,7 @@ describe("useConversationSession", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    const { result } = renderHook(() => useConversationSession("gemini"));
+    const { result } = renderSession();
 
     act(() => {
       result.current.setInput("Draft message");
@@ -202,7 +216,7 @@ describe("useConversationSession", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    renderHook(() => useConversationSession("gemini"));
+    renderSession();
 
     await waitFor(() => {
       expect(getConversationMessagesMock).toHaveBeenCalledWith("conv-err");
@@ -210,6 +224,27 @@ describe("useConversationSession", () => {
       expect(toastErrorMock).toHaveBeenCalledWith(
         "Failed to load conversation history",
       );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("clears an invalid conversation id from the URL when the consultation is missing", async () => {
+    currentSearchParams = new URLSearchParams("conversationId=missing");
+    getConversationMessagesMock.mockRejectedValue(
+      new ConversationNotFoundError(),
+    );
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    renderSession();
+
+    await waitFor(() => {
+      expect(getConversationMessagesMock).toHaveBeenCalledWith("missing");
+      expect(setMessagesMock).toHaveBeenCalledWith([]);
+      expect(replaceMock).toHaveBeenCalledWith("/");
+      expect(toastErrorMock).toHaveBeenCalledWith("Consultation not found");
     });
 
     consoleErrorSpy.mockRestore();
@@ -223,7 +258,7 @@ describe("useConversationSession", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    const { result } = renderHook(() => useConversationSession("gemini"));
+    const { result } = renderSession();
 
     act(() => {
       result.current.setInput("Follow-up details");
@@ -242,11 +277,23 @@ describe("useConversationSession", () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it("stops an in-flight response when requested", async () => {
+    chatState.status = "streaming";
+
+    const { result } = renderSession();
+
+    await act(async () => {
+      await result.current.actions.stopGenerating();
+    });
+
+    expect(stopMock).toHaveBeenCalledTimes(1);
+  });
+
   it("clears the transcript when a selected conversation loads no messages", async () => {
     currentSearchParams = new URLSearchParams("conversationId=conv-empty");
     getConversationMessagesMock.mockResolvedValue([]);
 
-    renderHook(() => useConversationSession("gemini"));
+    renderSession();
 
     await waitFor(() => {
       expect(getConversationMessagesMock).toHaveBeenCalledWith("conv-empty");
@@ -257,7 +304,7 @@ describe("useConversationSession", () => {
   it("updates the URL for selection and reset actions", () => {
     currentSearchParams = new URLSearchParams("conversationId=old&foo=bar");
 
-    const { result } = renderHook(() => useConversationSession("gemini"));
+    const { result } = renderSession();
 
     act(() => {
       result.current.actions.selectConversation("conv-3");
@@ -275,7 +322,7 @@ describe("useConversationSession", () => {
   });
 
   it("shows an LLM-specific toast for classified chat-stream errors", () => {
-    renderHook(() => useConversationSession("gemini"));
+    renderSession();
 
     const options = useChatMock.mock.calls[0][0] as {
       onError?: (error: Error) => void;
@@ -293,7 +340,7 @@ describe("useConversationSession", () => {
   });
 
   it("shows a rate-limit toast for classified chat-stream errors", () => {
-    renderHook(() => useConversationSession("gemini"));
+    renderSession();
 
     const options = useChatMock.mock.calls[0][0] as {
       onError?: (error: Error) => void;
@@ -310,45 +357,67 @@ describe("useConversationSession", () => {
     );
   });
 
-  it("shows an info toast when the requested model falls back to Gemini", () => {
-    renderHook(() => useConversationSession("claude"));
-
-    const options = useChatMock.mock.calls[0][0] as {
-      onData?: (part: { type: string; data: ProviderFallbackNotice }) => void;
-    };
-
-    options.onData?.({
-      type: "data-provider-fallback",
-      data: {
-        requestedProvider: "claude",
-        resolvedProvider: "gemini",
-        message: "claude is unavailable, using default gemini instead",
-      },
+  it("shows a toast when the selected chat model is unavailable", () => {
+    renderSession({
+      chat: "claude-sonnet-4-5",
+      diagnosis: "gemini-2.5-flash",
     });
 
-    expect(toastInfoMock).toHaveBeenCalledWith(
-      "claude is unavailable, using default gemini instead",
+    const options = useChatMock.mock.calls[0][0] as {
+      onError?: (error: Error) => void;
+    };
+
+    options.onError?.(
+      new Error(
+        serializeChatErrorPayload(
+          createChatErrorPayload("CHAT_MODEL_UNAVAILABLE"),
+        ),
+      ),
+    );
+
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "The selected chat model is unavailable",
     );
   });
 
-  it("shows an info toast when the requested OpenAI model falls back to Gemini", () => {
-    renderHook(() => useConversationSession("openai"));
-
-    const options = useChatMock.mock.calls[0][0] as {
-      onData?: (part: { type: string; data: ProviderFallbackNotice }) => void;
-    };
-
-    options.onData?.({
-      type: "data-provider-fallback",
-      data: {
-        requestedProvider: "openai",
-        resolvedProvider: "gemini",
-        message: "openai is unavailable, using default gemini instead",
-      },
+  it("shows a toast when the selected diagnosis model is unavailable", () => {
+    renderSession({
+      chat: "gemini-2.5-flash",
+      diagnosis: "claude-sonnet-4-5",
     });
 
-    expect(toastInfoMock).toHaveBeenCalledWith(
-      "openai is unavailable, using default gemini instead",
+    const options = useChatMock.mock.calls[0][0] as {
+      onError?: (error: Error) => void;
+      transport?: {
+        prepareSendMessagesRequest?: (input: {
+          body: Record<string, unknown>;
+          id: string;
+          messages: unknown[];
+        }) => { api: string; body: Record<string, unknown> };
+      };
+    };
+
+    options.onError?.(
+      new Error(
+        serializeChatErrorPayload(
+          createChatErrorPayload("DIAGNOSIS_MODEL_UNAVAILABLE"),
+        ),
+      ),
     );
+
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "The selected diagnosis model is unavailable",
+    );
+
+    const request = options.transport?.prepareSendMessagesRequest?.({
+      id: "conv-1",
+      messages: [],
+      body: {},
+    });
+
+    expect(request?.body).toMatchObject({
+      chatModelId: "gemini-2.5-flash",
+      diagnosisModelId: "claude-sonnet-4-5",
+    });
   });
 });

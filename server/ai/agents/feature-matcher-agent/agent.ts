@@ -6,7 +6,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
+import { getDiagnosisModel } from "@/server/ai/core/models";
 import type { FeatureRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const SUPPORTED_FEATURE_TYPES = [
@@ -29,7 +29,8 @@ const featureMatchSchema = z.object({
     z.object({
       key: z.string(),
       score: z.number().min(0).max(1),
-      matchedText: z.array(z.string()).default([]),
+      // Keep this required because OpenAI strict structured outputs reject optional/default fields.
+      matchedText: z.array(z.string()),
     })
   ),
 });
@@ -37,10 +38,11 @@ const featureMatchSchema = z.object({
 export async function matchFeatures(
   patientDescription: string,
   clinicalPresentation: { key: string; name: string },
-  features: FeatureRecord[]
+  features: FeatureRecord[],
+  diagnosisModelId?: string,
 ) {
   const { output } = await generateText({
-    model: getDefaultDiagnosisModel(),
+    model: getDiagnosisModel(diagnosisModelId),
     prompt: `
 You are matching patient wording to feature nodes within one clinical presentation.
 
@@ -48,6 +50,7 @@ Rules:
 - Only choose from the feature keys provided.
 - Do not invent keys.
 - Return an empty array if the match is weak.
+- Always include matchedText as an array for every match. Use [] if there is no exact supporting phrase.
 - Prefer concrete symptoms, signs, and descriptors stated or strongly implied by the patient description.
 - Match only features relevant to the given clinical presentation.
 - Use feature type to interpret the role of each feature in the history.

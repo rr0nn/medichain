@@ -65,27 +65,24 @@ export function useConversationList({
     // Delete Flow - Removes the conversation and redirects if the active one disappears.
     try {
       await deleteConversation(id);
+      const remainingConversations = conversations.filter(
+        (conversation) => conversation.id !== id,
+      );
 
-      setConversations((previousConversations) => {
-        const remainingConversations = previousConversations.filter(
-          (conversation) => conversation.id !== id,
-        );
+      setConversations(remainingConversations);
 
-        if (activeId === id) {
-          if (remainingConversations.length > 0) {
-            onSelect(remainingConversations[0].id);
-          } else {
-            onNew();
-          }
+      if (activeId === id) {
+        if (remainingConversations.length > 0) {
+          onSelect(remainingConversations[0].id);
+        } else {
+          onNew();
         }
-
-        return remainingConversations;
-      });
+      }
     } catch (error) {
       console.error("[sidebar] Failed to delete conversation:", error);
       toast.error("Failed to delete conversation");
     }
-  }, [activeId, onNew, onSelect]);
+  }, [activeId, conversations, onNew, onSelect]);
 
   return {
     collapsed,

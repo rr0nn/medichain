@@ -6,7 +6,7 @@
  */
 
 import { Button } from "@/components/ui/button";
-import { ArrowUpIcon } from "lucide-react";
+import { ArrowUpIcon, SquareIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 type ChatComposerProps = {
@@ -14,6 +14,7 @@ type ChatComposerProps = {
   input: string;
   isLoading: boolean;
   onInputChange: (value: string) => void;
+  onStop: () => void;
   onSubmit: () => void;
 };
 
@@ -22,6 +23,7 @@ export function ChatComposer({
   input,
   isLoading,
   onInputChange,
+  onStop,
   onSubmit,
 }: ChatComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -33,6 +35,15 @@ export function ChatComposer({
     }
 
     onSubmit();
+  };
+
+  const handlePrimaryAction = () => {
+    if (isLoading) {
+      onStop();
+      return;
+    }
+
+    handleSubmit();
   };
 
   useEffect(() => {
@@ -57,7 +68,7 @@ export function ChatComposer({
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        handleSubmit();
+        handlePrimaryAction();
       }}
       className="shrink-0 border-t border-[color:var(--glass-border)]/80 bg-background/30 p-3 backdrop-blur-sm"
     >
@@ -103,14 +114,17 @@ export function ChatComposer({
             disabled={isLoading}
           />
 
-          {/* Send Button - Submits the current intake note when input is valid. */}
+          {/* Primary Action - Sends a new message, or stops an in-flight response. */}
           <Button
             size="icon-sm"
-            type="submit"
-            disabled={!canSubmit}
+            type="button"
+            onClick={handlePrimaryAction}
+            disabled={isLoading ? false : !canSubmit}
+            aria-label={isLoading ? "Stop response" : "Send message"}
+            title={isLoading ? "Stop response" : "Send message"}
             className="shrink-0 rounded-2xl shadow-[var(--shadow-brand)]"
           >
-            <ArrowUpIcon />
+            {isLoading ? <SquareIcon /> : <ArrowUpIcon />}
           </Button>
         </div>
       </div>

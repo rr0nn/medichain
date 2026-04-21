@@ -13,14 +13,14 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 
 ## Key Components
 
-- `chat/chat-header.tsx`, `chat/chat-message-list.tsx`, and `chat/chat-composer.tsx`: structure the left-side consultation experience
+- `chat/chat-header.tsx`, `chat/model-settings-dialog.tsx`, `chat/chat-message-list.tsx`, and `chat/chat-composer.tsx`: structure the left-side consultation experience
 - `ui/toaster.tsx`: shared app toaster wrapper that keeps Sonner aligned with the current theme and global placement
 - `ddx/ddx-panel.tsx`: renders workflow state, evidence summary, safety review, and ranked differentials
 - `ddx/evidence-subgraph.tsx`: visualizes diagnosis evidence paths as a subgraph of the knowledge graph
 - `ddx/workflow-canvas.tsx`: displays stage-by-stage workflow progress
 - `layout/conversation-sidebar.tsx`: conversation list and session switching UI
 - `theme/theme-selector.tsx` and `theme/theme-provider.tsx`: theme switching support
-- `ai-elements/model-selector.tsx`: adapted AI Elements model selector used in the chat header
+- `ai-elements/model-provider-logo.tsx`: reduced AI Elements-derived helper for rendering provider logos in model-related UI
 - `ai-elements/`: shared chat layout and message presentation
 
 ## Related Hooks

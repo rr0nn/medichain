@@ -47,6 +47,7 @@ function completeRemainingSteps(
 export async function runDifferentialDiagnosisWorkflow(
   patientDescription: string,
   onStep?: OnStep,
+  diagnosisModelId?: string,
 ): Promise<DifferentialDiagnosisWorkflowResult> {
   // Start with every known clinical presentation that could anchor the patient's complaint.
   onStep?.({ type: "step", step: "match_presentations", status: "running" });
@@ -56,6 +57,7 @@ export async function runDifferentialDiagnosisWorkflow(
   const clinicalPresentationResult = await matchClinicalPresentations(
     patientDescription,
     clinicalPresentations,
+    diagnosisModelId,
   );
   onStep?.({ type: "step", step: "match_presentations", status: "complete" });
 
@@ -153,6 +155,7 @@ export async function runDifferentialDiagnosisWorkflow(
         patientDescription,
         { key: presentation.key, name: presentation.name },
         presentationCategories,
+        diagnosisModelId,
       );
 
       for (const categoryMatch of categoryResult.matches.filter(
@@ -202,6 +205,7 @@ export async function runDifferentialDiagnosisWorkflow(
       patientDescription,
       { key: presentation.key, name: presentation.name },
       presentationFeatures,
+      diagnosisModelId,
     );
 
     for (const featureMatch of featureResult.matches.filter(

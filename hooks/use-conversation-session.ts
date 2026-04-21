@@ -13,12 +13,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { getChatErrorToastMessage } from "@/lib/chat/error-payload";
-import type { ProviderFallbackNotice } from "@/lib/chat/provider-fallback";
+import type { SelectedModelIds } from "@/lib/chat/model-catalog";
 import {
+  ConversationNotFoundError,
   createConversation,
   getConversationMessages,
 } from "@/lib/conversations";
-import type { ModelProvider } from "@/server/ai/core/models";
 
 type UseConversationSessionResult = {
   activeConversationId: string | null;
@@ -32,12 +32,13 @@ type UseConversationSessionResult = {
   actions: {
     selectConversation: (id: string) => void;
     startNewConversation: () => void;
+    stopGenerating: () => Promise<void>;
     submitMessage: () => Promise<void>;
   };
 };
 
 export function useConversationSession(
-  modelProvider: ModelProvider,
+  selectedModelIds: SelectedModelIds,
 ): UseConversationSessionResult {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -48,18 +49,11 @@ export function useConversationSession(
   >(null);
   const [input, setInput] = useState("");
   const activeConversationId = searchParams.get("conversationId");
-  const modelProviderRef = useRef<ModelProvider>(modelProvider);
-  modelProviderRef.current = modelProvider;
+  const selectedModelIdsRef = useRef<SelectedModelIds>(selectedModelIds);
+  selectedModelIdsRef.current = selectedModelIds;
 
-  const { messages, sendMessage, setMessages, status } = useChat({
+  const { messages, sendMessage, setMessages, status, stop } = useChat({
     id: activeConversationId ?? undefined,
-    onData: (part) => {
-      if (part.type !== "data-provider-fallback") {
-        return;
-      }
-
-      toast.info((part.data as ProviderFallbackNotice).message);
-    },
     onError: (error) => {
       toast.error(getChatErrorToastMessage(error));
     },
@@ -68,8 +62,9 @@ export function useConversationSession(
         api: `/api/conversations/${id}/chat`,
         body: {
           ...body,
+          chatModelId: selectedModelIdsRef.current.chat,
+          diagnosisModelId: selectedModelIdsRef.current.diagnosis,
           messages,
-          modelProvider: modelProviderRef.current,
         },
       }),
     }),
@@ -110,12 +105,19 @@ export function useConversationSession(
       } catch (error) {
         console.error("[chat] Failed to load conversation messages:", error);
         setMessages([]);
+
+        if (error instanceof ConversationNotFoundError) {
+          setConversationInUrl(null, true);
+          toast.error("Consultation not found");
+          return;
+        }
+
         toast.error("Failed to load conversation history");
       } finally {
         setLoadingMessages(false);
       }
     },
-    [setMessages],
+    [setConversationInUrl, setMessages],
   );
 
   useEffect(() => {
@@ -232,6 +234,14 @@ export function useConversationSession(
     setConversationInUrl,
   ]);
 
+  const stopGenerating = useCallback(async () => {
+    if (!isLoading) {
+      return;
+    }
+
+    await stop();
+  }, [isLoading, stop]);
+
   return {
     activeConversationId,
     conversationListVersion,
@@ -244,6 +254,7 @@ export function useConversationSession(
     actions: {
       selectConversation,
       startNewConversation,
+      stopGenerating,
       submitMessage,
     },
   };
