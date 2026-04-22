@@ -37,6 +37,7 @@ Within `server/ai/`, the diagnosis pipeline is organized as:
 - Google Generative AI
 - Sonner
 - Vitest
+- Playwright
 
 ## Prerequisites
 
@@ -151,6 +152,8 @@ pnpm lint
 pnpm test
 pnpm test:watch
 pnpm test:coverage
+pnpm exec playwright test -c tests/playwright.config.ts
+pnpm exec playwright test -c tests/playwright.config.ts --headed
 ```
 
 Docker helpers:
@@ -183,7 +186,7 @@ prisma/                 Database schema and migrations
 server/
   ai/                   AI orchestration, agents, tools, and workflows
   db/                   Prisma-based persistence layer
-tests/                  Integration tests and shared test setup
+tests/                  Integration tests, E2E tests, and shared test setup
 public/                 Static assets
 ```
 
