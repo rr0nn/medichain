@@ -21,7 +21,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 
-import { formatDdxName } from "@/lib/format-ddx-name";
+import { formatDdxName } from "@/lib/ddx/format-ddx-name";
 
 type DiagnosisEvidencePath = {
   clinicalPresentationName: string;

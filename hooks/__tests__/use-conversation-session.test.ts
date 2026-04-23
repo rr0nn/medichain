@@ -10,8 +10,8 @@ import {
   createChatErrorPayload,
   serializeChatErrorPayload,
 } from "@/lib/chat/error-payload";
-import { ConversationNotFoundError } from "@/lib/conversations";
 import type { SelectedModelIds } from "@/lib/chat/model-catalog";
+import { ConversationNotFoundError } from "@/lib/conversations/errors";
 import { useConversationSession } from "../use-conversation-session";
 
 const pushMock = vi.fn();
@@ -47,8 +47,8 @@ vi.mock("@ai-sdk/react", () => ({
   useChat: (...args: unknown[]) => useChatMock(...args),
 }));
 
-vi.mock("@/lib/conversations", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/conversations")>();
+vi.mock("@/lib/conversations/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/conversations/api")>();
 
   return {
     ...actual,

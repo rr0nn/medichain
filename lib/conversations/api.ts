@@ -1,28 +1,16 @@
 /**
- * @fileoverview Client-side helpers for conversation list and message fetch operations.
+ * @fileoverview Provides client-side helpers for conversation list and message fetch operations.
  * @contributors Johnson Zhang
  */
 
 import type { UIMessage } from "ai";
 
-export interface ConversationSummary {
-  id: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  _count: { messages: number };
-}
+import { ConversationNotFoundError } from "@/lib/conversations/errors";
+import type { ConversationSummary } from "@/lib/conversations/types";
 
 type CreateConversationInput = {
   title?: string;
 };
-
-export class ConversationNotFoundError extends Error {
-  constructor() {
-    super("Conversation not found");
-    this.name = "ConversationNotFoundError";
-  }
-}
 
 async function readJson<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {

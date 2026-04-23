@@ -8,11 +8,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import type { ConversationSummary } from "@/lib/conversations";
+import type { ConversationSummary } from "@/lib/conversations/types";
 import {
   deleteConversation,
   listConversations,
-} from "@/lib/conversations";
+} from "@/lib/conversations/api";
 
 type UseConversationListOptions = {
   activeId: string | null;

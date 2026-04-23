@@ -8,7 +8,7 @@
 import Image from "next/image";
 
 import type { ModelProviderId } from "@/lib/chat/model-catalog";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { ComponentProps } from "react";
 
 export type ModelProviderLogoProps = Omit<

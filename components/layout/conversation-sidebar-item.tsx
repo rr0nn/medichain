@@ -8,9 +8,9 @@
 import type * as React from "react";
 import { MessageSquareIcon, Trash2Icon } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "@/lib/date-utils";
-import type { ConversationSummary } from "@/lib/conversations";
+import { formatDistanceToNow } from "@/lib/utils/date";
+import type { ConversationSummary } from "@/lib/conversations/types";
+import { cn } from "@/lib/utils/cn";
 
 type ConversationSidebarItemProps = {
   active: boolean;

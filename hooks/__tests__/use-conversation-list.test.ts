@@ -12,7 +12,7 @@ const listConversationsMock = vi.fn();
 const deleteConversationMock = vi.fn();
 const toastErrorMock = vi.fn();
 
-vi.mock("@/lib/conversations", () => ({
+vi.mock("@/lib/conversations/api", () => ({
   listConversations: (...args: unknown[]) => listConversationsMock(...args),
   deleteConversation: (...args: unknown[]) => deleteConversationMock(...args),
 }));

@@ -15,10 +15,10 @@ import { toast } from "sonner";
 import { getChatErrorToastMessage } from "@/lib/chat/error-payload";
 import type { SelectedModelIds } from "@/lib/chat/model-catalog";
 import {
-  ConversationNotFoundError,
   createConversation,
   getConversationMessages,
-} from "@/lib/conversations";
+} from "@/lib/conversations/api";
+import { ConversationNotFoundError } from "@/lib/conversations/errors";
 
 type UseConversationSessionResult = {
   activeConversationId: string | null;

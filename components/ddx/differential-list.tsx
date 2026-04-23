@@ -7,8 +7,8 @@
 
 import { ChevronRight } from "lucide-react";
 
-import { formatDdxName } from "@/lib/format-ddx-name";
-import { formatSourceLabel } from "@/lib/format-source-label";
+import { formatDdxName } from "@/lib/ddx/format-ddx-name";
+import { formatSourceLabel } from "@/lib/ddx/format-source-label";
 import type {
   CategoryMatch,
   ClinicalPresentationMatch,
