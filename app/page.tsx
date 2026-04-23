@@ -5,9 +5,9 @@
 
 import { Suspense } from "react";
 
-import { ChatPage } from "@/components/chat/chat-page";
+import { ConsultationScreen } from "@/components/consultation/consultation-screen";
 
-function ChatPageFallback() {
+function ConsultationScreenFallback() {
   return (
     <div className="flex h-screen min-h-0 gap-3 overflow-hidden p-3">
       <div className="glass w-60 rounded-[28px] border border-[color:var(--glass-border)] bg-background/40" />
@@ -22,8 +22,8 @@ function ChatPageFallback() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<ChatPageFallback />}>
-      <ChatPage />
+    <Suspense fallback={<ConsultationScreenFallback />}>
+      <ConsultationScreen />
     </Suspense>
   );
 }

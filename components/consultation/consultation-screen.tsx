@@ -19,7 +19,7 @@ import { useConversationSession } from "@/hooks/use-conversation-session";
 import { useDdxResult } from "@/hooks/use-ddx-result";
 import { useWorkflowSteps } from "@/hooks/use-workflow-steps";
 
-export function ChatPage() {
+export function ConsultationScreen() {
   const {
     catalog,
     loading: loadingModelCatalog,
