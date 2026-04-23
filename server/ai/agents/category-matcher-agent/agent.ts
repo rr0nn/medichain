@@ -13,14 +13,21 @@ const categoryMatchSchema = z.object({
   matches: z.array(
     z.object({
       key: z.string(),
-      // Model-reported match strength on a 0..1 scale. Only ranking signal, not a calibrated probability.
+      // Model-reported match strength on a 0..1 scale. This is a ranking signal,
+      // not a calibrated probability.
       score: z.number().min(0).max(1),
-      // Keep this required because OpenAI strict structured outputs reject optional/default fields.
+      // Keep this required because strict structured outputs reject
+      // optional or defaulted fields.
       matchedText: z.array(z.string()),
     })
   ),
 });
 
+/**
+ * Matches a patient description to category nodes within one clinical presentation.
+ *
+ * Returns only the model-scored category matches from the supplied candidate set.
+ */
 export async function matchCategories(
   patientDescription: string,
   clinicalPresentation: { key: string; name: string },
