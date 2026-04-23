@@ -172,8 +172,10 @@ The diagnosis pipeline depends on a seeded Neo4j graph.
 
 1. Start or connect to a Neo4j instance.
 2. Configure the Neo4j variables in `.env.local`.
-3. Seed the graph using [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
+3. Run `pnpm seed:graph` to execute [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
 4. Review the schema in [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md).
+
+`pnpm seed:graph` loads Neo4j credentials from the current shell or `.env.local`. The current seed file is destructive: it drops graph constraints, deletes existing nodes, and recreates the project dataset.
 
 ## Project Structure
 
