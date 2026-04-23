@@ -47,6 +47,9 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 
 Current component coverage includes:
 
+- `chat/__tests__/chat-composer.test.tsx`
+- `chat/__tests__/chat-message-list.test.tsx`
+- `layout/__tests__/conversation-sidebar.test.tsx`
 - `ddx/__tests__/ddx-panel.test.tsx`
 - integration tests under [`../tests/integration`](../tests/integration)
 

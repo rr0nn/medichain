@@ -9,7 +9,7 @@ This directory contains shared test setup plus the repository's integration and 
 - `e2e/`: Playwright end-to-end tests covering browser-visible user flows
 - `playwright.config.ts`: shared Playwright configuration for the E2E suite
 
-Most unit tests remain colocated with the source files they validate. This directory holds shared setup, broader integration coverage, and browser-level E2E coverage.
+Most unit tests remain colocated with the source files or feature folder they validate. This directory holds shared setup, broader integration coverage, and browser-level E2E coverage.
 
 ## Testing Strategy
 
@@ -127,6 +127,7 @@ pnpm dev
 
 - Put focused unit tests next to the source file they validate when possible.
 - For `components/`, prefer feature-local `__tests__/` folders rather than mixing `*.test.tsx` files directly into the main component file list.
+- For `hooks/`, prefer a local `__tests__/` folder when the main hook directory becomes noisy.
 - Put cross-module tests in `tests/integration/` when they exercise larger system flows.
 - Put browser-level tests in `tests/e2e/` and name them `*.spec.ts`.
 - Prefer explicit mocks at unstable external boundaries and keep internal orchestration under test real.
