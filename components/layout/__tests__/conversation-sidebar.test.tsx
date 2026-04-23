@@ -8,7 +8,7 @@ vi.mock("@/hooks/use-conversation-list", () => ({
   useConversationList: (...args: unknown[]) => useConversationListMock(...args),
 }));
 
-import { ConversationSidebar } from "./conversation-sidebar";
+import { ConversationSidebar } from "../conversation-sidebar";
 
 describe("ConversationSidebar", () => {
   it("renders the loading state", () => {

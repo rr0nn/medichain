@@ -126,6 +126,7 @@ pnpm dev
 ## Conventions
 
 - Put focused unit tests next to the source file they validate when possible.
+- For `components/`, prefer feature-local `__tests__/` folders rather than mixing `*.test.tsx` files directly into the main component file list.
 - Put cross-module tests in `tests/integration/` when they exercise larger system flows.
 - Put browser-level tests in `tests/e2e/` and name them `*.spec.ts`.
 - Prefer explicit mocks at unstable external boundaries and keep internal orchestration under test real.

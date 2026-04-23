@@ -33,7 +33,7 @@ vi.mock("@/components/ai-elements/message", () => ({
   MessageResponse: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
 }));
 
-import { ChatMessageList } from "./chat-message-list";
+import { ChatMessageList } from "../chat-message-list";
 
 describe("ChatMessageList", () => {
   it("renders the starter empty state and lets the user select a prompt", async () => {

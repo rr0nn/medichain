@@ -41,13 +41,13 @@ This folder contains reusable React UI for the chat experience, workflow visuali
 - Keep `chat/` focused on the active consultation pane, and keep `conversation-*` naming for history/session list concerns.
 - Keep full-screen consultation composition in `consultation/`, and reserve `layout/` for reusable app shell pieces.
 - Keep toast triggering in client hooks and feature orchestration layers rather than spreading `toast.*` calls across presentation components.
-- Co-locate component tests next to the component when the test is tightly coupled to its rendered behavior.
+- Put component unit tests in feature-local `__tests__/` folders to keep source files visible without separating tests from their owning feature.
 
 ## Testing
 
 Current component coverage includes:
 
-- `ddx/ddx-panel.test.tsx`
+- `ddx/__tests__/ddx-panel.test.tsx`
 - integration tests under [`../tests/integration`](../tests/integration)
 
 ## Related Documentation
