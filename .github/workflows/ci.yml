@@ -59,13 +59,23 @@ jobs:
 
       # Vitest runs the repository's unit tests plus integration tests in tests/integration
       # so logic and cross-module behavior regressions fail before merge.
-      - name: Run tests
+      - name: Run unit and integration tests
         run: pnpm test
 
       # A production Next.js build validates route compilation, server/client bundling,
       # and build-time environment assumptions used by the deployed app.
-      - name: Run build
+      - name: Run production build
         run: pnpm build
+      
+      # Playwright needs a real browser binary in CI, so install Chromium and its
+      # required system dependencies before running browser-level E2E coverage.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Playwright exercises the browser-visible user flows in tests/e2e, using mocked
+      # API boundaries so the CI suite stays deterministic without live external services.
+      - name: Run end-to-end tests
+        run: pnpm exec playwright test -c tests/playwright.config.ts
 
   audit:
     runs-on: ubuntu-latest
