@@ -10,7 +10,7 @@ import {
   MODEL_SELECTION_STORAGE_KEY,
   type ModelCatalog,
 } from "@/lib/chat/model-catalog";
-import { useModelCatalog } from "./use-model-catalog";
+import { useModelCatalog } from "../use-model-catalog";
 
 const getModelCatalogMock = vi.fn();
 const toastErrorMock = vi.fn();

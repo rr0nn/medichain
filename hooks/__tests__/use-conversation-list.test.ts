@@ -6,7 +6,7 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useConversationList } from "./use-conversation-list";
+import { useConversationList } from "../use-conversation-list";
 
 const listConversationsMock = vi.fn();
 const deleteConversationMock = vi.fn();

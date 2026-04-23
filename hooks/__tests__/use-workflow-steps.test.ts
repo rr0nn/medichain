@@ -6,7 +6,7 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { useWorkflowSteps } from "./use-workflow-steps";
+import { useWorkflowSteps } from "../use-workflow-steps";
 
 describe("useWorkflowSteps", () => {
   it("returns idle steps while a submission is pending", () => {

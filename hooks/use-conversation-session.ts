@@ -37,6 +37,14 @@ type UseConversationSessionResult = {
   };
 };
 
+/**
+ * Manages the active consultation session for the main chat screen.
+ *
+ * Side effects:
+ * - Syncs the active conversation id with the URL.
+ * - Loads persisted conversation messages when the active consultation changes.
+ * - Creates conversations and sends chat requests through the streaming chat client.
+ */
 export function useConversationSession(
   selectedModelIds: SelectedModelIds,
 ): UseConversationSessionResult {
@@ -150,7 +158,8 @@ export function useConversationSession(
 
     void (async () => {
       try {
-        // First Message Sync - Reload after sending so the new conversation shows immediately.
+        // Reload after the first send so the newly created conversation shows
+        // the persisted transcript instead of staying in a transient state.
         await sendMessage({ text: pendingInitialMessage });
 
         if (!cancelled) {

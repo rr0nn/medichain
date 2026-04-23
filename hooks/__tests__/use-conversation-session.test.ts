@@ -12,7 +12,7 @@ import {
 } from "@/lib/chat/error-payload";
 import { ConversationNotFoundError } from "@/lib/conversations";
 import type { SelectedModelIds } from "@/lib/chat/model-catalog";
-import { useConversationSession } from "./use-conversation-session";
+import { useConversationSession } from "../use-conversation-session";
 
 const pushMock = vi.fn();
 const replaceMock = vi.fn();

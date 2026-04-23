@@ -26,6 +26,14 @@ type UseModelCatalogResult = {
   setSelectedModel: (selectorKey: ModelSelectorKey, modelId: string) => void;
 };
 
+/**
+ * Loads the backend model catalog and manages the active chat and diagnosis selections.
+ *
+ * Side effects:
+ * - Fetches model metadata from the backend.
+ * - Reads persisted selections from local storage.
+ * - Writes normalized selections back to local storage once the catalog is available.
+ */
 export function useModelCatalog(): UseModelCatalogResult {
   const [catalog, setCatalog] = useState<ModelCatalog | null>(null);
   const [loading, setLoading] = useState(true);
