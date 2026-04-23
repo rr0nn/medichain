@@ -113,11 +113,6 @@ Variable roles:
 - `OPENAI_API_KEY`: API key required to use OpenAI models from the model selector
 - `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`: Neo4j connection settings for the diagnosis knowledge graph
 
-Optional Aura metadata:
-
-- `AURA_INSTANCEID`
-- `AURA_INSTANCENAME`
-
 ## Knowledge Graph Setup
 
 The diagnosis pipeline depends on a seeded Neo4j graph. Seed the graph before starting the app for the first time.
@@ -158,6 +153,8 @@ The `migrate` service runs Prisma migrations and then exits. That is expected.
 docker compose up -d db
 docker compose run --rm migrate
 ```
+
+The checked-in Compose setup publishes PostgreSQL on `localhost:5432`, so the default `DATABASE_URL` in `.env.example` works unchanged for local development.
 
 4. Install dependencies:
 
@@ -220,7 +217,6 @@ public/                 Static assets
 - [`server/ai/README.md`](server/ai/README.md)
 - [`prisma/README.md`](prisma/README.md)
 - [`docs/knowledge-graph/README.md`](docs/knowledge-graph/README.md)
-- [`docs/commenting-conventions.md`](docs/commenting-conventions.md)
 - [`tests/README.md`](tests/README.md)
 
 ## Notes
