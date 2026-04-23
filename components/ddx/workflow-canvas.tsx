@@ -17,7 +17,7 @@ import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useMemo, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { WorkflowStepName } from "@/server/ai/workflows/ddx-workflow/types";
 import type { CriticAssessment } from "@/server/ai/workflows/safety-workflow/types";
 

@@ -4,10 +4,11 @@ This folder contains focused AI modules with a narrow responsibility. Each agent
 
 ## Current Agents
 
-- `interview-agent/`: owns the user-facing chat behavior, tool calling, and final response framing
+- `interview-agent/`: owns the user-facing chat behavior and tool calling
 - `clinical-presentation-matcher-agent/`: maps free-text descriptions to known clinical presentations
 - `category-matcher-agent/`: scores which categories fit a matched presentation
 - `feature-matcher-agent/`: scores which specific features are present in the case description
+- `response-composer-agent/`: turns grounded workflow output into concise patient-facing explanations
 
 ## File Pattern
 

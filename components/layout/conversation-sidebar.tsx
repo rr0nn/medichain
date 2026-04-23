@@ -14,7 +14,7 @@ import { ConversationSidebarEmptyState } from "@/components/layout/conversation-
 import { ConversationSidebarItem } from "@/components/layout/conversation-sidebar-item";
 import { ConversationSidebarLoadingState } from "@/components/layout/conversation-sidebar-loading-state";
 import { useConversationList } from "@/hooks/use-conversation-list";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 
 interface ConversationSidebarProps {
   activeId: string | null;

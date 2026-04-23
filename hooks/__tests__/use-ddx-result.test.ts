@@ -1,7 +1,12 @@
+/**
+ * @fileoverview Tests extraction of the latest differential diagnosis result from the transcript.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { useDdxResult } from "./use-ddx-result";
+import { useDdxResult } from "../use-ddx-result";
 
 describe("useDdxResult", () => {
   it("returns empty results when no DDx tool output exists", () => {

@@ -16,8 +16,8 @@ import { z } from "zod";
 import type { ChatRequest } from "@/server/ai/core/types";
 import { serializeChatStreamError } from "@/server/ai/core/chat-error-classification";
 import { resolveModelSelection } from "@/server/ai/core/models";
+import { composePatientResponse } from "@/server/ai/agents/response-composer-agent/agent";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
-import { composePatientResponse } from "./patient-response";
 
 function buildWorkflowPatientDescription(input: {
   patientDescription: string;
@@ -83,14 +83,21 @@ General rules:
 - Do not imply that an evidence support score is a probability.
 - If the tool output is weak or sparse, say so plainly instead of overstating confidence.`;
 
+/**
+ * Runs the interview agent that powers the main consultation chat flow.
+ *
+ * Side effects:
+ * - Rebuilds model messages from the current transcript.
+ * - Streams chat output and tool execution events into the UI writer.
+ * - Invokes the safety-reviewed differential workflow when the model calls the tool.
+ */
 export async function runInterviewAgent(
   { messages, chatModelId, diagnosisModelId }: ChatRequest,
   writer: UIMessageStreamWriter
 ) {
   const modelMessages = await convertToModelMessages(messages, {
-    // If a stream was manually stopped, the last assistant message can contain
-    // an incomplete tool call. Ignore those transient parts so the next user
-    // message can continue the consultation cleanly.
+    // Ignore incomplete tool calls left behind by a manually stopped stream so
+    // the next user turn can resume the consultation cleanly.
     ignoreIncompleteToolCalls: true,
   });
   const chatSelection = resolveModelSelection("chat", chatModelId);

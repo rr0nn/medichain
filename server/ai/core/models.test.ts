@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests model catalog metadata and strict model selection behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { afterEach, describe, expect, it } from "vitest";
 
 import {

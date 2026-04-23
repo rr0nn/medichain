@@ -1,5 +1,6 @@
 /**
  * @fileoverview Formats differential-diagnosis names for display.
+ * @contributors Johnson Zhang
  */
 
 function toTitleCase(value: string) {

@@ -14,15 +14,16 @@ MediChain is a prototype system that demonstrates how a knowledge graph-grounded
 
 ## Architecture Summary
 
-The project is split into three main layers:
+The project is split into three main application layers plus a shared client-helper layer:
 
 - `app/`: Next.js application shell, pages, styles, and API route handlers
 - `components/`: client-side UI for chat, workflow state, and differential display
 - `server/`: server-side orchestration, AI workflows, graph access, and persistence
+- `lib/`: domain-organized client helpers for chat state, conversation API calls, formatting, and shared utilities
 
 Within `server/ai/`, the diagnosis pipeline is organized as:
 
-- `agents/`: focused matchers and the interview agent
+- `agents/`: focused matchers, the interview agent, and the response composer
 - `tools/`: reusable graph and support utilities
 - `workflows/`: orchestration steps for interview, differential generation, and safety review
 
@@ -46,11 +47,12 @@ Before running the project, make sure you have:
 - Node.js 20+
 - pnpm 10+
 - Docker + Docker Compose v2
-- access to a PostgreSQL database
-- access to a Neo4j database seeded with the project graph
-- a Google Generative AI API key
-- optionally, an Anthropic API key if you want to use Claude models
-- optionally, an OpenAI API key if you want to use OpenAI models
+- a Neo4j instance created and running
+- the Neo4j connection credentials saved when the instance is created
+- at least one supported LLM provider API key:
+  - Google Gemini
+  - OpenAI
+  - Anthropic
 
 If pnpm is not installed locally:
 
@@ -58,6 +60,29 @@ If pnpm is not installed locally:
 corepack enable
 corepack prepare pnpm@10.33.0 --activate
 ```
+
+### Neo4j
+
+Create a Neo4j instance before setup and make sure it is reachable when you run `pnpm seed:graph`.
+
+When the instance is created, keep the following credentials:
+
+- URI
+- username
+- password
+- database name
+
+These values are required in `.env.local` for knowledge graph seeding and diagnosis workflow execution.
+
+### AI Provider Keys
+
+Prepare at least one provider API key before setup:
+
+- `GOOGLE_GENERATIVE_AI_API_KEY`
+- `OPENAI_API_KEY`
+- `ANTHROPIC_API_KEY`
+
+The app can run with one provider, but model availability in the UI depends on which keys are configured.
 
 ## Environment Setup
 
@@ -70,7 +95,7 @@ cp .env.example .env.local
 Required variables:
 
 - `DATABASE_URL`
-- `GOOGLE_GENERATIVE_AI_API_KEY`
+- one AI provider key: `GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, or `OPENAI_API_KEY`
 - `NEO4J_URI`
 - `NEO4J_USERNAME`
 - `NEO4J_PASSWORD`
@@ -78,21 +103,28 @@ Required variables:
 
 Optional variables:
 
-- `ANTHROPIC_API_KEY`
-- `OPENAI_API_KEY`
+- any additional AI provider keys you want available in the model selector beyond the one required above
 
 Variable roles:
 
 - `DATABASE_URL`: PostgreSQL connection string for conversation and message persistence
-- `GOOGLE_GENERATIVE_AI_API_KEY`: API key used by the default Gemini-backed server-side AI agents and workflows
-- `ANTHROPIC_API_KEY`: optional API key required to use Claude models from the model selector
-- `OPENAI_API_KEY`: optional API key required to use OpenAI models from the model selector
+- `GOOGLE_GENERATIVE_AI_API_KEY`: API key required to use Gemini models from the model selector
+- `ANTHROPIC_API_KEY`: API key required to use Claude models from the model selector
+- `OPENAI_API_KEY`: API key required to use OpenAI models from the model selector
 - `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`: Neo4j connection settings for the diagnosis knowledge graph
 
-Optional Aura metadata:
+## Knowledge Graph Setup
 
-- `AURA_INSTANCEID`
-- `AURA_INSTANCENAME`
+The diagnosis pipeline depends on a seeded Neo4j graph. Seed the graph before starting the app for the first time.
+
+1. Start or connect to a Neo4j instance.
+2. Configure the Neo4j variables in `.env.local`.
+3. Run `pnpm seed:graph` to execute [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
+4. Review the schema in [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md).
+
+`pnpm seed:graph` loads Neo4j credentials from the current shell or `.env.local`. The current seed file is destructive: it drops graph constraints, deletes existing nodes, and recreates the project dataset.
+
+If you want to expand or modify the diagnosis dataset, you can manage the knowledge graph directly in Neo4j after seeding. Update the graph data there, and keep the seed file and schema documentation in sync if you want those changes to become part of the project's baseline dataset.
 
 ## Getting Started
 
@@ -100,43 +132,37 @@ Optional Aura metadata:
 
 1. Clone the repository and enter it.
 2. Create `.env.local` from `.env.example`.
-3. Start PostgreSQL:
+3. Start or connect to Neo4j and run `pnpm seed:graph`.
+4. Start the Docker services:
 
 ```bash
-docker compose up -d db
+docker compose up --build
 ```
 
-4. Apply Prisma migrations:
+5. Open `http://localhost:3000`.
 
-```bash
-docker compose run --rm migrate
-```
-
-5. Start the app container:
-
-```bash
-docker compose up -d web
-```
-
-6. Open `http://localhost:3000`.
+The `migrate` service runs Prisma migrations and then exits. That is expected.
 
 ### Local Development
 
 1. Create `.env.local`.
-2. Start PostgreSQL and apply migrations:
+2. Start or connect to Neo4j and run `pnpm seed:graph`.
+3. Start PostgreSQL and apply migrations:
 
 ```bash
 docker compose up -d db
 docker compose run --rm migrate
 ```
 
-3. Install dependencies:
+The checked-in Compose setup publishes PostgreSQL on `localhost:5432`, so the default `DATABASE_URL` in `.env.example` works unchanged for local development.
+
+4. Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-4. Start the development server:
+5. Start the development server:
 
 ```bash
 pnpm dev
@@ -166,24 +192,13 @@ docker compose down -v
 
 `docker compose down -v` is destructive and removes local database volume data.
 
-## Knowledge Graph Setup
-
-The diagnosis pipeline depends on a seeded Neo4j graph.
-
-1. Start or connect to a Neo4j instance.
-2. Configure the Neo4j variables in `.env.local`.
-3. Run `pnpm seed:graph` to execute [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
-4. Review the schema in [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md).
-
-`pnpm seed:graph` loads Neo4j credentials from the current shell or `.env.local`. The current seed file is destructive: it drops graph constraints, deletes existing nodes, and recreates the project dataset.
-
 ## Project Structure
 
 ```text
 app/                    Next.js pages, routes, and global styles
 components/             UI building blocks and feature components
 docs/                   Supporting project documentation
-lib/                    Small shared frontend utilities
+lib/                    Domain-organized client helpers, formatters, and shared utilities
 prisma/                 Database schema and migrations
 server/
   ai/                   AI orchestration, agents, tools, and workflows
@@ -197,6 +212,7 @@ public/                 Static assets
 - [`app/README.md`](app/README.md)
 - [`app/api/README.md`](app/api/README.md)
 - [`components/README.md`](components/README.md)
+- [`lib/README.md`](lib/README.md)
 - [`server/README.md`](server/README.md)
 - [`server/ai/README.md`](server/ai/README.md)
 - [`prisma/README.md`](prisma/README.md)
@@ -212,5 +228,4 @@ public/                 Static assets
 - The frontend loads its model-selector options from a backend-driven model catalog rather than hardcoding the model list locally.
 - The UI now exposes separate selectors for the chat model and the diagnosis model. This lets users choose a stronger model for the outer chat orchestration task, while using a lighter and cheaper model for the inner diagnosis semantic-matching pipeline when appropriate.
 - The chat model changes the outer interview behavior, such as when follow-up questions are asked or when the diagnosis tool is invoked, while the diagnosis model changes the inner presentation/category/feature matching pipeline.
-- If `ANTHROPIC_API_KEY` is not set, Claude models remain visible but unavailable in the selector and requests using them will fail with an explicit model-unavailable error.
-- If `OPENAI_API_KEY` is not set, OpenAI models remain visible but unavailable in the selector and requests using them will fail with an explicit model-unavailable error.
+- If a provider API key is not set, that provider's models remain visible but unavailable in the selector, and requests using them fail with an explicit model-unavailable error.

@@ -1,6 +1,6 @@
 /**
  * @fileoverview Covers consultation creation flows, including creation failure and failed first-message submission.
- *  @contributors John Kollannur
+ * @contributors John Kollannur
  */
 
 import { expect, test } from "@playwright/test";

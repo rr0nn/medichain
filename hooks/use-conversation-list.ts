@@ -1,18 +1,18 @@
+"use client";
+
 /**
  * @fileoverview Manages conversation list state for the sidebar.
  * @contributors Johnson Zhang
  */
 
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import type { ConversationSummary } from "@/lib/conversations";
+import type { ConversationSummary } from "@/lib/conversations/types";
 import {
   deleteConversation,
   listConversations,
-} from "@/lib/conversations";
+} from "@/lib/conversations/api";
 
 type UseConversationListOptions = {
   activeId: string | null;
@@ -31,6 +31,14 @@ type UseConversationListResult = {
   };
 };
 
+/**
+ * Loads and manages the consultation list shown in the sidebar.
+ *
+ * Side effects:
+ * - Fetches saved conversations from the API.
+ * - Deletes conversations and updates local list state.
+ * - Triggers navigation callbacks when the active conversation is removed.
+ */
 export function useConversationList({
   activeId,
   onNew,
@@ -42,7 +50,6 @@ export function useConversationList({
   const [collapsed, setCollapsed] = useState(false);
 
   const fetchConversations = useCallback(async () => {
-    // Conversation Fetch - Refreshes the sidebar list from the API.
     setLoading(true);
 
     try {
@@ -62,7 +69,6 @@ export function useConversationList({
   }, [fetchConversations, refreshToken]);
 
   const handleDeleteConversation = useCallback(async (id: string) => {
-    // Delete Flow - Removes the conversation and redirects if the active one disappears.
     try {
       await deleteConversation(id);
       const remainingConversations = conversations.filter(
@@ -90,7 +96,6 @@ export function useConversationList({
     loading,
     actions: {
       deleteConversation: handleDeleteConversation,
-      // Collapse Toggle - Switches the sidebar between compact and expanded layouts.
       toggleCollapsed: () => setCollapsed((value) => !value),
     },
   };

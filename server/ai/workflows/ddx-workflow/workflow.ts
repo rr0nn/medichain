@@ -1,6 +1,6 @@
 /**
  * @fileoverview Orchestrates the differential diagnosis flow from matching through ranking.
- * @contributors Johnson Zhang, Aryan Wadhawan, John Kollannur
+ * @contributors Johnson Zhang
  */
 
 import { matchCategories } from "@/server/ai/agents/category-matcher-agent/agent";
@@ -28,6 +28,12 @@ export type { WorkflowStepEvent };
 
 type OnStep = (event: WorkflowStepEvent) => void;
 
+/**
+ * Marks the remaining workflow steps as complete when the pipeline exits early.
+ *
+ * This keeps the UI workflow state consistent even when the graph cannot
+ * support downstream matching or diagnosis resolution.
+ */
 function completeRemainingSteps(
   steps: WorkflowStepEvent["step"][],
   onStep?: OnStep,
@@ -39,10 +45,12 @@ function completeRemainingSteps(
 
 /**
  * Runs the differential diagnosis workflow from free-text patient description
- * through: clinical presentation matching -> category/feature matching -> diagnosis ranking -> final output.
+ * through: clinical presentation matching -> category/feature matching ->
+ * diagnosis ranking -> final output.
  *
- * @param patientDescription Free-text summary of the patient's presentation.
- * @returns The intermediate presentation/category matches and final ranked differentials.
+ * The workflow first anchors the complaint to clinical presentations, then
+ * expands those branches into categories, features, and diagnoses before
+ * returning the intermediate evidence matches alongside the ranked result.
  */
 export async function runDifferentialDiagnosisWorkflow(
   patientDescription: string,
@@ -102,6 +110,9 @@ export async function runDifferentialDiagnosisWorkflow(
     getFeaturesForClinicalPresentations(clinicalPresentationKeys),
     getSourcesForClinicalPresentations(clinicalPresentationKeys),
   ]);
+
+  // Index source metadata by clinical presentation so the shortlisted matches
+  // can carry their graph-grounded references into the returned workflow output.
   const sourcesByClinicalPresentationKey = new Map<string, typeof sources>();
 
   for (const source of sources) {
@@ -115,6 +126,9 @@ export async function runDifferentialDiagnosisWorkflow(
     );
   }
 
+  // Rehydrate the shortlisted presentation matches with stable display names
+  // and source references so downstream UI can explain which presentation
+  // branches were selected and where they came from.
   const matchedClinicalPresentations =
     shortlistedClinicalPresentationMatches.map((match) => {
       const presentation = clinicalPresentations.find(
@@ -130,6 +144,8 @@ export async function runDifferentialDiagnosisWorkflow(
       };
     });
 
+  // Keep category and feature evidence separate because they represent
+  // different graph paths and later contribute differently to ranking.
   const matchedCategories: CategoryMatch[] = [];
   const matchedFeatures: FeatureMatch[] = [];
 
@@ -158,6 +174,8 @@ export async function runDifferentialDiagnosisWorkflow(
         diagnosisModelId,
       );
 
+      // Filter to category matches that are strong enough to justify a
+      // downstream diagnosis lookup on that presentation branch.
       for (const categoryMatch of categoryResult.matches.filter(
         (match) => match.score >= 0.55,
       )) {
@@ -208,6 +226,8 @@ export async function runDifferentialDiagnosisWorkflow(
       diagnosisModelId,
     );
 
+    // Filter to feature matches that are strong enough to act as direct
+    // evidence paths into the diagnosis graph.
     for (const featureMatch of featureResult.matches.filter(
       (match) => match.score >= 0.55,
     )) {
@@ -242,7 +262,9 @@ export async function runDifferentialDiagnosisWorkflow(
     };
   }
 
-  // Resolve both matched category paths and matched feature paths into diagnosis rows.
+  // Resolve both matched category paths and matched feature paths into raw
+  // diagnosis rows. At this stage the workflow is converting evidence matches
+  // into the candidate diagnoses they explicitly support in the graph.
   onStep?.({ type: "step", step: "fetch_diagnoses", status: "running" });
   const diagnosisRecords: DiagnosisRecord[] = (
     await Promise.all([
@@ -262,7 +284,8 @@ export async function runDifferentialDiagnosisWorkflow(
   ).flat();
   onStep?.({ type: "step", step: "fetch_diagnoses", status: "complete" });
 
-  // Deduplicate and rank the final differential diagnoses before returning them.
+  // Deduplicate and rank the final differential diagnoses before returning
+  // them, while preserving the intermediate evidence matches for explanation.
   onStep?.({ type: "step", step: "group_diagnoses", status: "running" });
   const differentials: DifferentialDiagnosis[] = rankDifferentialDiagnoses(
     diagnosisRecords,

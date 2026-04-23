@@ -36,10 +36,9 @@ function toOptionalNumber(value: unknown): number | undefined {
 }
 
 /**
- * Returns all clinical presentation nodes, sorted by display name, for use as
- * the top-level candidate set in diagnosis matching flows.
+ * Returns all clinical presentation nodes, sorted by display name.
  *
- * @returns {Promise<ClinicalPresentationRecord[]>} All clinical presentation nodes ordered by name.
+ * This provides the top-level candidate set for diagnosis matching flows.
  */
 export async function getClinicalPresentations(): Promise<
   ClinicalPresentationRecord[]
@@ -70,9 +69,6 @@ export async function getClinicalPresentations(): Promise<
 /**
  * Returns category nodes attached to the supplied clinical presentation keys.
  * Short-circuits to an empty array when no presentation keys are provided.
- *
- * @param {string[]} clinicalPresentationKeys Clinical presentation keys to expand into categories.
- * @returns {Promise<CategoryRecord[]>} Category rows linked to the supplied clinical presentation keys.
  */
 export async function getCategoriesForClinicalPresentations(
   clinicalPresentationKeys: string[],
@@ -110,9 +106,6 @@ export async function getCategoriesForClinicalPresentations(
 /**
  * Returns source nodes documenting the supplied clinical presentation keys.
  * Short-circuits to an empty array when no presentation keys are provided.
- *
- * @param {string[]} clinicalPresentationKeys Clinical presentation keys to expand into sources.
- * @returns {Promise<SourceRecord[]>} Source rows linked to the supplied clinical presentation keys.
  */
 export async function getSourcesForClinicalPresentations(
   clinicalPresentationKeys: string[],
@@ -155,9 +148,6 @@ export async function getSourcesForClinicalPresentations(
 /**
  * Returns feature nodes attached to the supplied clinical presentation keys.
  * Short-circuits to an empty array when no presentation keys are provided.
- *
- * @param {string[]} clinicalPresentationKeys Clinical presentation keys to expand into features.
- * @returns {Promise<FeatureRecord[]>} Feature rows linked to the supplied clinical presentation keys.
  */
 export async function getFeaturesForClinicalPresentations(
   clinicalPresentationKeys: string[],
@@ -197,9 +187,6 @@ export async function getFeaturesForClinicalPresentations(
 /**
  * Returns diagnosis rows for each provided clinical-presentation/category pair.
  * Short-circuits to an empty array when no pairs are provided.
- *
- * @param {Array<{ clinicalPresentationKey: string; categoryKey: string }>} pairs Clinical presentation and category key pairs to expand into diagnoses.
- * @returns {Promise<DiagnosisRecord[]>} Diagnosis rows linked to the supplied presentation-category pairs.
  */
 export async function getDiagnosesForPairs(
   pairs: Array<{ clinicalPresentationKey: string; categoryKey: string }>,
@@ -240,9 +227,6 @@ export async function getDiagnosesForPairs(
 /**
  * Returns diagnosis rows for each provided clinical-presentation/feature pair.
  * Short-circuits to an empty array when no pairs are provided.
- *
- * @param {Array<{ clinicalPresentationKey: string; featureKey: string }>} pairs Clinical presentation and feature key pairs to expand into diagnoses.
- * @returns {Promise<DiagnosisRecord[]>} Diagnosis rows linked to the supplied presentation-feature pairs.
  */
 export async function getDiagnosesForFeaturePairs(
   pairs: Array<{ clinicalPresentationKey: string; featureKey: string }>,
@@ -283,9 +267,6 @@ export async function getDiagnosesForFeaturePairs(
 /**
  * Re-verifies exact diagnosis evidence paths directly against Neo4j.
  * Short-circuits to an empty array when no candidate paths are provided.
- *
- * @param {DiagnosisPathAuditRecord[]} paths Candidate evidence paths to audit.
- * @returns {Promise<DiagnosisPathAuditRecord[]>} Only the paths that still exist in the graph.
  */
 export async function verifyDiagnosisEvidencePaths(
   paths: DiagnosisPathAuditRecord[],

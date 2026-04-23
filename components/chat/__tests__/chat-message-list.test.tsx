@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests chat message list empty-state and transcript rendering behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -33,7 +38,7 @@ vi.mock("@/components/ai-elements/message", () => ({
   MessageResponse: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
 }));
 
-import { ChatMessageList } from "./chat-message-list";
+import { ChatMessageList } from "../chat-message-list";
 
 describe("ChatMessageList", () => {
   it("renders the starter empty state and lets the user select a prompt", async () => {

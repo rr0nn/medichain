@@ -10,7 +10,7 @@ vi.mock("@/components/ddx/workflow-canvas", () => ({
   WorkflowCanvas: () => <div>workflow-canvas</div>,
 }));
 
-import { DdxPanel } from "./ddx-panel";
+import { DdxPanel } from "../ddx-panel";
 beforeAll(() => {
   global.ResizeObserver = class {
     observe() { }

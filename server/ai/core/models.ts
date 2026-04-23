@@ -44,8 +44,12 @@ type ResolvedModelSelection = {
   modelLabel: string;
 };
 
-// We reject unavailable selections explicitly so the UI can show a clear error.
-// This is easier to explain to a client than silently swapping to a different model.
+/**
+ * Represents a rejected model selection for either the chat or diagnosis selector.
+ *
+ * The app surfaces this error to the client instead of silently falling back to a
+ * different model when a requested selection is missing, unsupported, or unavailable.
+ */
 export class ModelSelectionError extends Error {
   code: "CHAT_MODEL_UNAVAILABLE" | "DIAGNOSIS_MODEL_UNAVAILABLE";
   selectorKey: ModelSelectorKey;
@@ -63,8 +67,8 @@ export class ModelSelectionError extends Error {
   }
 }
 
-// Single source of truth for every model the product knows about.
-// To add a new provider/model, register it here and expose the required env var.
+// Keep all supported models in one registry so catalog generation and request-time
+// selection always read from the same source of truth.
 const REGISTERED_MODELS: readonly RegisteredModel[] = [
   {
     createLanguageModel: () => google("gemini-2.5-flash"),
@@ -95,8 +99,8 @@ const REGISTERED_MODELS: readonly RegisteredModel[] = [
   },
 ] as const;
 
-// Each selector has its own label and preferred default model.
-// The frontend reads this metadata from the backend rather than hardcoding it.
+// The backend owns selector metadata so the frontend can render both dropdowns
+// without hardcoding labels, titles, or default model ids.
 const SELECTOR_DEFINITIONS: Record<ModelSelectorKey, SelectorDefinition> = {
   chat: {
     defaultModelId: "gemini-2.5-flash",
@@ -112,7 +116,6 @@ const SELECTOR_DEFINITIONS: Record<ModelSelectorKey, SelectorDefinition> = {
   },
 };
 
-// A model is considered available only when its required API key exists.
 function isModelAvailable(model: RegisteredModel): boolean {
   return model.envVar ? Boolean(process.env[model.envVar]) : true;
 }
@@ -143,9 +146,8 @@ function getDefaultModelDefinition(
   return model;
 }
 
-// This chooses the model that should appear as the default option in the UI.
-// If the preferred default is unavailable, we fall back only for the initial UI state,
-// not for an explicit user selection.
+// Catalog defaults may fall back to another available model so the initial UI
+// remains usable even when the preferred default cannot run locally.
 function getCatalogDefaultModelDefinition(
   selectorKey: ModelSelectorKey,
 ): RegisteredModel {
@@ -175,9 +177,8 @@ function toModelOption(model: RegisteredModel): ModelOption {
   };
 }
 
-// This is the strict selection path used when the app is about to run a request.
-// If the user asked for a model that is missing, unsupported, or unavailable,
-// we throw a typed error instead of silently switching providers.
+// Request-time selection stays strict: explicit user selections never fall back
+// to another provider because the UI should surface unavailable choices clearly.
 function getSelectableModelDefinition(
   selectorKey: ModelSelectorKey,
   requestedModelId?: string | null,
@@ -205,8 +206,12 @@ function getSelectableModelDefinition(
   return model;
 }
 
-// The frontend calls this route-backed catalog to build both dropdowns.
-// Each option includes availability so the UI can disable models that cannot run.
+/**
+ * Builds the backend-driven model catalog used by the chat and diagnosis selectors.
+ *
+ * Returns selector metadata, the effective catalog default for each selector, and
+ * availability flags so the client can disable models that cannot run locally.
+ */
 export function getModelCatalog(): ModelCatalog {
   return {
     selectors: (Object.keys(SELECTOR_DEFINITIONS) as ModelSelectorKey[]).map(
@@ -225,7 +230,12 @@ export function getModelCatalog(): ModelCatalog {
   };
 }
 
-// Converts a selected model id into a live AI SDK model instance for execution.
+/**
+ * Resolves a selector choice into the model instance used for execution.
+ *
+ * Throws `ModelSelectionError` when the requested model is missing, unsupported,
+ * or unavailable for the given selector.
+ */
 export function resolveModelSelection(
   selectorKey: ModelSelectorKey,
   requestedModelId?: string | null,
@@ -242,12 +252,20 @@ export function resolveModelSelection(
   };
 }
 
-// Chat model = outer interview orchestration.
+/**
+ * Returns the model used for the outer chat and interview orchestration flow.
+ *
+ * Throws `ModelSelectionError` when the requested chat model cannot run.
+ */
 export function getChatModel(chatModelId?: string | null) {
   return resolveModelSelection("chat", chatModelId).model;
 }
 
-// Diagnosis model = inner matching workflow used after the tool is invoked.
+/**
+ * Returns the model used for the inner diagnosis matching pipeline.
+ *
+ * Throws `ModelSelectionError` when the requested diagnosis model cannot run.
+ */
 export function getDiagnosisModel(diagnosisModelId?: string | null) {
   return resolveModelSelection("diagnosis", diagnosisModelId).model;
 }

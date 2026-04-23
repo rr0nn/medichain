@@ -29,12 +29,18 @@ const featureMatchSchema = z.object({
     z.object({
       key: z.string(),
       score: z.number().min(0).max(1),
-      // Keep this required because OpenAI strict structured outputs reject optional/default fields.
+      // Keep this required because strict structured outputs reject
+      // optional or defaulted fields.
       matchedText: z.array(z.string()),
     })
   ),
 });
 
+/**
+ * Matches a patient description to feature nodes within one clinical presentation.
+ *
+ * Returns only the model-scored feature matches from the supplied candidate set.
+ */
 export async function matchFeatures(
   patientDescription: string,
   clinicalPresentation: { key: string; name: string },

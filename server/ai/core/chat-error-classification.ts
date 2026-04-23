@@ -84,6 +84,12 @@ function classifyChatError(error: unknown): ChatErrorCode {
   return "CHAT_UNAVAILABLE";
 }
 
+/**
+ * Serializes a chat-stream failure into the stable payload format expected by the client.
+ *
+ * Collapses provider-specific and transport-specific failures into a smaller set
+ * of client-facing error codes so browser UI does not need to parse raw SDK errors.
+ */
 export function serializeChatStreamError(error: unknown): string {
   return serializeChatErrorPayload(
     createChatErrorPayload(classifyChatError(error)),

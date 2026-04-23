@@ -35,6 +35,11 @@ const EMPTY_RESULT: DdxResult = {
   groundingAssessment: undefined,
 };
 
+/**
+ * Extracts the latest available differential diagnosis tool output from the transcript.
+ *
+ * Returns a stable empty result when no completed differential output is present.
+ */
 export function useDdxResult(messages: UIMessage[]): DdxResult {
   const output = getLatestToolOutput<{
     differentials?: DifferentialDiagnosis[];

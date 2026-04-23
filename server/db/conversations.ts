@@ -7,6 +7,9 @@ import type { UIMessage } from "ai";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "./client";
 
+/**
+ * Lists saved conversations in reverse chronological update order.
+ */
 export async function listConversations() {
   return prisma.conversation.findMany({
     orderBy: { updatedAt: "desc" },
@@ -20,6 +23,9 @@ export async function listConversations() {
   });
 }
 
+/**
+ * Creates a new conversation record with an optional title override.
+ */
 export async function createConversation(title?: string) {
   return prisma.conversation.create({
     data: { title: title ?? "New Consultation" },
@@ -27,18 +33,32 @@ export async function createConversation(title?: string) {
   });
 }
 
+/**
+ * Returns a single conversation by id when it exists.
+ */
 export async function getConversation(id: string) {
   return prisma.conversation.findUnique({ where: { id } });
 }
 
+/**
+ * Updates the stored title for an existing conversation.
+ */
 export async function updateConversationTitle(id: string, title: string) {
   return prisma.conversation.update({ where: { id }, data: { title } });
 }
 
+/**
+ * Deletes a conversation and its dependent records through Prisma relations.
+ */
 export async function deleteConversation(id: string) {
   return prisma.conversation.delete({ where: { id } });
 }
 
+/**
+ * Loads persisted messages for a conversation in ascending creation order.
+ *
+ * Returns messages in the `UIMessage` shape expected by the chat layer.
+ */
 export async function getMessages(conversationId: string): Promise<UIMessage[]> {
   const messages = await prisma.message.findMany({
     where: { conversationId },
@@ -53,6 +73,9 @@ export async function getMessages(conversationId: string): Promise<UIMessage[]> 
   }));
 }
 
+/**
+ * Persists a single message for a conversation.
+ */
 export async function saveMessage(
   conversationId: string,
   role: string,
@@ -63,6 +86,9 @@ export async function saveMessage(
   });
 }
 
+/**
+ * Persists multiple messages for a conversation in one batch operation.
+ */
 export async function saveMessages(
   conversationId: string,
   messages: { role: string; parts: unknown }[]

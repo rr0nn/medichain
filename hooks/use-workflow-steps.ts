@@ -18,6 +18,12 @@ const initialSteps: WorkflowStepState = {
   safety_review: "idle",
 };
 
+/**
+ * Derives workflow step state from transcript step events and the current chat status.
+ *
+ * Returns the idle workflow state while a request is still pending, then maps the
+ * latest emitted step events onto the workflow canvas state shape.
+ */
 export function useWorkflowSteps(
   messages: UIMessage[],
   status: string,

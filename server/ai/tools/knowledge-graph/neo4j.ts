@@ -44,6 +44,9 @@ export const neo4jDriver = new Proxy({} as Driver, {
 
 export const neo4jDatabase = database;
 
+/**
+ * Closes the shared Neo4j driver and resets the cached driver instance.
+ */
 export async function closeNeo4jDriver() {
   if (!driver) {
     return;

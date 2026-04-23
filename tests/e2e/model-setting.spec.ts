@@ -21,15 +21,17 @@ test("opens model settings and shows available and unavailable models", async ({
 
   await expect(dialog.getByText("Model Settings")).toBeVisible();
   await expect(
-    dialog.getByRole("button", { name: /Gemini 1.5 Flash/i }).first(),
+    dialog.getByRole("button", { name: /Gemini 2.5 Flash/i }).first(),
   ).toBeVisible();
   await expect(
-    dialog.getByRole("button", { name: /Gemini 1.5 Pro/i }).first(),
+    dialog.getByRole("button", { name: /GPT-5 mini/i }).first(),
   ).toBeVisible();
   await expect(
-    dialog.getByRole("button", { name: /Claude 3.5 Sonnet/i }),
+    dialog.getByRole("button", { name: /Claude Sonnet 4.5/i }).first(),
   ).toBeVisible();
-  await expect(dialog.getByText("Unavailable", { exact: true })).toBeVisible();
+  await expect(
+    dialog.getByText("Unavailable", { exact: true }),
+  ).toHaveCount(2);
   await expect(dialog.getByRole("heading", { name: "Chat Model" })).toBeVisible();
   await expect(dialog.getByRole("heading", { name: "Diagnosis Model" })).toBeVisible();
 });
@@ -42,18 +44,18 @@ test("persists selected models across reloads", async ({ page }) => {
 
   await page.getByRole("button", { name: /models/i }).click();
 
-  await page.getByRole("button", { name: /Gemini 1.5 Pro/i }).first().click();
-  await page.getByRole("button", { name: /Gemini 1.5 Pro/i }).nth(1).click();
+  await page.getByRole("button", { name: /GPT-5 mini/i }).first().click();
+  await page.getByRole("button", { name: /GPT-5 mini/i }).nth(1).click();
 
   await page.keyboard.press("Escape");
 
   await expect(page.getByRole("button", { name: /models/i })).toContainText(
-    "Gemini 1.5 Pro / Gemini 1.5 Pro",
+    "GPT-5 mini / GPT-5 mini",
   );
 
   await page.reload();
 
   await expect(page.getByRole("button", { name: /models/i })).toContainText(
-    "Gemini 1.5 Pro / Gemini 1.5 Pro",
+    "GPT-5 mini / GPT-5 mini",
   );
 });

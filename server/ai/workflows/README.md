@@ -4,9 +4,9 @@ This folder contains the multi-step orchestration logic that combines agents, gr
 
 ## Current Workflows
 
+- `interview-workflow/`: interview-oriented workflow responsible for handling user input and outputs
 - `ddx-workflow/`: differential diagnosis generation, evidence retrieval, and ranking
 - `safety-workflow/`: confidence and grounding review before results are surfaced
-- `interview-workflow/`: interview-oriented workflow support used by the chat layer
 
 ## Responsibilities
 

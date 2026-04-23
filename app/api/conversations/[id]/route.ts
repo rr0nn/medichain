@@ -1,5 +1,5 @@
 /**
- * @fileoverview Fetches or deletes a single saved conversation.
+ * @fileoverview Fetches, updates, or deletes a single saved conversation.
  * @contributors Aryan Wadhawan
  */
 

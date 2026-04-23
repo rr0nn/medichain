@@ -1,8 +1,13 @@
+/**
+ * @fileoverview Tests chat composer submission and stop-state behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { ChatComposer } from "./chat-composer";
+import { ChatComposer } from "../chat-composer";
 
 describe("ChatComposer", () => {
   it("submits when idle and input is present", async () => {

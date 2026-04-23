@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests consultation sidebar rendering and interaction behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -8,7 +13,7 @@ vi.mock("@/hooks/use-conversation-list", () => ({
   useConversationList: (...args: unknown[]) => useConversationListMock(...args),
 }));
 
-import { ConversationSidebar } from "./conversation-sidebar";
+import { ConversationSidebar } from "../conversation-sidebar";
 
 describe("ConversationSidebar", () => {
   it("renders the loading state", () => {

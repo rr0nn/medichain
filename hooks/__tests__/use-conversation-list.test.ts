@@ -1,13 +1,18 @@
+/**
+ * @fileoverview Tests conversation list hook state, refresh, and deletion behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useConversationList } from "./use-conversation-list";
+import { useConversationList } from "../use-conversation-list";
 
 const listConversationsMock = vi.fn();
 const deleteConversationMock = vi.fn();
 const toastErrorMock = vi.fn();
 
-vi.mock("@/lib/conversations", () => ({
+vi.mock("@/lib/conversations/api", () => ({
   listConversations: (...args: unknown[]) => listConversationsMock(...args),
   deleteConversation: (...args: unknown[]) => deleteConversationMock(...args),
 }));

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests consultation session hook routing, loading, and send-state behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -5,9 +10,9 @@ import {
   createChatErrorPayload,
   serializeChatErrorPayload,
 } from "@/lib/chat/error-payload";
-import { ConversationNotFoundError } from "@/lib/conversations";
 import type { SelectedModelIds } from "@/lib/chat/model-catalog";
-import { useConversationSession } from "./use-conversation-session";
+import { ConversationNotFoundError } from "@/lib/conversations/errors";
+import { useConversationSession } from "../use-conversation-session";
 
 const pushMock = vi.fn();
 const replaceMock = vi.fn();
@@ -42,8 +47,8 @@ vi.mock("@ai-sdk/react", () => ({
   useChat: (...args: unknown[]) => useChatMock(...args),
 }));
 
-vi.mock("@/lib/conversations", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/conversations")>();
+vi.mock("@/lib/conversations/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/conversations/api")>();
 
   return {
     ...actual,

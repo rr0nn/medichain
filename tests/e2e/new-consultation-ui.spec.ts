@@ -1,6 +1,6 @@
 /**
  * @fileoverview Covers returning to the fresh consultation state from the header and sidebar controls.
- * @contributor John Kollannur
+ * @contributors John Kollannur
  */
 
 import { expect, test } from "@playwright/test";
