@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests conversation list hook state, refresh, and deletion behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

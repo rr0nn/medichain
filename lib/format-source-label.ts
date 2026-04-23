@@ -1,5 +1,6 @@
 /**
  * @fileoverview Formats knowledge-graph source metadata for compact UI display.
+ * @contributors Johnson Zhang
  */
 
 type SourceLabelInput = {

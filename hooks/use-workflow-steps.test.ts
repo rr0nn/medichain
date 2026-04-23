@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests workflow step derivation from transcript step events and chat status.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 

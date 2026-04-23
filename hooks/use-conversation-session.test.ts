@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests consultation session hook routing, loading, and send-state behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

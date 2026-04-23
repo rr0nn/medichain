@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests extraction of the latest differential diagnosis result from the transcript.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 

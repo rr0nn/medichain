@@ -1,9 +1,9 @@
+"use client";
+
 /**
  * @fileoverview Manages consultation session state for the page.
  * @contributors Johnson Zhang
  */
-
-"use client";
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";

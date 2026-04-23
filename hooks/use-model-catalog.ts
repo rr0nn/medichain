@@ -1,9 +1,9 @@
+"use client";
+
 /**
  * @fileoverview Loads the backend-driven model catalog and manages active selector state.
  * @contributors Johnson Zhang
  */
-
-"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";

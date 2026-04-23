@@ -1,9 +1,9 @@
+"use client";
+
 /**
  * @fileoverview Manages conversation list state for the sidebar.
  * @contributors Johnson Zhang
  */
-
-"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";

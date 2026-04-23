@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests chat message list empty-state and transcript rendering behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";

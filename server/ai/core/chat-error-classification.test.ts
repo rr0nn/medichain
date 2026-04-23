@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests classification of chat-stream errors into stable client-facing payloads.
+ * @contributors Johnson Zhang
+ */
+
 import { APICallError } from "ai";
 import { describe, expect, it } from "vitest";
 

@@ -1,6 +1,6 @@
 /**
  * @fileoverview Verifies browser-visible error handling for failed conversation list and missing consultation history requests.
- * @contributor John Kollannur
+ * @contributors John Kollannur
  */
 
 import { expect, test } from "@playwright/test";

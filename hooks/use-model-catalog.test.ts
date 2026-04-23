@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests model catalog loading, persistence, and fallback selection behavior.
+ * @contributors Johnson Zhang
+ */
+
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
