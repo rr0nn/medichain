@@ -1,5 +1,5 @@
 /**
- * @fileoverview Tests composition of patient-facing responses from grounded differential results.
+ * @fileoverview Tests response-composer-agent grounded patient-facing replies.
  * @contributors Johnson Zhang
  */
 
@@ -18,7 +18,7 @@ vi.mock("@/server/ai/core/models", () => ({
   getChatModel: mocks.mockGetChatModel,
 }));
 
-import { composePatientResponse } from "./patient-response";
+import { composePatientResponse } from "./agent";
 
 describe("composePatientResponse", () => {
   beforeEach(() => {

@@ -10,7 +10,7 @@ import type { SafetyWorkflowResult } from "@/server/ai/workflows/safety-workflow
 
 /**
  * Composes a patient-facing explanation from the safety-reviewed differential
- * result. This module only formats grounded workflow output; it does not
+ * result. This agent only formats grounded workflow output; it does not
  * perform any routing or ask follow-up questions.
  */
 export async function composePatientResponse(

@@ -16,8 +16,8 @@ import { z } from "zod";
 import type { ChatRequest } from "@/server/ai/core/types";
 import { serializeChatStreamError } from "@/server/ai/core/chat-error-classification";
 import { resolveModelSelection } from "@/server/ai/core/models";
+import { composePatientResponse } from "@/server/ai/agents/response-composer-agent/agent";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
-import { composePatientResponse } from "./patient-response";
 
 function buildWorkflowPatientDescription(input: {
   patientDescription: string;

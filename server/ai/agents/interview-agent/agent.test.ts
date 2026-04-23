@@ -28,7 +28,7 @@ vi.mock("@/server/ai/workflows/safety-workflow/workflow", () => ({
   runSafetyWorkflow: mocks.mockRunSafetyWorkflow,
 }));
 
-vi.mock("./patient-response", () => ({
+vi.mock("@/server/ai/agents/response-composer-agent/agent", () => ({
   composePatientResponse: mocks.mockComposePatientResponse,
 }));
 
