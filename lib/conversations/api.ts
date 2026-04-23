@@ -1,5 +1,5 @@
 /**
- * @fileoverview Provides client-side helpers for conversation list and message fetch operations.
+ * @fileoverview Provides client-side helpers for conversation list, creation, deletion, and message fetch operations.
  * @contributors Johnson Zhang
  */
 
