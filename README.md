@@ -42,14 +42,14 @@ Within `server/ai/`, the diagnosis pipeline is organized as:
 
 ## Prerequisites
 
-Before running the project, make sure you have:
+Before you start, make sure you have:
 
 - Node.js 20+
 - pnpm 10+
 - Docker + Docker Compose v2
-- a Neo4j instance created and running
-- the Neo4j connection credentials saved when the instance is created
-- at least one supported LLM provider API key:
+- a reachable Neo4j instance
+- the Neo4j URI, username, password, and database name
+- at least one AI provider key:
   - Google Gemini
   - OpenAI
   - Anthropic
@@ -61,112 +61,107 @@ corepack enable
 corepack prepare pnpm@10.33.0 --activate
 ```
 
-### Neo4j
+At least one provider key is required for the app's AI features to work. Any extra keys you add will make more models available in the selector.
 
-Create a Neo4j instance before setup and make sure it is reachable when you run `pnpm seed:graph`.
+## Quick Start
 
-When the instance is created, keep the following credentials:
+The fastest way to run the app is with Docker Compose:
 
-- URI
-- username
-- password
-- database name
+1. Clone the repository and enter the project directory:
 
-These values are required in `.env.local` for knowledge graph seeding and diagnosis workflow execution.
+```bash
+git clone <repository-url>
+cd capstone-project-26t1-3900-w09a-date
+```
 
-### AI Provider Keys
-
-Prepare at least one provider API key before setup:
-
-- `GOOGLE_GENERATIVE_AI_API_KEY`
-- `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
-
-The app can run with one provider, but model availability in the UI depends on which keys are configured.
-
-## Environment Setup
-
-Copy `.env.example` to `.env.local`:
+2. Create your local environment file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Required variables:
+3. Fill in `.env.local` with:
 
 - `DATABASE_URL`
-- one AI provider key: `GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, or `OPENAI_API_KEY`
 - `NEO4J_URI`
 - `NEO4J_USERNAME`
 - `NEO4J_PASSWORD`
 - `NEO4J_DATABASE`
+- at least one provider key:
+  - `GOOGLE_GENERATIVE_AI_API_KEY`
+  - `OPENAI_API_KEY`
+  - `ANTHROPIC_API_KEY`
 
-Optional variables:
+The default `DATABASE_URL` in `.env.example` already matches the local PostgreSQL container started by `docker compose`.
 
-- any additional AI provider keys you want available in the model selector beyond the one required above
+4. Install dependencies so the Neo4j seed script can run:
 
-Variable roles:
+```bash
+pnpm install
+```
 
-- `DATABASE_URL`: PostgreSQL connection string for conversation and message persistence
-- `GOOGLE_GENERATIVE_AI_API_KEY`: API key required to use Gemini models from the model selector
-- `ANTHROPIC_API_KEY`: API key required to use Claude models from the model selector
-- `OPENAI_API_KEY`: API key required to use OpenAI models from the model selector
-- `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`: Neo4j connection settings for the diagnosis knowledge graph
+5. Seed the knowledge graph once your Neo4j instance is reachable:
 
-## Knowledge Graph Setup
+```bash
+pnpm seed:graph
+```
 
-The diagnosis pipeline depends on a seeded Neo4j graph. Seed the graph before starting the app for the first time.
-
-1. Start or connect to a Neo4j instance.
-2. Configure the Neo4j variables in `.env.local`.
-3. Run `pnpm seed:graph` to execute [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher).
-4. Review the schema in [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md).
-
-`pnpm seed:graph` loads Neo4j credentials from the current shell or `.env.local`. The current seed file is destructive: it drops graph constraints, deletes existing nodes, and recreates the project dataset.
-
-If you want to expand or modify the diagnosis dataset, you can manage the knowledge graph directly in Neo4j after seeding. Update the graph data there, and keep the seed file and schema documentation in sync if you want those changes to become part of the project's baseline dataset.
-
-## Getting Started
-
-### Docker-Based Setup
-
-1. Clone the repository and enter it.
-2. Create `.env.local` from `.env.example`.
-3. Start or connect to Neo4j and run `pnpm seed:graph`.
-4. Start the Docker services:
+6. Start the app:
 
 ```bash
 docker compose up --build
 ```
 
-5. Open `http://localhost:3000`.
+7. Open `http://localhost:3000`.
 
-The `migrate` service runs Prisma migrations and then exits. That is expected.
+The `migrate` service applies Prisma migrations and then exits. That is expected.
 
-### Local Development
+## Local Development
 
-1. Create `.env.local`.
-2. Start or connect to Neo4j and run `pnpm seed:graph`.
-3. Start PostgreSQL and apply migrations:
+Use this path only if you want the Next.js development server with `pnpm dev`.
+
+1. Complete steps 1-5 from [Quick Start](#quick-start).
+2. Start PostgreSQL and apply Prisma migrations:
 
 ```bash
 docker compose up -d db
 docker compose run --rm migrate
 ```
 
-The checked-in Compose setup publishes PostgreSQL on `localhost:5432`, so the default `DATABASE_URL` in `.env.example` works unchanged for local development.
-
-4. Install dependencies:
-
-```bash
-pnpm install
-```
-
-5. Start the development server:
+3. Start the development server:
 
 ```bash
 pnpm dev
 ```
+
+4. Open `http://localhost:3000`.
+
+## Setup Reference
+
+### Environment Variables
+
+Required:
+
+- `DATABASE_URL`: PostgreSQL connection string for conversation and message persistence
+- `NEO4J_URI`, `NEO4J_USERNAME`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`: Neo4j connection settings for the diagnosis knowledge graph
+- one provider key:
+  - `GOOGLE_GENERATIVE_AI_API_KEY`: enables Gemini models
+  - `OPENAI_API_KEY`: enables OpenAI models
+  - `ANTHROPIC_API_KEY`: enables Claude models
+
+Optional:
+
+- any additional provider keys you want available in the model selector
+
+### Knowledge Graph Notes
+
+The diagnosis pipeline depends on a seeded Neo4j graph. Run `pnpm seed:graph` before starting the app for the first time.
+
+`pnpm seed:graph` loads Neo4j credentials from the current shell or `.env.local`, then executes [`docs/knowledge-graph/seeding.cypher`](docs/knowledge-graph/seeding.cypher) through [`scripts/seed-neo4j.mjs`](scripts/seed-neo4j.mjs).
+
+The seed is destructive: it drops graph constraints, deletes existing nodes, and recreates the project dataset.
+
+If you want to inspect or extend the graph, review [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md). If you make changes directly in Neo4j and want them to become part of the baseline dataset, keep the seed file and schema documentation in sync.
 
 ## Useful Commands
 
