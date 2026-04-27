@@ -1,19 +1,16 @@
+/**
+ * @fileoverview Sets up the root app layout, global fonts, and shared client providers.
+ * @contributors Johnson Zhang, John Kollannur, Aryan Wadhawan
+ */
+
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import "./theme.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/theme-provider";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { BackgroundLayer } from "@/components/layout/background-layer";
 
 export const metadata: Metadata = {
   title: "MediChain",
@@ -29,11 +26,13 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} font-sans`}
+      className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}
     >
       <body className="antialiased">
         <ThemeProvider>
+          <BackgroundLayer />
           <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

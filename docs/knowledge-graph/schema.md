@@ -50,7 +50,7 @@ Represents:
 
 #### Examples
 
-- `source:pocketbook_ddx_5e_extract`
+- `source:pocketbook_ddx_5e`
 - `source:pocketbook_ddx_5e_abdominal_pain`
 
 ---

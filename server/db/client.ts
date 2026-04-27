@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Creates and reuses the shared Prisma client for server-side database access.
+ * @contributors Aryan Wadhawan
+ */
+
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 

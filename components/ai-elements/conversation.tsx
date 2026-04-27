@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/cn";
 import type { UIMessage } from "ai";
 import { ArrowDownIcon, DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -85,7 +85,7 @@ export const ConversationScrollButton = ({
     !isAtBottom && (
       <Button
         className={cn(
-          "absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full dark:bg-background dark:hover:bg-muted",
+          "absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full border-[color:var(--glass-border)] bg-background/70 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm hover:bg-background/85",
           className
         )}
         onClick={handleScrollToBottom}
@@ -153,7 +153,7 @@ export const ConversationDownload = ({
   return (
     <Button
       className={cn(
-        "absolute top-4 right-4 rounded-full dark:bg-background dark:hover:bg-muted",
+        "absolute top-4 right-4 rounded-full border-[color:var(--glass-border)] bg-background/70 shadow-[inset_0_1px_0_var(--glass-highlight)] backdrop-blur-sm hover:bg-background/85",
         className
       )}
       onClick={handleDownload}

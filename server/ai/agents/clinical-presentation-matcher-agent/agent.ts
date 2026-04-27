@@ -1,29 +1,40 @@
-// Clinical presentation matcher agent:
-// maps free-text patient wording to candidate clinical presentation nodes,
-// returning ranked presentation-key matches for downstream selection.
+/**
+ * @fileoverview Matches a patient description to known clinical presentations in the graph.
+ * @contributors Johnson Zhang
+ */
+
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { getDefaultDiagnosisModel } from "@/server/ai/core/models";
+import { getDiagnosisModel } from "@/server/ai/core/models";
 import type { ClinicalPresentationRecord } from "@/server/ai/tools/knowledge-graph/types";
 
 const clinicalPresentationMatchSchema = z.object({
   matches: z.array(
     z.object({
       key: z.string(),
-      // Model-reported match strength on a 0..1 scale. This is a ranking signal, not a calibrated probability.
+      // Model-reported match strength on a 0..1 scale. This is a ranking signal,
+      // not a calibrated probability.
       score: z.number().min(0).max(1),
-      matchedText: z.array(z.string()).default([]),
+      // Keep this required because strict structured outputs reject
+      // optional or defaulted fields.
+      matchedText: z.array(z.string()),
     })
   ),
 });
 
+/**
+ * Matches a patient description to the most relevant clinical presentations in the graph.
+ *
+ * Returns only matches drawn from the supplied candidate presentation set.
+ */
 export async function matchClinicalPresentations(
   patientDescription: string,
-  candidates: ClinicalPresentationRecord[]
+  candidates: ClinicalPresentationRecord[],
+  diagnosisModelId?: string,
 ) {
   const { output } = await generateText({
-    model: getDefaultDiagnosisModel(),
+    model: getDiagnosisModel(diagnosisModelId),
     prompt: `
 You are matching patient wording to graph nodes.
 
@@ -32,6 +43,7 @@ Rules:
 - Do not invent keys.
 - Match the presenting complaint, not the final diagnosis.
 - Return an empty array if the match is weak.
+- Always include matchedText as an array for every match. Use [] if there is no exact supporting phrase.
 - Prefer broad symptom/presentation matching.
 - Treat score as relative match strength for ranking, not as a probability.
 

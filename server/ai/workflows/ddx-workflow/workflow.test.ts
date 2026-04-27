@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests end-to-end orchestration of the differential diagnosis workflow.
+ * @contributors Johnson Zhang, John Kollannur
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -139,6 +144,70 @@ describe("runDifferentialDiagnosisWorkflow", () => {
     ).not.toHaveBeenCalled();
     expect(mocks.mockGetDiagnosesForPairs).not.toHaveBeenCalled();
     expect(mocks.mockGetDiagnosesForFeaturePairs).not.toHaveBeenCalled();
+  });
+
+  it("passes the selected diagnosis model provider to the matcher agents", async () => {
+    mocks.mockGetClinicalPresentations.mockResolvedValue([
+      { key: "cp-fever", name: "Fever" },
+    ]);
+    mocks.mockGetCategoriesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        categoryKey: "cat-infectious",
+        categoryName: "Infectious",
+        categoryNormalizedName: "infectious",
+      },
+    ]);
+    mocks.mockGetFeaturesForClinicalPresentations.mockResolvedValue([
+      {
+        clinicalPresentationKey: "cp-fever",
+        featureKey: "feature-rigors",
+        featureName: "Rigors",
+        featureNormalizedName: "rigors",
+        featureType: "associated_symptom",
+      },
+    ]);
+
+    mocks.mockMatchClinicalPresentations.mockResolvedValue({
+      matches: [{ key: "cp-fever", score: 0.9, matchedText: ["fever"] }],
+    });
+    mocks.mockMatchCategories.mockResolvedValue({ matches: [] });
+    mocks.mockMatchFeatures.mockResolvedValue({ matches: [] });
+
+    await runDifferentialDiagnosisWorkflow("fever", undefined, "openai");
+
+    expect(mocks.mockMatchClinicalPresentations).toHaveBeenCalledWith(
+      "fever",
+      [{ key: "cp-fever", name: "Fever" }],
+      "openai",
+    );
+    expect(mocks.mockMatchCategories).toHaveBeenCalledWith(
+      "fever",
+      { key: "cp-fever", name: "Fever" },
+      [
+        {
+          categoryKey: "cat-infectious",
+          categoryName: "Infectious",
+          categoryNormalizedName: "infectious",
+          clinicalPresentationKey: "cp-fever",
+        },
+      ],
+      "openai",
+    );
+    expect(mocks.mockMatchFeatures).toHaveBeenCalledWith(
+      "fever",
+      { key: "cp-fever", name: "Fever" },
+      [
+        {
+          clinicalPresentationKey: "cp-fever",
+          featureKey: "feature-rigors",
+          featureName: "Rigors",
+          featureNormalizedName: "rigors",
+          featureType: "associated_symptom",
+        },
+      ],
+      "openai",
+    );
   });
 
   it("completes downstream step states when no clinical presentations match", async () => {

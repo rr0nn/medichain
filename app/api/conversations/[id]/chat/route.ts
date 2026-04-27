@@ -1,6 +1,12 @@
+/**
+ * @fileoverview Handles chat requests for an existing conversation and streams interview-agent responses.
+ * @contributors Johnson Zhang, Jason Yang, Aryan Wadhawan
+ */
+
 import { createUIMessageStream, createUIMessageStreamResponse, type UIMessage } from "ai";
 
 import type { ChatRequest } from "@/server/ai/core/types";
+import { serializeChatStreamError } from "@/server/ai/core/chat-error-classification";
 import {
   saveMessage,
   updateConversationTitle,
@@ -19,6 +25,7 @@ export async function POST(
 
   const stream = createUIMessageStream({
     originalMessages: body.messages,
+    onError: serializeChatStreamError,
     execute: async ({ writer }) => {
       await runInterviewerWorkflow(body, writer);
     },

@@ -1,0 +1,78 @@
+/**
+ * @fileoverview Tests response-composer-agent grounded patient-facing replies.
+ * @contributors Johnson Zhang
+ */
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  mockGenerateText: vi.fn(),
+  mockGetChatModel: vi.fn(),
+}));
+
+vi.mock("ai", () => ({
+  generateText: mocks.mockGenerateText,
+}));
+
+vi.mock("@/server/ai/core/models", () => ({
+  getChatModel: mocks.mockGetChatModel,
+}));
+
+import { composePatientResponse } from "./agent";
+
+describe("composePatientResponse", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("builds a patient-facing prompt from the grounded safety result", async () => {
+    mocks.mockGetChatModel.mockReturnValue({ id: "fake-chat-model" });
+    mocks.mockGenerateText.mockResolvedValue({
+      text: "This pattern may fit a few possibilities, including appendicitis.",
+    });
+
+    const text = await composePatientResponse("abdominal pain", {
+      status: "ready_for_review",
+      matchedClinicalPresentations: [],
+      matchedCategories: [],
+      matchedFeatures: [],
+      differentials: [
+        {
+          diagnosisKey: "dx-appendicitis",
+          diagnosisName: "Appendicitis",
+          score: 0.92,
+          evidence: [],
+        },
+      ],
+      criticAssessment: {
+        isConfident: true,
+        shouldReturnToInterview: false,
+        confidenceLabel: "high",
+        reasons: [],
+        topDifferentialScore: 0.92,
+        topDifferentialEvidenceCount: 1,
+        scoreGapToSecond: null,
+      },
+      groundingAssessment: {
+        isGrounded: true,
+        reasons: [],
+        groundedDifferentialCount: 1,
+        ungroundedDifferentialCount: 0,
+        topDiagnosisHasGroundedEvidence: true,
+        topDiagnosisHasFeatureEvidence: true,
+      },
+      candidateFeatures: [],
+    }, "gpt-5-mini");
+
+    expect(text).toBe(
+      "This pattern may fit a few possibilities, including appendicitis.",
+    );
+    expect(mocks.mockGetChatModel).toHaveBeenCalledWith("gpt-5-mini");
+    expect(mocks.mockGenerateText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: { id: "fake-chat-model" },
+        prompt: expect.stringContaining("Write a short, calm, empathetic explanation"),
+      }),
+    );
+  });
+});

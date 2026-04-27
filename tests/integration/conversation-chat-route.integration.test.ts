@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Integration tests for the conversation chat route across streaming and persistence boundaries.
+ * @contributors Johnson Zhang, Jason Yang, John Kollannur
+ */
+
 import { describe,  expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -97,6 +102,11 @@ describe("POST /api/conversations/[id]/chat integration", () => {
     await executePromise;
 
     expect(mocks.mockCreateUIMessageStream).toHaveBeenCalledTimes(1);
+    expect(mocks.mockCreateUIMessageStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onError: expect.any(Function),
+      }),
+    );
     expect(mocks.mockRunInterviewAgent).toHaveBeenCalledWith(body, writer);
     expect(mocks.mockCreateUIMessageStreamResponse).toHaveBeenCalledWith({
       stream,

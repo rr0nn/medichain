@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Runs safety review over differential results before the final response is composed.
+ * @contributors Johnson Zhang, John Kollannur
+ */
+
 import { getFeaturesForClinicalPresentations } from "@/server/ai/tools/knowledge-graph/knowledge-graph";
 import { runDifferentialDiagnosisWorkflow } from "@/server/ai/workflows/ddx-workflow/workflow";
 import type { WorkflowStepEvent } from "@/server/ai/workflows/ddx-workflow/types";
@@ -41,22 +46,29 @@ function mergeSafetyAssessments(input: {
 }
 
 /**
- * Runs the safety workflow on top of the core DDX workflow by auditing graph
- * grounding and confidence before the interview agent decides how to respond.
+ * Runs safety review on top of the core differential diagnosis workflow.
+ *
+ * Audits graph grounding before confidence review so unsupported diagnosis
+ * paths never influence whether the interview loop continues or a review-ready
+ * response is returned.
  */
 export async function runSafetyWorkflow(
   patientDescription: string,
   onStep?: OnStep,
+  diagnosisModelId?: string,
 ): Promise<SafetyWorkflowResult> {
+  // Run the core DDX workflow first and treat its output as a candidate result,
+  // not yet something safe to present back through the interview layer.
   const ddxResult = await runDifferentialDiagnosisWorkflow(
     patientDescription,
     onStep,
+    diagnosisModelId,
   );
 
   onStep?.({ type: "step", step: "safety_review", status: "running" });
 
-  // First, audit every returned diagnosis path directly against Neo4j so the
-  // safety workflow only evaluates differentials that still exist in the graph.
+  // Audit the returned evidence paths directly against Neo4j before confidence
+  // review so the critic never scores unsupported graph output.
   const groundingResult = await reviewDifferentialGrounding({
     differentials: ddxResult.differentials,
   });
@@ -65,25 +77,29 @@ export async function runSafetyWorkflow(
     differentials: groundingResult.differentials,
   };
 
-  // Then run the critic on the audited differential list rather than the raw
-  // DDX output, so confidence never depends on unsupported graph paths.
+  // Confidence review happens after grounding so the critic only evaluates the
+  // diagnosis set that still survives direct graph verification.
   const criticAssessment = reviewDifferentialConfidence(
     groundedDdxResult.differentials,
   );
   onStep?.({ type: "step", step: "safety_review", status: "complete" });
 
+  // Merge grounding and confidence into one routing decision because either
+  // failure mode means the interview loop should continue gathering history.
   const mergedCriticAssessment = mergeSafetyAssessments({
     criticAssessment,
     groundingAssessment: groundingResult.assessment,
   });
 
-  // Any grounding failure or confidence failure routes the case back to the
-  // interview loop with the audited differential state attached.
+  // Route the case back to the interviewer whenever grounding or confidence is
+  // insufficient, and attach the audited differential state for follow-up.
   if (mergedCriticAssessment.shouldReturnToInterview) {
     const candidateFeatures = await getFeaturesForClinicalPresentations(
       groundedDdxResult.matchedClinicalPresentations.map((match) => match.key),
     );
 
+    // Return the audited state plus candidate graph features so the interview
+    // agent can ask better follow-up questions without inventing unsupported detail.
     return buildNeedsMoreInformationResult(
       groundedDdxResult.matchedClinicalPresentations,
       groundedDdxResult.matchedCategories,
@@ -95,6 +111,8 @@ export async function runSafetyWorkflow(
     );
   }
 
+  // Only reach the review-ready state when the differential remains grounded
+  // and confident enough after both safety gates have run.
   return {
     ...groundedDdxResult,
     status: "ready_for_review",

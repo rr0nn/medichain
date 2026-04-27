@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Runs the interview agent that decides when to call tools and how to reply to the user.
+ * @contributors Johnson Zhang, John Kollannur
+ */
+
 import {
   convertToModelMessages,
   stepCountIs,
@@ -9,9 +14,10 @@ import {
 import { z } from "zod";
 
 import type { ChatRequest } from "@/server/ai/core/types";
-import { getDefaultChatModel } from "@/server/ai/core/models";
+import { serializeChatStreamError } from "@/server/ai/core/chat-error-classification";
+import { resolveModelSelection } from "@/server/ai/core/models";
+import { composePatientResponse } from "@/server/ai/agents/response-composer-agent/agent";
 import { runSafetyWorkflow } from "@/server/ai/workflows/safety-workflow/workflow";
-import { composePatientResponse } from "./patient-response";
 
 function buildWorkflowPatientDescription(input: {
   patientDescription: string;
@@ -77,14 +83,31 @@ General rules:
 - Do not imply that an evidence support score is a probability.
 - If the tool output is weak or sparse, say so plainly instead of overstating confidence.`;
 
+/**
+ * Runs the interview agent that powers the main consultation chat flow.
+ *
+ * Side effects:
+ * - Rebuilds model messages from the current transcript.
+ * - Streams chat output and tool execution events into the UI writer.
+ * - Invokes the safety-reviewed differential workflow when the model calls the tool.
+ */
 export async function runInterviewAgent(
-  { messages }: ChatRequest,
+  { messages, chatModelId, diagnosisModelId }: ChatRequest,
   writer: UIMessageStreamWriter
 ) {
-  const modelMessages = await convertToModelMessages(messages);
+  const modelMessages = await convertToModelMessages(messages, {
+    // Ignore incomplete tool calls left behind by a manually stopped stream so
+    // the next user turn can resume the consultation cleanly.
+    ignoreIncompleteToolCalls: true,
+  });
+  const chatSelection = resolveModelSelection("chat", chatModelId);
+  const diagnosisSelection = resolveModelSelection(
+    "diagnosis",
+    diagnosisModelId,
+  );
 
   const result = streamText({
-    model: getDefaultChatModel(),
+    model: chatSelection.model,
     system: SYSTEM_PROMPT,
     messages: modelMessages,
     tools: {
@@ -120,15 +143,19 @@ export async function runInterviewAgent(
             newInformationFocus,
           });
 
-          const safetyResult = await runSafetyWorkflow(workflowPatientDescription, (event) =>
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            writer.write({ type: "data-step", data: event } as any),
+          const safetyResult = await runSafetyWorkflow(
+            workflowPatientDescription,
+            (event) =>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              writer.write({ type: "data-step", data: event } as any),
+            diagnosisSelection.modelId,
           );
 
           if (safetyResult.status === "ready_for_review") {
             const composedResponse = await composePatientResponse(
               patientDescription,
               safetyResult,
+              chatSelection.modelId,
             );
 
             return {
@@ -144,5 +171,9 @@ export async function runInterviewAgent(
     stopWhen: stepCountIs(4),
   });
 
-  writer.merge(result.toUIMessageStream<UIMessage>());
+  writer.merge(
+    result.toUIMessageStream<UIMessage>({
+      onError: serializeChatStreamError,
+    }),
+  );
 }

@@ -1,5 +1,7 @@
-// This ensures the interview workflow stays a thin wrapper around the
-// interview agent, even if the implementation changes later.
+/**
+ * @fileoverview Tests the interview workflow and how it interacts with safety review.
+ * @contributors Johnson Zhang, Jason Yang, Aryan Wadhawan, John Kollannur
+ */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Defines the typed records returned by knowledge-graph query helpers.
+ * @contributors Johnson Zhang
+ */
+
 export type ClinicalPresentationRecord = {
   key: string;
   name: string;

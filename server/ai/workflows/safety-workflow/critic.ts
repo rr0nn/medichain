@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Evaluates confidence signals for a generated differential diagnosis result.
+ * @contributors Johnson Zhang, John Kollannur
+ */
+
 import type { DifferentialDiagnosis } from "@/server/ai/workflows/ddx-workflow/types";
 
 import type { CriticAssessment } from "./types";
@@ -6,7 +11,7 @@ import type { CriticAssessment } from "./types";
  * Reviews the ranked differential list and decides whether the workflow should
  * continue to the interviewer for more history gathering.
  *
- * This critic is heuristic-first so the routing behaviour is predictable,
+ * This critic is heuristic-first so the routing behavior is predictable,
  * easy to test, and pragmatic for a small example knowledge graph.
  *
  * Current project rule:
@@ -17,9 +22,6 @@ import type { CriticAssessment } from "./types";
  * - require more than one supporting evidence path for the top differential
  * - require a minimum score gap from the second-ranked differential
  * - require feature-backed evidence for specific high-risk presentations
- *
- * @param differentials Ranked differential diagnoses from the DDX workflow.
- * @returns Assessment describing whether the result is confident enough.
  */
 export function reviewDifferentialConfidence(
   differentials: DifferentialDiagnosis[]

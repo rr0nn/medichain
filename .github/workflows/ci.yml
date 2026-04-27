@@ -2,11 +2,32 @@ name: CI
 
 on:
   push:
+    branches: [main, develop]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Placeholder build-time values so Prisma client generation and Next.js build steps
+  # can execute in CI without connecting to real databases or external AI services.
+  DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
+  NEO4J_URI: bolt://localhost:7687
+  NEO4J_USERNAME: neo4j
+  NEO4J_PASSWORD: password
+  NEO4J_DATABASE: neo4j
+  GOOGLE_GENERATIVE_AI_API_KEY: dummy
+  ANTHROPIC_API_KEY: dummy
+  NEXT_TELEMETRY_DISABLED: "1"
+
 jobs:
-  lint-test-build:
+  quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -15,7 +36,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.33.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,20 +46,142 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        env:
-          DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
 
+      # ESLint checks for code-style problems, common React/Next.js mistakes,
+      # and issues that can often fail at runtime but are cheaper to catch statically.
       - name: Run lint
         run: pnpm lint
 
-      - name: Run tests
+      # TypeScript verifies that imports, props, return types, and other type contracts
+      # still line up across the codebase without depending on generated .next files.
+      - name: Run typecheck
+        run: pnpm typecheck
+
+      # Vitest runs the repository's unit tests plus integration tests in tests/integration
+      # so logic and cross-module behavior regressions fail before merge.
+      - name: Run unit and integration tests
         run: pnpm test
 
-      - name: Run build
+      # A production Next.js build validates route compilation, server/client bundling,
+      # and build-time environment assumptions used by the deployed app.
+      - name: Run production build
         run: pnpm build
+      
+      # Playwright needs a real browser binary in CI, so install Chromium and its
+      # required system dependencies before running browser-level E2E coverage.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Playwright exercises the browser-visible user flows in tests/e2e, using mocked
+      # API boundaries so the CI suite stays deterministic without live external services.
+      - name: Run end-to-end tests
+        run: pnpm exec playwright test -c tests/playwright.config.ts
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Block the pipeline on critical vulnerabilities only; high/moderate are reported
+      # via Dependabot and worked through out of band without gating every PR.
+      - name: Audit dependencies
+        run: pnpm audit --prod --audit-level critical
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality
+
+    services:
+      postgres:
+        image: postgres:16
         env:
-          NEO4J_URI: bolt://localhost:7687
-          NEO4J_USERNAME: neo4j
-          NEO4J_PASSWORD: password
-          NEO4J_DATABASE: neo4j
+          POSTGRES_DB: medichain
+          POSTGRES_USER: medichain
+          POSTGRES_PASSWORD: medichain
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U medichain -d medichain"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Apply Prisma migrations so the smoke test can exercise the real conversations API,
+      # not just static SSR — this catches schema drift and boot-time DB wiring issues.
+      - name: Apply database migrations
+        env:
           DATABASE_URL: postgresql://medichain:medichain@localhost:5432/medichain
+        run: pnpm prisma migrate deploy
+
+      # Docker build acts as a packaging smoke test: it verifies the production image can be
+      # built from scratch, including dependency install, Prisma generation, and app bundling.
+      - name: Build Docker image
+        run: docker build --target runner --tag medichain:${{ github.sha }} .
+
+      # Start the built container against the live postgres service (via --network host)
+      # and verify both the home route and a DB-backed API route answer, so the smoke
+      # test fails loudly if startup breaks or the DB wiring drifts.
+      - name: Run Docker smoke test
+        run: |
+          docker run -d \
+            --name medichain-smoke \
+            --network host \
+            -e DATABASE_URL=postgresql://medichain:medichain@localhost:5432/medichain \
+            -e NEO4J_URI=bolt://localhost:7687 \
+            -e NEO4J_USERNAME=neo4j \
+            -e NEO4J_PASSWORD=password \
+            -e NEO4J_DATABASE=neo4j \
+            -e GOOGLE_GENERATIVE_AI_API_KEY=dummy \
+            -e ANTHROPIC_API_KEY=dummy \
+            medichain:${{ github.sha }}
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null \
+              && curl --fail --silent http://127.0.0.1:3000/api/conversations > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs medichain-smoke
+          exit 1
+
+      - name: Cleanup Docker smoke test
+        if: always()
+        run: docker rm -f medichain-smoke || true

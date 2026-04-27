@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Tests the safety workflow and its grounding review outcomes.
+ * @contributors Johnson Zhang
+ */
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -105,6 +110,23 @@ describe("runSafetyWorkflow", () => {
     expect(
       mocks.mockGetFeaturesForClinicalPresentations,
     ).not.toHaveBeenCalled();
+  });
+
+  it("passes the selected diagnosis model provider to the ddx workflow", async () => {
+    mocks.mockRunDifferentialDiagnosisWorkflow.mockResolvedValue({
+      matchedClinicalPresentations: [],
+      matchedCategories: [],
+      matchedFeatures: [],
+      differentials: [],
+    });
+
+    await runSafetyWorkflow("fever and rigors", undefined, "openai");
+
+    expect(mocks.mockRunDifferentialDiagnosisWorkflow).toHaveBeenCalledWith(
+      "fever and rigors",
+      undefined,
+      "openai",
+    );
   });
 
   it("routes to needs_more_information when the top differential score is too low", async () => {

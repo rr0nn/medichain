@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Configures Prisma schema loading and environment setup for the project.
+ * @contributors Aryan Wadhawan, Johnson Zhang
+ */
+
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig, env } from "prisma/config";
