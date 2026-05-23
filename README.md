@@ -2,6 +2,12 @@
 
 MediChain is a prototype system that demonstrates how a knowledge graph-grounded, multi-agent chatbot can support transparent and explainable differential diagnosis reasoning. It is designed to improve clinical efficiency while providing a user-friendly interface for non-technical users.
 
+## Important Notice
+
+MediChain is a research and educational prototype, not a medical device. It does not provide a confirmed diagnosis, treatment recommendation, emergency triage, or a substitute for professional clinical judgement.
+
+Do not use this project with real patient information unless you have deployed it with appropriate privacy, security, access-control, and compliance safeguards for your jurisdiction. Conversation content may be stored in PostgreSQL and sent to the selected AI provider for processing.
+
 ## What The App Does
 
 - collects a patient presentation through a conversational interface
@@ -71,7 +77,7 @@ The fastest way to run the app is with Docker Compose:
 
 ```bash
 git clone <repository-url>
-cd capstone-project-26t1-3900-w09a-date
+cd medichain
 ```
 
 2. Create your local environment file:
@@ -153,6 +159,8 @@ Optional:
 
 - any additional provider keys you want available in the model selector
 
+Do not commit `.env.local` or any other file containing real credentials. The repository's `.gitignore` excludes local environment files by default.
+
 ### Knowledge Graph Notes
 
 The diagnosis pipeline depends on a seeded Neo4j graph. Run `pnpm seed:graph` before starting the app for the first time.
@@ -162,6 +170,8 @@ The diagnosis pipeline depends on a seeded Neo4j graph. Run `pnpm seed:graph` be
 The seed is destructive: it drops graph constraints, deletes existing nodes, and recreates the project dataset.
 
 If you want to inspect or extend the graph, review [`docs/knowledge-graph/schema.md`](docs/knowledge-graph/schema.md). If you make changes directly in Neo4j and want them to become part of the baseline dataset, keep the seed file and schema documentation in sync.
+
+Before redistributing modified graph data or adding external clinical source material, make sure you have the right to publish that content and preserve any required attribution.
 
 ## Useful Commands
 
@@ -219,11 +229,19 @@ public/                 Static assets
 - Differentials are intended to be graph-grounded rather than free-form model output.
 - Safety review can route the conversation back for clarification when evidence is weak.
 - API routes should stay thin and delegate work into `server/`.
+- The default project does not include authentication or authorization. Add access controls before deploying it for shared, public, or sensitive use.
 - The chat UI uses toast notifications for conversation persistence failures, unavailable model selections, and classified LLM stream failures such as provider unavailability or rate limits.
 - The frontend loads its model-selector options from a backend-driven model catalog rather than hardcoding the model list locally.
 - The UI now exposes separate selectors for the chat model and the diagnosis model. This lets users choose a stronger model for the outer chat orchestration task, while using a lighter and cheaper model for the inner diagnosis semantic-matching pipeline when appropriate.
 - The chat model changes the outer interview behavior, such as when follow-up questions are asked or when the diagnosis tool is invoked, while the diagnosis model changes the inner presentation/category/feature matching pipeline.
 - If a provider API key is not set, that provider's models remain visible but unavailable in the selector, and requests using them fail with an explicit model-unavailable error.
+
+## Security And Privacy
+
+- Never commit provider API keys, database URLs, Neo4j credentials, exported patient data, or local `.env` files.
+- Review AI provider data-retention and privacy terms before sending clinical or personal information to any model.
+- Treat generated output as decision-support context only. Clinicians remain responsible for reviewing evidence, uncertainty, and patient-specific risk.
+- If you discover a vulnerability, avoid posting secrets or exploit details publicly. Contact the maintainers privately or open a minimal issue that does not expose sensitive information.
 
 ## License
 
