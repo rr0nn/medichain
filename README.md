@@ -224,3 +224,7 @@ public/                 Static assets
 - The UI now exposes separate selectors for the chat model and the diagnosis model. This lets users choose a stronger model for the outer chat orchestration task, while using a lighter and cheaper model for the inner diagnosis semantic-matching pipeline when appropriate.
 - The chat model changes the outer interview behavior, such as when follow-up questions are asked or when the diagnosis tool is invoked, while the diagnosis model changes the inner presentation/category/feature matching pipeline.
 - If a provider API key is not set, that provider's models remain visible but unavailable in the selector, and requests using them fail with an explicit model-unavailable error.
+
+## License
+
+This project is licensed under the Apache License 2.0. See [`LICENSE`](LICENSE) for details.
